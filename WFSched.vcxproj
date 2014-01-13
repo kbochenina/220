@@ -84,6 +84,8 @@
     <None Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CriteriaFactory.h" />
+    <ClInclude Include="CriteriaMethod.h" />
     <ClInclude Include="DataInfo.h" />
     <ClInclude Include="Efficiency.h" />
     <ClInclude Include="Greedy.h" />
@@ -93,6 +95,7 @@
     <ClInclude Include="ModelingContext.h" />
     <ClInclude Include="Package.h" />
     <ClInclude Include="PriorityQueue.h" />
+    <ClInclude Include="ReservedTimeCriteria.h" />
     <ClInclude Include="ResourceType.h" />
     <ClInclude Include="Scheduler.h" />
     <ClInclude Include="ScheduleToXML.h" />
@@ -104,6 +107,8 @@
     <ClInclude Include="Workflow.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="CriteriaFactory.cpp" />
+    <ClCompile Include="CriteriaMethod.cpp" />
     <ClCompile Include="DataInfo.cpp" />
     <ClCompile Include="Efficiency.cpp" />
     <ClCompile Include="Greedy.cpp" />
@@ -113,6 +118,7 @@
     <ClCompile Include="ModelingContext.cpp" />
     <ClCompile Include="Package.cpp" />
     <ClCompile Include="PriorityQueue.cpp" />
+    <ClCompile Include="ReservedTimeCriteria.cpp" />
     <ClCompile Include="ResourceType.cpp" />
     <ClCompile Include="Scheduler.cpp" />
     <ClCompile Include="ScheduleToXML.cpp" />

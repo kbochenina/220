@@ -5,7 +5,8 @@
 #include <memory>
 
 #pragma once
-// SCHEDULING METHODS: 1 - Bellman, 2 - Greedy
+
+enum Criteries { RESERVED_TIME = 1 };
 
 class Scheduler 
 {
@@ -33,6 +34,8 @@ class Scheduler
 	void StagedScheme(vector <int>& wfOrder);
 	// scheduling like one big WF
 	void SimpleSched();
+	// scheduling ordered due to prioretization criteria
+	void OrderedScheme(int criteriaNumber);
 	// add to file info about schedule
 	void PrintOneWFSched(ofstream & out, Schedule & sched, int wfNum);
 	// add to res file additional schedule information

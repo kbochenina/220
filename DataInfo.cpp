@@ -994,7 +994,18 @@ int DataInfo::GetGlobalProcessorIndex(int resource, int local){
 
 // getting next package with smallest finishing time
 int DataInfo::GetNextPackage(int wfNum, int index){
-	int val = wfPriorities[wfNum][index];
-	//wfPriorities[wfNum].pop_back();
-	return val;
+	try{
+		if (wfNum < 0 || wfNum > wfPriorities.size() - 1)
+			throw UserException("DataInfo::GetNextPackage() error. Wrong wf num");
+		if (index < 0 || index > wfPriorities[wfNum].size() - 1)
+			throw UserException("DataInfo::GetNextPackage() error. Wrong index");
+		int val = wfPriorities[wfNum][index];
+		//wfPriorities[wfNum].pop_back();
+		return val;
+	}
+	catch (UserException& e){
+		std::cout<<"error : " << e.what() <<endl;
+		std::system("pause");
+		exit(EXIT_FAILURE);
+	}
 }

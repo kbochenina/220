@@ -9,7 +9,6 @@ SchedulingFactory::SchedulingFactory(void)
 {
 }
 
-
 SchedulingFactory::~SchedulingFactory(void)
 {
 }

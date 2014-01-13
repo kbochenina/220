@@ -12,7 +12,7 @@
 using namespace std;
 
 enum SchedulingTypes { ONLY_BELLMAN = 1, ONLY_GREEDY = 2, MIXED = 3 };
-enum SchedulingSchemes { STAGED = 1, DIRECT_ORDER = 2, SIMPLE = 3 };
+enum SchedulingSchemes { STAGED = 1, DIRECT_ORDER = 2, SIMPLE = 3, RESERVED_ORDERED = 4 };
 
 int _tmain(int argc, wchar_t** argv)
 {
@@ -35,10 +35,12 @@ int _tmain(int argc, wchar_t** argv)
 	ModelData md(data);
 	Scheduler sched(md);
 	sched.SetSchedulingStrategy(ONLY_GREEDY);	
-	sched.GetSchedule(SIMPLE);
+	/*sched.GetSchedule(SIMPLE);
 	sched.GetMetrics("simple_metrics.txt");
 	sched.GetSchedule(STAGED);
-	sched.GetMetrics("staged_metrics.txt");
+	sched.GetMetrics("staged_metrics.txt");*/
+	sched.GetSchedule(RESERVED_ORDERED);
+	sched.GetMetrics("reserved_metrics.txt");
 //	system("pause");
 	return 0;
 }
