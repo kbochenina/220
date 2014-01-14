@@ -35,6 +35,8 @@ public:
 	double GetAvgExecTime(int pNum) const;
 	// return computational amount of package pNum
 	double GetAmount(const int & pNum) { return packages[pNum].GetAmount(); }
+	// return all successors of package pNum
+	void GetSuccessors(const int &pNum, vector<int>&out) const;
 	Workflow(int u, vector <Package> p, vector<vector<int>> m) {uid = u; packages = p; matrix = m;}
 	Workflow(){ uid = 0; }
 	~Workflow(void);

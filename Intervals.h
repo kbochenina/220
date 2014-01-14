@@ -39,6 +39,9 @@ public:
 	// find placement !for 1 processor for execTime
 	// tbegin and processor is out parameters
 	bool FindPlacement(const double &execTime, int &tbegin, int& processor) const;
+	// check received interval for intersection with existing intervals
+	// procNum is numbered from 1!
+	bool CanPlace(const int& resNum, const int &procNum, const int& tBegin, const double& execTime);
 	~Intervals(void);
 };
 

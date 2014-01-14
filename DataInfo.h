@@ -98,6 +98,8 @@ public:
 	void SetWfPriorities();
 	// get init package number by wfNum
 	int GetInitPackageNumber(int wfNum) {return initPackageNumbers[wfNum];}
+	// remove some numbers from priorities
+	void RemoveFromPriorities(const vector<int>& toRemove);
 	~DataInfo(void);
 };
 

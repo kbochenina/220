@@ -94,7 +94,6 @@
     <ClInclude Include="ModelData.h" />
     <ClInclude Include="ModelingContext.h" />
     <ClInclude Include="Package.h" />
-    <ClInclude Include="PriorityQueue.h" />
     <ClInclude Include="ReservedTimeCriteria.h" />
     <ClInclude Include="ResourceType.h" />
     <ClInclude Include="Scheduler.h" />
@@ -103,6 +102,7 @@
     <ClInclude Include="SchedulingMethod.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="Test.h" />
     <ClInclude Include="UserException.h" />
     <ClInclude Include="Workflow.h" />
   </ItemGroup>
@@ -117,7 +117,6 @@
     <ClCompile Include="ModelData.cpp" />
     <ClCompile Include="ModelingContext.cpp" />
     <ClCompile Include="Package.cpp" />
-    <ClCompile Include="PriorityQueue.cpp" />
     <ClCompile Include="ReservedTimeCriteria.cpp" />
     <ClCompile Include="ResourceType.cpp" />
     <ClCompile Include="Scheduler.cpp" />
@@ -128,6 +127,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="Test.cpp" />
     <ClCompile Include="UserException.cpp" />
     <ClCompile Include="WFSched.cpp" />
     <ClCompile Include="Workflow.cpp" />

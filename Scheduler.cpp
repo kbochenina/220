@@ -218,9 +218,11 @@ void Scheduler::StagedScheme(vector<int>& order){
 
 void Scheduler::GetSchedule(int scheduleVariant){
 	Schedule storedSched;
+	data.SetInitBusyIntervals();
+	fullSchedule.clear();
 	int bestStage = 0;
 	ofstream resTime("time.txt", ios::app);
-	double t, end, stagedTime;
+	double t = 0, end = 0, stagedTime = 0;
 	switch (scheduleVariant)
 	{
 		case 1:
@@ -263,6 +265,7 @@ void Scheduler::GetSchedule(int scheduleVariant){
 			end = (clock() - t)/1000.0;
 			cout << "Time of executing simple scheduling algorithm " << end << endl;
 			resTime << "Time of executing simple scheduling algorithm " << end << endl;
+			break;
 		case 4:
 			// reserved_ordered sched
 			data.SetWfPriorities();
@@ -271,6 +274,7 @@ void Scheduler::GetSchedule(int scheduleVariant){
 			end = (clock() - t)/1000.0;
 			cout << "Time of executing ordered scheme " << end << endl;
 			resTime << "Time of executing ordered scheme " << end << endl;
+			break;
 		default:
 			break;
 		}
@@ -402,4 +406,12 @@ void Scheduler::GetMetrics(string filename){
 	m.GetMetrics(fullSchedule);
 	ofstream out(filename, ios::app);
 	out << "Efficiency: " << maxEff << endl;
+}
+
+void Scheduler::TestSchedule(){
+	Test t(data, fullSchedule);
+	if (t.TestIntervals())
+		cout << "Test intervals passed" << endl;
+	if (t.TestWFLinks())
+		cout << "Test wf links passed" << endl;
 }

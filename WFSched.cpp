@@ -35,12 +35,15 @@ int _tmain(int argc, wchar_t** argv)
 	ModelData md(data);
 	Scheduler sched(md);
 	sched.SetSchedulingStrategy(ONLY_GREEDY);	
-	/*sched.GetSchedule(SIMPLE);
+	sched.GetSchedule(SIMPLE);
 	sched.GetMetrics("simple_metrics.txt");
-	sched.GetSchedule(STAGED);
-	sched.GetMetrics("staged_metrics.txt");*/
+	sched.TestSchedule();
+	/*sched.GetSchedule(STAGED);
+	sched.GetMetrics("staged_metrics.txt");
+	sched.TestSchedule();
 	sched.GetSchedule(RESERVED_ORDERED);
 	sched.GetMetrics("reserved_metrics.txt");
+	sched.TestSchedule();*/
 //	system("pause");
 	return 0;
 }

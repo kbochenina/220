@@ -2,7 +2,7 @@
 #include "ResourceType.h"
 
 
-ResourceType::ResourceType(int u, int nC, int rC, double p, vector<BusyIntervals> bi, bool flag, ModelingContext& context)
+ResourceType::ResourceType(int u, int rC, int nC, double p, vector<BusyIntervals> bi, bool flag, ModelingContext& context)
 {
 	uid = u;
 	numCoresPerOneRes = nC;
@@ -51,6 +51,13 @@ void ResourceType::AddInterval(const double &execTime, const int &tbegin, const 
 	vector <int> processorNumber;
 	processorNumber.push_back(processor);
 	windows.AddDiaps(processorNumber, tbegin, execTime);
+}
+
+// check received interval for intersection with existing intervals
+bool ResourceType::CanPlace(const int& num, const int& tBegin, const double& execTime){
+	const int resNum = num / numCoresPerOneRes;
+	const int procNum = num - resNum * numCoresPerOneRes + 1;
+	return windows.CanPlace(resNum, procNum, tBegin, execTime);
 }
 
 

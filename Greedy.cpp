@@ -28,10 +28,10 @@ double Greedy::GetFullSchedule(Schedule& out){
 	data.SetPriorities();
 	// while all packages are not scheduled
 	double minFinishingTime = 0.0;
-	int tbegin, processor = 0;
+	int expectedBegin, processor = 0;
 	double time = 0;
 	while (finished.size() != data.GetPackagesCount()){
-		tbegin = 0;
+		expectedBegin = 0;
 		// get unscheduled package with minimum finishing count
 		int current = data.GetNextPackage();
 		// get wfNum and package local num
@@ -47,8 +47,8 @@ double Greedy::GetFullSchedule(Schedule& out){
 				{
 					int resType = data.GetResourceTypeIndex(boost::get<2>(j)[0]);
 					double tEnd = boost::get<1>(j) + data.Workflows(wfNum).GetExecTime(dependsOn[i], resType + 1, 1);
-					if (tEnd > tbegin)
-						tbegin = tEnd + 1;
+					if (tEnd > expectedBegin)
+						expectedBegin = tEnd + 1;
 				}
 			}
 		}
@@ -65,6 +65,7 @@ double Greedy::GetFullSchedule(Schedule& out){
 		bool planWasFound = false;
 		
 		while (viewedResources.size() != resTypes.size()){
+			int tbegin = expectedBegin;
 			double min = std::numeric_limits<double>::infinity();
 			int minResIndex = 0;
 			for (int i = 0; i < resTypes.size(); i++){
@@ -116,6 +117,19 @@ double Greedy::GetFullSchedule(Schedule& out){
 		else {
 			//cout << "Can not find placement for package " << current << endl;
 			finished.push_back(current);
+			int initPackageNum = data.GetInitPackageNumber(wfNum);
+			// get all successors of this package
+			vector <int> successors;
+			data.Workflows(wfNum).GetSuccessors(current - initPackageNum, successors);
+			
+			for (auto & i : successors){
+				// transform local to global
+				i += initPackageNum;
+				// add successors to finished
+				finished.push_back(i);
+			}
+			// remove successor from priority queue
+			data.RemoveFromPriorities(successors);
 		}
 		
 		// fix resource
@@ -132,11 +146,11 @@ double Greedy::GetOneWFSchedule(Schedule& out){
 	vector <int> finished;
 	int index = data.Workflows(wfNum).GetPackageCount() - 1;
 	double minFinishingTime = 0.0;
-	int tbegin, processor = 0;
+	int expectedBegin, processor = 0;
 	double time = 0;
 	/// while all packages are not scheduled
 	while (finished.size() != data.Workflows(wfNum).GetPackageCount()){
-		tbegin = 0;
+		expectedBegin = 0;
 		// get unscheduled package with minimum finishing count
 		int current = data.GetNextPackage(wfNum,index--);
 		
@@ -152,8 +166,8 @@ double Greedy::GetOneWFSchedule(Schedule& out){
 					double tEnd = boost::get<1>(j) + boost::get<3>(j);
 					// and tend of this package > current package beginning time,
 					// set new beginning time
-					if (tEnd > tbegin)
-						tbegin = tEnd + 1;
+					if (tEnd > expectedBegin)
+						expectedBegin = tEnd + 1;
 				}
 			}
 		}
@@ -170,6 +184,7 @@ double Greedy::GetOneWFSchedule(Schedule& out){
 		bool planWasFound = false;
 		// for each resource type
 		while (viewedResources.size() != resTypes.size()){
+			int tbegin = expectedBegin;
 			double min = std::numeric_limits<double>::infinity();
 			int minResIndex = 0;
 			// find next minimum exec time

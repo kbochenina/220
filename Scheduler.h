@@ -2,6 +2,7 @@
 #include "ScheduleToXML.h"
 #include "Efficiency.h"
 #include "Metrics.h"
+#include "Test.h"
 #include <memory>
 
 #pragma once
@@ -50,6 +51,8 @@ public:
 	void GetSchedule(int scheduleVariant);
 	// get metrics
 	void GetMetrics(string filename);
+	// test full schedule
+	void TestSchedule();
 	~Scheduler(void);
 };
 

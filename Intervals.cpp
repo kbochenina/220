@@ -164,6 +164,10 @@ bool Intervals::FindPlacement(const double &execTime, int &tbegin, int& processo
 	int trealbegin = context.GetT();
 	// find resource with earliest finishing time
 	for (int i = 0; i < tb.size(); i++){
+		// if we haven't free window on this processor
+		// we should miss it
+		if (tb[i] == -1)
+			continue;
 		// if starting time is less than previous
 		// and more than earliest finishing time
 		if (tb[i] < trealbegin && tb[i]>=tbegin){
@@ -214,6 +218,21 @@ void Intervals::AddDiaps(vector <int> coreNumbers, int tBegin, double execTime) 
 			}
 		}
 	}
+}
+
+// check received interval for intersection with existing intervals
+bool Intervals::CanPlace(const int& resNum, const int &procNum, const int& tBegin, const double& execTime){
+	
+	const auto& intervals = current[resNum][procNum];
+	
+	for (const auto& interval : intervals){
+		if (tBegin >= interval.first && tBegin < interval.second)
+			return false;
+		const double tEnd = tBegin + execTime;
+		if (tEnd > interval.first && tEnd <= interval.second)
+			return false;
+	}
+	return true;
 }
 
 Intervals::~Intervals(void)

@@ -38,7 +38,9 @@ public:
 	// tbegin and processor is out parameters
 	bool FindPlacement(const double &execTime, int &tbegin, int& processor) const;
 	// add interval [tbegin; tbegin + execTime] to processor
-	void AddInterval(const double &execTime, const int &tbegin, const int& processor) ;
+	void AddInterval(const double &execTime, const int &tbegin, const int& processor);
+	// check received interval for intersection with existing intervals
+	bool CanPlace(const int& num, const int& tBegin, const double& execTime);
 	~ResourceType(void);
 };
 

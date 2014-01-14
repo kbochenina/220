@@ -893,6 +893,7 @@ void DataInfo::SetPriorities(){
 
 // set different wf priorities
 void DataInfo::SetWfPriorities(){
+	wfPriorities.clear();
 	wfPriorities.resize(workflows.size());
 	// constructing list of pairs (package number, finishing time)
 	for (int i = 0; i < workflows.size(); i++){
@@ -965,9 +966,18 @@ int DataInfo::GetResourceTypeIndex(int globalIndex){
 
 // getting next package with smallest finishing time
 int DataInfo::GetNextPackage(){
-	int next = priorities.back();
-	priorities.pop_back();
-	return next;
+	try{
+		if (priorities.size() == 0)
+			throw UserException("DataInfo::GetNextPackage() error. Priority is empty");
+		int next = priorities.back();
+		priorities.pop_back();
+		return next;
+	}
+	catch (UserException& e){
+		std::cout<<"error : " << e.what() <<endl;
+		std::system("pause");
+		exit(EXIT_FAILURE);
+	}
 }
 
 // get wfNum and local package number for global package number
@@ -1007,5 +1017,13 @@ int DataInfo::GetNextPackage(int wfNum, int index){
 		std::cout<<"error : " << e.what() <<endl;
 		std::system("pause");
 		exit(EXIT_FAILURE);
+	}
+}
+
+// remove some numbers from priorities
+void DataInfo::RemoveFromPriorities(const vector<int>& toRemove){
+	for (const auto& val : toRemove){
+		auto & it = find(priorities.begin(), priorities.end(), val);
+		if (it != priorities.end()) priorities.erase(it);
 	}
 }
