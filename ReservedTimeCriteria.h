@@ -7,9 +7,11 @@ class ReservedTimeCriteria :
 public:
 	ReservedTimeCriteria(DataInfo &d);
 	double GetCriteria(const Schedule &in);
-	bool TendsToMin() {return false;}
+	// get criteria value taling into account the average time of unscheduled tasks
+	double GetCriteria (const Schedule &in, const int &wfNum);
+	bool TendsToMin() {return true;}
 	// return true if first value is better than second
-	bool IsBetter(double first, double second){ return (first > second ? true : false); }
+	bool IsBetter(double first, double second){ return (first < second ? true : false); }
 	~ReservedTimeCriteria(void);
 };
 

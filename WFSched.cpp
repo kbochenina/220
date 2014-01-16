@@ -38,12 +38,12 @@ int _tmain(int argc, wchar_t** argv)
 	sched.GetSchedule(SIMPLE);
 	sched.GetMetrics("simple_metrics.txt");
 	sched.TestSchedule();
-	/*sched.GetSchedule(STAGED);
+	sched.GetSchedule(STAGED);
 	sched.GetMetrics("staged_metrics.txt");
 	sched.TestSchedule();
 	sched.GetSchedule(RESERVED_ORDERED);
 	sched.GetMetrics("reserved_metrics.txt");
-	sched.TestSchedule();*/
+	sched.TestSchedule();
 //	system("pause");
 	return 0;
 }

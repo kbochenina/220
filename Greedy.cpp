@@ -148,12 +148,14 @@ double Greedy::GetOneWFSchedule(Schedule& out){
 	double minFinishingTime = 0.0;
 	int expectedBegin, processor = 0;
 	double time = 0;
+	vector<int> unscheduled;
 	/// while all packages are not scheduled
 	while (finished.size() != data.Workflows(wfNum).GetPackageCount()){
 		expectedBegin = 0;
 		// get unscheduled package with minimum finishing count
 		int current = data.GetNextPackage(wfNum,index--);
-		
+		if (find(unscheduled.begin(), unscheduled.end(), current) != unscheduled.end())
+			continue;
 		// should get latest finishing time of previous packages
 		vector<int> dependsOn;
 		data.Workflows(wfNum).GetInput(current, dependsOn);
@@ -241,6 +243,21 @@ double Greedy::GetOneWFSchedule(Schedule& out){
 		else {
 			//cout << "Can not find placement for package " << current << endl;
 			finished.push_back(current);
+			//int initPackageNum = data.GetInitPackageNumber(wfNum);
+			// get all successors of this package
+			vector <int> successors;
+			//data.Workflows(wfNum).GetSuccessors(current - initPackageNum, successors);
+			data.Workflows(wfNum).GetSuccessors(current, successors);
+			
+			for (auto & i : successors){
+				// transform local to global
+				// i += initPackageNum;
+				// add successors to finished
+				if (find(finished.begin(), finished.end(),i) == finished.end())
+					finished.push_back(i);
+				if (find(unscheduled.begin(),unscheduled.end(), i) == unscheduled.end()) 
+					unscheduled.push_back(i);
+			}
 		}
 	}
 	//cout << "Efficiency value: " << efficiency << endl;

@@ -283,77 +283,86 @@ void Scheduler::GetSchedule(int scheduleVariant){
 
 // scheduling ordered due to prioretization criteria
 void Scheduler::OrderedScheme(int criteriaNumber){
-	maxEff = 0.0;
-	// get pointer to criteria 
-	unique_ptr<CriteriaMethod> criteria = CriteriaFactory::GetMethod(data,criteriaNumber);
-	bool tendsToMin = criteria->TendsToMin();
-	// unscheduled WF numbers
-	vector <int> unscheduled;
-	for (int i = 0; i < data.GetWFCount(); i++)
-		unscheduled.push_back(i);
-	// while we have unscheduled WFs
-	while (unscheduled.size() != 0){
-		// best schedule (from the prioretization criteria point of view)
-		Schedule best;
-		// and "best" wf number
-		int bestWFNum = 0;
-		// max eff (on this iteration)
-		double currentBestEff = 0.0;
-		// current best criteria value
-		double bestCriteria = tendsToMin ? numeric_limits<double>::max() : 
-			-1 * numeric_limits<double>::max();
-		// busy intervals for best schedule
+	try{
+		maxEff = 0.0;
+		// get pointer to criteria 
+		unique_ptr<CriteriaMethod> criteria = CriteriaFactory::GetMethod(data,criteriaNumber);
+		bool tendsToMin = criteria->TendsToMin();
+		// unscheduled WF numbers
+		vector <int> unscheduled;
+		for (int i = 0; i < data.GetWFCount(); i++)
+			unscheduled.push_back(i);
+		// while we have unscheduled WFs
+		while (unscheduled.size() != 0){
+			// best schedule (from the prioretization criteria point of view)
+			Schedule best;
+			// and "best" wf number
+			int bestWFNum = 0;
+			// max eff (on this iteration)
+			double currentBestEff = 0.0;
+			// current best criteria value
+			double bestCriteria = tendsToMin ? numeric_limits<double>::max() : 
+				-1 * numeric_limits<double>::max();
+			// busy intervals for best schedule
 
-		vector<vector <BusyIntervals>> storedIntervals;
-		// for each unscheduled WF
-		for (auto &wfNum : unscheduled){
-			Schedule current;
-			unique_ptr <SchedulingMethod> method = 
-				SchedulingFactory::GetMethod(data, methodsSet[wfNum], wfNum);
-			// get current schedule in current variable
-			double currentEff = method->GetWFSchedule(current);
-			// get current criteria
-			double currentCriteria = criteria->GetCriteria(current);
-			if (criteria->IsBetter(currentCriteria, bestCriteria)){
-				best = current;
-				bestWFNum = wfNum;
-				currentBestEff = currentEff;
-				bestCriteria = currentCriteria;
-				storedIntervals.clear();
-				data.GetCurrentIntervals(storedIntervals);
+			vector<vector <BusyIntervals>> storedIntervals;
+			// for each unscheduled WF
+			for (auto &wfNum : unscheduled){
+				Schedule current;
+				unique_ptr <SchedulingMethod> method = 
+					SchedulingFactory::GetMethod(data, methodsSet[wfNum], wfNum);
+				// get current schedule in current variable
+				double currentEff = method->GetWFSchedule(current);
+				// get current criteria
+				double currentCriteria = criteria->GetCriteria(current, wfNum);
+				if (criteria->IsBetter(currentCriteria, bestCriteria)){
+					best = current;
+					bestWFNum = wfNum;
+					currentBestEff = currentEff;
+					bestCriteria = currentCriteria;
+					storedIntervals.clear();
+					data.GetCurrentIntervals(storedIntervals);
+				}
+				data.ResetBusyIntervals();
 			}
-			data.ResetBusyIntervals();
+
+			// set local to global packages
+			int initNum = data.GetInitPackageNumber(bestWFNum);
+			for (int i = 0; i < best.size(); i++)
+				best[i].get<0>() += initNum;
+			// add best schedule to full schedule
+			copy(best.begin(), best.end(), back_inserter(fullSchedule));
+
+			data.SetCurrentIntervals(storedIntervals);
+			data.FixBusyIntervals();
+
+			maxEff += currentBestEff;
+
+			cout << "Best wf num: " << bestWFNum << " bestCriteria: " << bestCriteria << endl;
+
+			auto idx = find(unscheduled.begin(), unscheduled.end(), bestWFNum);
+			if (idx == unscheduled.end()) 
+				throw UserException("Scheduler::OrderedScheme(int) error. Best wf number was not found");
+			unscheduled.erase(idx);
 		}
-
-		// set local to global packages
-		int initNum = data.GetInitPackageNumber(bestWFNum);
-		for (int i = 0; i < best.size(); i++)
-			best[i].get<0>() += initNum;
-		// add best schedule to full schedule
-		copy(best.begin(), best.end(), back_inserter(fullSchedule));
-
-		data.SetCurrentIntervals(storedIntervals);
-		data.FixBusyIntervals();
-
-		maxEff += currentBestEff;
-
-		cout << "Best wf num: " << bestWFNum << " bestCriteria: " << bestCriteria << endl;
-
-		auto idx = find(unscheduled.begin(), unscheduled.end(), bestWFNum);
-		unscheduled.erase(idx);
+		data.SetInitBusyIntervals();
+		maxEff /= maxPossible;
+		cout << "Ordered scheme eff: " << maxEff << endl;
+		xmlWriter->SetXMLBaseName("Ordered_");
+		// write result to XML
+		xmlWriter->CreateXML(fullSchedule, -1);
+		string resFileName = "ordered.txt";
+		ofstream res(resFileName);
+		if (res.fail()) 
+			throw UserException("Scheduler::OrderedScheme error. Unable to create res file");
+		PrintOneWFSched(res, fullSchedule, -1);
+		res.close();
 	}
-	data.SetInitBusyIntervals();
-	maxEff /= maxPossible;
-	cout << "Ordered scheme eff: " << maxEff << endl;
-	xmlWriter->SetXMLBaseName("Ordered_");
-	// write result to XML
-	xmlWriter->CreateXML(fullSchedule, -1);
-	string resFileName = "ordered.txt";
-	ofstream res(resFileName);
-	if (res.fail()) 
-		throw UserException("Scheduler::OrderedScheme error. Unable to create res file");
-	PrintOneWFSched(res, fullSchedule, -1);
-	res.close();
+	catch (UserException& e){
+		cout<<"error : " << e.what() <<endl;
+		std::system("pause");
+		exit(EXIT_FAILURE);
+	}
 }
 
 void Scheduler::SimpleSched(){
