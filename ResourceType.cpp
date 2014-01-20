@@ -42,8 +42,8 @@ void ResourceType::SetCurrentIntervals(vector<BusyIntervals> &storedIntervals){
 
 // find placement !for 1 processor for execTime
 // tbegin and processor is out parameters
-bool ResourceType::FindPlacement(const double &execTime, int &tbegin, int& processor) const {
-	if (windows.FindPlacement(execTime, tbegin, processor)) return true;
+bool ResourceType::FindPlacement(const double &execTime, int &tbegin, int& processor, double& deadline) const {
+	if (windows.FindPlacement(execTime, tbegin, processor, deadline)) return true;
 	return false;
 }
 // add interval [tbegin; tbegin + execTime] to processor

@@ -12,7 +12,7 @@
 using namespace std;
 
 enum SchedulingTypes { ONLY_BELLMAN = 1, ONLY_GREEDY = 2, MIXED = 3 };
-enum SchedulingSchemes { STAGED = 1, DIRECT_ORDER = 2, SIMPLE = 3, RESERVED_ORDERED = 4 };
+enum SchedulingSchemes { STAGED = 1, EFF_ORDERED = 2, SIMPLE = 3, RESERVED_ORDERED = 4 };
 
 int _tmain(int argc, wchar_t** argv)
 {
@@ -34,17 +34,25 @@ int _tmain(int argc, wchar_t** argv)
 	// init model data
 	ModelData md(data);
 	Scheduler sched(md);
+	ofstream f("fullmetrics.txt", ios::trunc);
+	f.close();
 	sched.SetSchedulingStrategy(ONLY_GREEDY);	
 	sched.GetSchedule(SIMPLE);
-	sched.GetMetrics("simple_metrics.txt");
+	sched.GetMetrics("simple_metrics.txt", "SimpleSched");
 	sched.TestSchedule();
-	sched.GetSchedule(STAGED);
-	sched.GetMetrics("staged_metrics.txt");
-	sched.TestSchedule();
+	cout << "***************************************************" << endl;
 	sched.GetSchedule(RESERVED_ORDERED);
-	sched.GetMetrics("reserved_metrics.txt");
+	sched.GetMetrics("reserved_metrics.txt", "StagedReserveTime");
 	sched.TestSchedule();
-//	system("pause");
+	cout << "***************************************************" << endl;
+	sched.GetSchedule(EFF_ORDERED);
+	sched.GetMetrics("eff_metrics.txt", "StagedEfficiency");
+	sched.TestSchedule();
+	cout << "***************************************************" << endl;
+	/*sched.GetSchedule(STAGED);
+	sched.GetMetrics("staged_metrics.txt");
+	sched.TestSchedule();*/
+	//system("pause");
 	return 0;
 }
 

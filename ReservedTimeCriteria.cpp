@@ -23,7 +23,17 @@ double ReservedTimeCriteria::GetCriteria(const Schedule &in){
 
 // get criteria value taling into account the average time of unscheduled tasks
 double ReservedTimeCriteria::GetCriteria (const Schedule &in, const int &wfNum){
-	double deadline = GetCriteria(in);
+	double requiredDeadline = data.GetDeadline(wfNum);
+	// max ending time
+	double maxEndTime = 0;
+	for (auto &sched: in){
+		double currentEndTime = sched.get<1>() + sched.get<3>();
+		if (maxEndTime < currentEndTime)
+			maxEndTime = currentEndTime;
+	}
+	// if all tasks are unscheduled 
+	if (maxEndTime == 0) return 0;
+	double deadline = requiredDeadline - maxEndTime;
 	// if there are some unscheduled tasks
 	int pCount = data.Workflows(wfNum).GetPackageCount();
 	if (in.size() != pCount){

@@ -15,7 +15,7 @@ void Intervals::SetData(vector<BusyIntervals> i, ModelingContext& c){
 	for (int i = 0; i < stageCount; i++)
 		allCoresFreeTimes[i].resize(numCores);
 	Correct();
-	SetFreeTime();
+	//SetFreeTime();
 }
 
 void Intervals::Correct(){
@@ -129,8 +129,8 @@ void Intervals::SetFreeTime(){
 // we can use non-full execution times in that case
 // function return false and (-1, -1) as out parameters 
 // if we have not time at all processors
-bool Intervals::FindPlacement(const double &execTime, int &tbegin, int& processor) const{
-	vector <double> tb(numCores, context.GetT());
+bool Intervals::FindPlacement(const double &execTime, int &tbegin, int& processor, double&deadline) const{
+	vector <double> tb(numCores, -1);
 	int currentProcessor = 0;
 	// cycle for resources
 	for (int i = 0; i < current.size(); i++){
@@ -161,7 +161,7 @@ bool Intervals::FindPlacement(const double &execTime, int &tbegin, int& processo
 			currentProcessor++;
 		}
 	}
-	int trealbegin = context.GetT();
+	int trealbegin = deadline;
 	// find resource with earliest finishing time
 	for (int i = 0; i < tb.size(); i++){
 		// if we haven't free window on this processor
@@ -176,7 +176,7 @@ bool Intervals::FindPlacement(const double &execTime, int &tbegin, int& processo
 		}
 	}
 	tbegin = trealbegin;
-	if (tbegin == context.GetT()){
+	if (tbegin + 1 > deadline){
 		processor = -1;
 		tbegin = -1;
 		return false;

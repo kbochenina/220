@@ -7,7 +7,7 @@
 
 #pragma once
 
-enum Criteries { RESERVED_TIME = 1 };
+enum Criteries { RESERVED_TIME = 1, MAX_EFF = 2 };
 
 class Scheduler 
 {
@@ -37,6 +37,8 @@ class Scheduler
 	void SimpleSched();
 	// scheduling ordered due to prioretization criteria
 	void OrderedScheme(int criteriaNumber);
+	// efficiency ordered staged scheme
+	void EfficiencyOrdered();
 	// add to file info about schedule
 	void PrintOneWFSched(ofstream & out, Schedule & sched, int wfNum);
 	// add to res file additional schedule information
@@ -50,7 +52,7 @@ public:
 	// 2 - staged scheme with known order
 	void GetSchedule(int scheduleVariant);
 	// get metrics
-	void GetMetrics(string filename);
+	void GetMetrics(string filename, string name);
 	// test full schedule
 	void TestSchedule();
 	~Scheduler(void);

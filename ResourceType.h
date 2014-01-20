@@ -36,11 +36,12 @@ public:
 	void GetCurrentWindows(Intervals & out) const { out = windows; }
 	// find placement !for 1 processor for execTime
 	// tbegin and processor is out parameters
-	bool FindPlacement(const double &execTime, int &tbegin, int& processor) const;
+	bool FindPlacement(const double &execTime, int &tbegin, int& processor, double &deadline) const;
 	// add interval [tbegin; tbegin + execTime] to processor
 	void AddInterval(const double &execTime, const int &tbegin, const int& processor);
 	// check received interval for intersection with existing intervals
 	bool CanPlace(const int& num, const int& tBegin, const double& execTime);
+	//void PrintIntervals(int processor) {windows.PrintIntervals(processor);}
 	~ResourceType(void);
 };
 

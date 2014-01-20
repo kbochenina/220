@@ -21,6 +21,7 @@ Scheduler::Scheduler( ModelData& md ): data(md.GetData())
 	methodsSet.resize(data.GetWFCount());
 	maxEff = 0.0;
 	xmlWriter = unique_ptr<ScheduleToXML>(new ScheduleToXML(data));
+	data.SetWfPriorities();
 	eff = unique_ptr<Efficiency>(new Efficiency(2.00 / data.GetFullCoresCount(), data.GetT()));
 	maxPossible = 0.0;
 	for (int i = 0; i < data.GetResourceCount(); i++){
@@ -134,7 +135,7 @@ double Scheduler::StagedScheme(int firstWfNum){
 
 		while (scheduledWFs.size() != wfCount ){
 			//cout << "Stage " << scheduledWFs.size() + 1 << endl;
-			double stageMaxEff = -1.0;
+			double stageMaxEff = numeric_limits<double>::infinity();
 			int bestWfNum = -1;
 			for (int i = 0; i < wfCount; i++){
 				// if this WF wasn't scheduled yet
@@ -151,7 +152,7 @@ double Scheduler::StagedScheme(int firstWfNum){
 					BackBellmanProcedure();
 					directBellman = true;
 					double currentEff = DirectBellman(i);*/
-					if (stageMaxEff < currentEff){
+					if (stageMaxEff > currentEff){
 						stageMaxEff = currentEff;
 						bestWfNum = i;
 						storedSched = oneWFsched;
@@ -222,12 +223,13 @@ void Scheduler::GetSchedule(int scheduleVariant){
 	fullSchedule.clear();
 	int bestStage = 0;
 	ofstream resTime("time.txt", ios::app);
+	ofstream full("fullmetrics.txt", ios::app);
 	double t = 0, end = 0, stagedTime = 0;
 	switch (scheduleVariant)
 	{
 		case 1:
 			resTime << "Staged scheme: " << endl;
-			data.SetWfPriorities();
+			//data.SetWfPriorities();
 			maxEff = 0;
 			for (int i = 0; i < data.GetWFCount(); i++) {
 				scheduledWFs.clear();
@@ -252,10 +254,13 @@ void Scheduler::GetSchedule(int scheduleVariant){
 			break;
 		case 2:
 		{
-			vector <int> order;
-			for (int i = 0; i < data.GetWFCount(); i++)
-				order.push_back(i);
-			StagedScheme(order);
+			t = clock();
+			EfficiencyOrdered();
+			end = (clock() - t)/1000.0;
+			cout << "Time of executing efficiency ordered scheme " << end << endl;
+			resTime << "Time of executing efficiency ordered scheme " << end << endl;
+			full << "Time of executing efficiency ordered scheme " << end << endl;
+			full << "Efficiency ordered scheme eff: " << maxEff << endl;
 			break;
 		}
 		case 3: 
@@ -265,20 +270,111 @@ void Scheduler::GetSchedule(int scheduleVariant){
 			end = (clock() - t)/1000.0;
 			cout << "Time of executing simple scheduling algorithm " << end << endl;
 			resTime << "Time of executing simple scheduling algorithm " << end << endl;
+			full << "Time of executing simple scheduling algorithm " << end << endl;
+			full << "Sumple sched eff: " << maxEff << endl;
 			break;
 		case 4:
 			// reserved_ordered sched
-			data.SetWfPriorities();
+			//data.SetWfPriorities();
 			t = clock();
 			OrderedScheme(1);
 			end = (clock() - t)/1000.0;
-			cout << "Time of executing ordered scheme " << end << endl;
-			resTime << "Time of executing ordered scheme " << end << endl;
+			cout << "Time of executing reserved ordered scheme " << end << endl;
+			resTime << "Time of executing reserved ordered scheme " << end << endl;
+			full << "Time of executing reserved ordered scheme " << end << endl;
+			full << "Reserved scheme eff: " << maxEff << endl;
 			break;
 		default:
 			break;
 		}
 	resTime.close();
+	full.close();
+}
+
+void Scheduler::EfficiencyOrdered(){
+	try{
+		ofstream file("strange.txt");
+		maxEff = 0.0;
+		// unscheduled WF numbers
+		vector <int> unscheduled;
+		for (int i = 0; i < data.GetWFCount(); i++)
+			unscheduled.push_back(i);
+		int stage = 0;
+		// while we have unscheduled WFs
+		while (unscheduled.size() != 0){
+			//if (stage % 10 == 0) cout << "Stage " << stage << endl;
+			stage++;
+			// best schedule (from the prioretization criteria point of view)
+			Schedule best;
+			// and "best" wf number
+			int bestWFNum = -1;
+			// max eff (on this iteration)
+			double currentBestEff = numeric_limits<double>::infinity();
+			// busy intervals for best schedule
+			vector<vector <BusyIntervals>> storedIntervals;
+			// for each unscheduled WF
+			for (auto &wfNum : unscheduled){
+				Schedule current;
+				unique_ptr <SchedulingMethod> method = 
+					SchedulingFactory::GetMethod(data, methodsSet[wfNum], wfNum);
+				// get current schedule in current variable
+				double currentEff = method->GetWFSchedule(current);
+			//	file << "wfnum = " << wfNum << " current eff = " << currentEff << endl;
+				if (currentEff < currentBestEff){
+					best = current;
+					bestWFNum = wfNum;
+					currentBestEff = currentEff;
+					storedIntervals.clear();
+					data.GetCurrentIntervals(storedIntervals);
+				}
+				data.ResetBusyIntervals();
+			}
+
+			// set local to global packages
+			int initNum = data.GetInitPackageNumber(bestWFNum);
+			for (int i = 0; i < best.size(); i++)
+				best[i].get<0>() += initNum;
+			// add best schedule to full schedule
+			copy(best.begin(), best.end(), back_inserter(fullSchedule));
+
+			data.SetCurrentIntervals(storedIntervals);
+			data.FixBusyIntervals();
+
+			maxEff += currentBestEff;
+
+			//file << "Best wf num: " << bestWFNum << " bestEff: " << currentBestEff << endl;
+			//cout << "Best wf num: " << bestWFNum << " bestEff: " << currentBestEff << endl;
+			if (bestWFNum == -1) { 
+				cout << "unscheduled.size() == " << unscheduled.size() << endl;
+				break;
+			}
+			auto idx = find(unscheduled.begin(), unscheduled.end(), bestWFNum);
+			if (idx == unscheduled.end()) {
+				cout << bestWFNum << endl;
+				throw UserException("Scheduler::EfficiencyOrdered(int) error. Best wf number was not found");
+			}
+			unscheduled.erase(idx);
+		}
+		file.close();
+		data.SetInitBusyIntervals();
+		maxEff /= maxPossible;
+		cout << "Efficiency ordered scheme eff: " << maxEff << endl;
+		
+		xmlWriter->SetXMLBaseName("Efficiency_");
+		// write result to XML
+		xmlWriter->CreateXML(fullSchedule, -1);
+		string resFileName = "efficiency.txt";
+		ofstream res(resFileName);
+		if (res.fail()) 
+			throw UserException("Scheduler::EfficiencyOrdered error. Unable to create res file");
+		PrintOneWFSched(res, fullSchedule, -1);
+		res.close();
+	}
+	catch (UserException& e){
+		cout<<"error : " << e.what() <<endl;
+		std::system("pause");
+		exit(EXIT_FAILURE);
+	}
 }
 
 // scheduling ordered due to prioretization criteria
@@ -292,12 +388,15 @@ void Scheduler::OrderedScheme(int criteriaNumber){
 		vector <int> unscheduled;
 		for (int i = 0; i < data.GetWFCount(); i++)
 			unscheduled.push_back(i);
+		int stage = 0;
 		// while we have unscheduled WFs
 		while (unscheduled.size() != 0){
+			//if (stage % 10 == 0) cout << "Stage " << stage << endl;
+			stage++;
 			// best schedule (from the prioretization criteria point of view)
 			Schedule best;
 			// and "best" wf number
-			int bestWFNum = 0;
+			int bestWFNum = -1;
 			// max eff (on this iteration)
 			double currentBestEff = 0.0;
 			// current best criteria value
@@ -338,8 +437,11 @@ void Scheduler::OrderedScheme(int criteriaNumber){
 
 			maxEff += currentBestEff;
 
-			cout << "Best wf num: " << bestWFNum << " bestCriteria: " << bestCriteria << endl;
-
+			//cout << "Best wf num: " << bestWFNum << " bestCriteria: " << bestCriteria << endl;
+			if (bestWFNum == -1) { 
+				cout << "unscheduled.size() == " << unscheduled.size() << endl;
+				break;
+			}
 			auto idx = find(unscheduled.begin(), unscheduled.end(), bestWFNum);
 			if (idx == unscheduled.end()) 
 				throw UserException("Scheduler::OrderedScheme(int) error. Best wf number was not found");
@@ -410,9 +512,9 @@ void Scheduler::PrintFooter(ofstream & res, vector<double>&eff){
 	res << endl << "Max eff: " << maxEff << endl << endl;
 }
 
-void Scheduler::GetMetrics(string filename){
+void Scheduler::GetMetrics(string filename, string name){
 	Metrics m(data, filename);
-	m.GetMetrics(fullSchedule);
+	m.GetMetrics(fullSchedule, name);
 	ofstream out(filename, ios::app);
 	out << "Efficiency: " << maxEff << endl;
 }

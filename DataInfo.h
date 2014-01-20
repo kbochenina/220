@@ -22,6 +22,8 @@ class DataInfo
 	vector<int> initPackageNumbers;
 	// vector of model workflows
 	vector <Workflow> workflows;
+	// deadlines vector
+	vector <double> deadlines;
 	// vector of model resource types
 	vector <ResourceType> resources;
 	// vector of WFs packages finishing times
@@ -73,6 +75,7 @@ public:
 	const pair<int,int>& TypesCores(int index) const ;
 	int GetDelta() {return context.GetDelta();}
 	int GetStages() {return context.GetStages();}
+	double GetCCR() {return context.GetCCR();}
 	// get initial core index of resource type
 	int GetInitResourceTypeIndex(int type);
 	// do the same
@@ -90,6 +93,7 @@ public:
 	// get wfNum and local package number for global package number
 	void GetLocalNumbers (const int &current, int &wfNum, int &localNum);
 	int GetT() {return context.GetT();}
+	void SetT(double newT) {context.SetT(newT);}
 	// get global processor index 
 	int GetGlobalProcessorIndex(int resource, int local);
 	// get resource type by global index
@@ -100,6 +104,10 @@ public:
 	int GetInitPackageNumber(int wfNum) {return initPackageNumbers[wfNum];}
 	// remove some numbers from priorities
 	void RemoveFromPriorities(const vector<int>& toRemove);
+	bool IsWFPrioretized() {if (wfPriorities.size() == 0) return false;}
+	double GetDeadline(int wfNum){return deadlines[wfNum];}
+	double GetDeadline() {double maxDeadline = 0.0; for (auto& d: deadlines) if (d > maxDeadline) maxDeadline = d; return maxDeadline;}
+	int GetPrioritiesSize() {return priorities.size();}
 	~DataInfo(void);
 };
 

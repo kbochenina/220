@@ -153,7 +153,22 @@ void DataInfo::Init(string settingsFile){
 		}
 		s.erase(0,trim.size());
 		delta = stoi(s);
-		context.SetContext(T, delta);	
+		double CCR = 0.0;
+		
+		getline(file,s);
+		++line;
+		trim = "CCR=";
+		found = s.find(trim);
+		if (found != 0) {
+			sprintf_s(second, "%d", line);
+			errWrongFormatFull += second;
+			throw UserException(errWrongFormatFull);
+		}
+		s.erase(0,trim.size());
+		CCR = stof(s);
+
+		context.SetContext(T, delta, CCR);	
+		
 		// read all filenames from path
 		string resourcesFileName;
 		vector <string> WFFileNames;
@@ -728,7 +743,11 @@ const pair<int,int>& DataInfo::TypesCores(int index) const {
 }
 
 void DataInfo::InitFinishingTimes(){
-	int wfIndex = 1;
+	int wfIndex = 0;
+	double avgCalcPower = 0.0;
+	for (int i = 0; i < resources.size(); i++)
+		avgCalcPower += resources[i].GetPerf();
+	avgCalcPower /= resources.size();
 	// for each workflow
 	for (const Workflow& wf: workflows){
 		// indexes of packages which finishing time was already setted up 
@@ -804,13 +823,16 @@ void DataInfo::InitFinishingTimes(){
 		}
 		
 		// calculating last finishing times for all tasks
-		double T = context.GetT();
+		//double T = context.GetT();
 		FinishingTime f;
 		f.resize(pCount);
-		f[maxTask]= T;
+		//f[maxTask]= T;
+		
+		f[maxTask] = maxAmount/avgCalcPower;
+		double deadline = f[maxTask];
 		for (int i = 0; i < pCount; i++){
 			if (i != maxTask){
-				f[i] = amounts[i]/maxAmount*T;
+				f[i] = amounts[i]/maxAmount*deadline;
 			}
 		}
 		finishingTimes.push_back(f);
@@ -819,6 +841,7 @@ void DataInfo::InitFinishingTimes(){
 			cout << i << ") " << f[i] << " "; 
 		}
 		cout << endl;*/
+		wfIndex++;
 	}
 }
 
@@ -895,6 +918,9 @@ void DataInfo::SetPriorities(){
 void DataInfo::SetWfPriorities(){
 	wfPriorities.clear();
 	wfPriorities.resize(workflows.size());
+	deadlines.clear();
+	deadlines.resize(workflows.size());
+	double maxDeadline = 0.0;
 	// constructing list of pairs (package number, finishing time)
 	for (int i = 0; i < workflows.size(); i++){
 		// get priority list for current wf
@@ -946,8 +972,12 @@ void DataInfo::SetWfPriorities(){
 		}
 		// smallest elements will be in the end of vector
 		reverse(wfPriorities[i].begin(), wfPriorities[i].end());
+		deadlines[i] = GetT();
+		//deadlines[i] = 2 * finishingTimes[i][finishingTimes[i].size()-1] ;//+  finishingTimes[i][finishingTimes[i].size()-1]*0.1;
+		//if (deadlines[i] > maxDeadline) maxDeadline = deadlines[i];
 	}
-
+	//SetT(maxDeadline);
+	cout << "Max deadline = " << GetT() << endl;
 
 }
 
