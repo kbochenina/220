@@ -20,8 +20,12 @@ DataInfo::DataInfo( string fSettings )
    Init(fSettings);
     _mkdir("Output");
    _chdir("Output");
+  
 }
 
+const double DataInfo::GetDeadline(int wfNum){
+    return workflows[wfNum].GetDeadline();
+}
 
 void DataInfo::Init(string settingsFile){
    try{
@@ -425,7 +429,7 @@ void DataInfo::InitWorkflows(string f){
             }
             connectMatrix.push_back(row);
          }
-         Workflow w(workflows.size() + i+1, pacs,connectMatrix);
+         Workflow w(workflows.size() + i+1, pacs,connectMatrix, GetT());
          workflows.push_back(w);
          pacs.clear();
          connectMatrix.clear();
@@ -686,99 +690,8 @@ void DataInfo::InitFinishingTimes(){
       avgCalcPower += resources[i].GetPerf();
    avgCalcPower /= resources.size();
    // for each workflow
-   for (const Workflow& wf: workflows){
-      // indexes of packages which finishing time was already setted up 
-      vector <int> usedNums;
-      int maxAmount = 0.0, maxTask = -1;
-      // максимальная накопленная вычислительная сложность
-      // аналогично позднему сроку завершения событий в методах сетевого планирования и управления
-      vector<double> amounts;
-      int pCount = wf.GetPackageCount();
-      amounts.resize(pCount);
-      for (int i = 0; i < pCount; i++){
-         if (wf.IsPackageInit(i)){
-            amounts[i] = wf[i].GetAmount();
-            if (maxAmount < amounts[i]) {
-               maxAmount = amounts[i];
-               maxTask = i;
-            }
-            usedNums.push_back(i);
-         }
-      }
-      // linked - packages linked with already calculated
-      vector<int> linked;
-      vector<int> out;
-      for (int i = 0; i < usedNums.size(); i++){
-         wf.GetOutput(usedNums[i], out);
-         for (int i = 0; i < out.size(); i++){
-            if (find(linked.begin(), linked.end(), out[i]) == linked.end())
-               linked.push_back(out[i]);
-         }
-      }
-      // while we don't find all values
-      while (linked.size()!=0){
-         vector <int> in;
-         // get first value from linked
-         int current = linked.front();
-         // get all inputs for linked
-         wf.GetInput(current, in);
-         bool allUsed = true;
-         for (int k = 0; k < in.size(); k++){
-            if (find(usedNums.begin(),usedNums.end(),in[k]) == usedNums.end())
-               allUsed = false;
-         }
-         // if all previous values were already calculated
-         if (allUsed){
-            int max = 0;
-            for (int k = 0; k < in.size(); k++){
-               if (amounts[in[k]] > max) max = amounts[in[k]];
-            }
-            // get latest "time" according to maximum of previous
-            amounts[current] = max + wf[current].GetAmount();
-            if (maxAmount < amounts[current]){
-               maxAmount = amounts[current];
-               maxTask = current;
-            }
-            // push current package to usedNums
-            usedNums.push_back(current);
-            out.clear();
-            // add all outputs of current package to linked
-            wf.GetOutput(current, out);
-            // erase current from linked
-            linked.erase(linked.begin());
-            for (int i = 0; i < out.size(); i++){
-               if (find(linked.begin(), linked.end(), out[i]) == linked.end())
-                  linked.push_back(out[i]);
-            }
-         }
-         // if we can't calculate value for current on this step
-         else {
-            // we move current to the end
-            linked.erase(linked.begin());
-            linked.push_back(current);
-         }
-      }
-      
-      // calculating last finishing times for all tasks
-      //double T = context.GetT();
-      FinishingTime f;
-      f.resize(pCount);
-      //f[maxTask]= T;
-      
-      f[maxTask] = maxAmount/avgCalcPower;
-      double deadline = f[maxTask];
-      for (int i = 0; i < pCount; i++){
-         if (i != maxTask){
-            f[i] = amounts[i]/maxAmount*deadline;
-         }
-      }
-      finishingTimes.push_back(f);
-      /*cout << "Workflow # " << wfIndex++ << endl;
-      for (int i = 0; i < amounts.size(); i++){
-         cout << i << ") " << f[i] << " "; 
-      }
-      cout << endl;*/
-      wfIndex++;
+   for (Workflow& wf: workflows){
+      wf.SetFinishingTimes(avgCalcPower);
    }
 }
 
@@ -796,8 +709,8 @@ void DataInfo::SetPriorities(){
    list <pair<int, double>> priorityList;
    int pNumber = 0;
    for (int i = 0; i < workflows.size(); i++){
-      for (int j = 0; j < finishingTimes[i].size(); j++)
-         priorityList.insert(priorityList.end(),make_pair(pNumber++, finishingTimes[i][j]));
+      for (int j = 0; j < workflows[i].GetFinishingTimesSize(); j++)
+         priorityList.insert(priorityList.end(),make_pair(pNumber++, workflows[i].GetFinishingTime(j)));
    }
    double minTime = std::numeric_limits<double>::infinity();
    int minIndex = 0;
@@ -828,7 +741,7 @@ void DataInfo::SetPriorities(){
             for (int i = 0; i < dependsOn.size(); i++){
                auto foundPosition = 
                   find(priorityList.begin(), priorityList.end(),
-                  make_pair(dependsOn[i], finishingTimes[wfIndex][localPackage]));
+                  make_pair(dependsOn[i], workflows[wfIndex].GetFinishingTime(localPackage)));
 
                if (distance(foundPosition, dependPosition))
                   dependPosition = foundPosition;
@@ -853,65 +766,9 @@ void DataInfo::SetPriorities(){
 
 // set different wf priorities
 void DataInfo::SetWfPriorities(){
-   wfPriorities.clear();
-   wfPriorities.resize(workflows.size());
-   deadlines.clear();
-   deadlines.resize(workflows.size());
-   double maxDeadline = 0.0;
    // constructing list of pairs (package number, finishing time)
    for (int i = 0; i < workflows.size(); i++){
-      // get priority list for current wf
-      list <pair<int, double>> priorityList;
-      for (int j = 0; j < finishingTimes[i].size(); j++)
-         priorityList.insert(priorityList.end(),make_pair(j, finishingTimes[i][j]));
-      double minTime = std::numeric_limits<double>::infinity();
-      int minIndex = 0;
-
-      while (wfPriorities[i].size() < workflows[i].GetPackageCount()){
-         list<pair<int, double>>::iterator position, dependPosition = priorityList.begin();
-         for (list<pair<int, double>>::iterator it = priorityList.begin();
-            it!= priorityList.end(); it++){
-            if (it->second < minTime){
-                  minTime = it->second;
-                  minIndex = it->first;
-                  position = it;
-            }
-         }
-         vector<int> dependsOn;
-         workflows[i].GetInput(minIndex, dependsOn);
-         int current = i;
-         bool allPrioretized = true;
-         for (int i = 0; i < dependsOn.size(); i++){
-            if (find(wfPriorities[current].begin(), wfPriorities[current].end(), dependsOn[i]) == wfPriorities[current].end()){
-               allPrioretized = false;
-               // find last depend position
-               for (int i = 0; i < dependsOn.size(); i++){
-                  auto foundPosition = 
-                     find(priorityList.begin(), priorityList.end(),
-                     make_pair(dependsOn[i], finishingTimes[current][dependsOn[i]]));
-
-                  if (distance(foundPosition, dependPosition))
-                     dependPosition = foundPosition;
-               }
-               priorityList.erase(position);
-               priorityList.insert(dependPosition, make_pair(minIndex,minTime));
-               break;
-            }
-         }
-
-         if (allPrioretized) {
-            wfPriorities[current].push_back(minIndex);
-            priorityList.erase(position);
-         }
-      
-      
-         minTime = std::numeric_limits<double>::infinity();
-      }
-      // smallest elements will be in the end of vector
-      reverse(wfPriorities[i].begin(), wfPriorities[i].end());
-      deadlines[i] = GetT();
-      //deadlines[i] = 2 * finishingTimes[i][finishingTimes[i].size()-1] ;//+  finishingTimes[i][finishingTimes[i].size()-1]*0.1;
-      //if (deadlines[i] > maxDeadline) maxDeadline = deadlines[i];
+      workflows[i].SetPriorities();
    }
    //SetT(maxDeadline);
    cout << "Max deadline = " << GetT() << endl;
@@ -969,23 +826,7 @@ int DataInfo::GetGlobalProcessorIndex(int resource, int local){
    return global;
 }
 
-// getting next package with smallest finishing time
-int DataInfo::GetNextPackage(int wfNum, int index){
-   try{
-      if (wfNum < 0 || wfNum > wfPriorities.size() - 1)
-         throw UserException("DataInfo::GetNextPackage() error. Wrong wf num");
-      if (index < 0 || index > wfPriorities[wfNum].size() - 1)
-         throw UserException("DataInfo::GetNextPackage() error. Wrong index");
-      int val = wfPriorities[wfNum][index];
-      //wfPriorities[wfNum].pop_back();
-      return val;
-   }
-   catch (UserException& e){
-      std::cout<<"error : " << e.what() <<endl;
-      std::system("pause");
-      exit(EXIT_FAILURE);
-   }
-}
+
 
 // remove some numbers from priorities
 void DataInfo::RemoveFromPriorities(const vector<int>& toRemove){

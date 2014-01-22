@@ -6,8 +6,6 @@
 using namespace std;
 
 typedef vector <TimeCore> AllTimeCore;
-// for each package - last finishing time
-typedef vector<double> FinishingTime; 
 
 #pragma once
 class DataInfo
@@ -25,12 +23,8 @@ class DataInfo
 	vector <double> deadlines;
 	// vector of model resource types
 	vector <ResourceType> resources;
-	// vector of WFs packages finishing times
-	vector<FinishingTime> finishingTimes;
 	// priorities according to finishing time (vector of package numbers)
 	vector <int> priorities;
-	// vector of different wf priorities (local package numbers)
-	vector<vector<int>> wfPriorities;
 	// sum of resource types processors count
 	int processorsCount;
 	//OPERATIONS
@@ -72,8 +66,6 @@ public:
 	void SetPriorities();
 	// getting next package with smallest finishing time
 	int GetNextPackage();
-	// getting next package with smallest finishing time
-	int GetNextPackage(int wfNum, int pNum);
 	// get wfNum and local package number for global package number
 	void GetLocalNumbers (const int &current, int &wfNum, int &localNum);
 	int GetT() {return context.GetT();}
@@ -88,8 +80,7 @@ public:
 	int GetInitPackageNumber(int wfNum) {return initPackageNumbers[wfNum];}
 	// remove some numbers from priorities
 	void RemoveFromPriorities(const vector<int>& toRemove);
-	bool IsWFPrioretized() {if (wfPriorities.size() == 0) return false;}
-	double GetDeadline(int wfNum){return deadlines[wfNum];}
+	const double GetDeadline(int wfNum);
 	double GetDeadline() {double maxDeadline = 0.0; for (auto& d: deadlines) if (d > maxDeadline) maxDeadline = d; return maxDeadline;}
 	int GetPrioritiesSize() {return priorities.size();}
 	~DataInfo(void);

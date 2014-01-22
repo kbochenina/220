@@ -93,21 +93,6 @@ double Scheduler::StagedScheme(int firstWfNum){
       double oneStepStart = clock();
       eff.push_back(method->GetWFSchedule(oneWFsched));
 
-      /*	ReadData(firstWfNum);
-      int currentWfNum = firstWfNum;
-      directBellman = false;
-      BackBellmanProcedure();
-      directBellman = true;
-      eff.push_back(DirectBellman(firstWfNum));
-      allStagesCores = stagesCores;
-      BellmanToXML(true);
-      //std::system("pause");
-      stagesCores.clear();
-      FixNewBusyIntervals();
-      BellmanToXML(true);
-      //std::system("pause");
-      states.clear(); controls.clear(); nextStateNumbers.clear(); stagesCores.clear();*/
-
       // set local to global packages
       int initNum = data.GetInitPackageNumber(firstWfNum);
       for (int i = 0; i < oneWFsched.size(); i++)

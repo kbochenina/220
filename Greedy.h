@@ -3,9 +3,8 @@
 class Greedy :
 	public SchedulingMethod
 {
-public:
+ public:
 	Greedy(DataInfo &d,int u, int w);
-	void printInfo();
 	double GetWFSchedule(Schedule &out);
 	double GetFullSchedule(Schedule& out);
 	double GetOneWFSchedule(Schedule& out);
