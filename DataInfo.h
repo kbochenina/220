@@ -13,7 +13,6 @@ typedef vector<double> FinishingTime;
 class DataInfo
 {
 	// friend classes
-//	friend class Scheduler;
 	friend class ScheduleToXML;
 	// ATTRIBUTES
 	// modeling time characteristics
@@ -32,12 +31,8 @@ class DataInfo
 	vector <int> priorities;
 	// vector of different wf priorities (local package numbers)
 	vector<vector<int>> wfPriorities;
-	// metaWF is WF composed of all WFs
-	Workflow metaWF;
-	// variants of controls: (typeIndex1, coreCount1), (typeIndex1, coreCount2),..., (typeIndexN, coreCountN)
-	vector <pair<int,int>> typesCores;
-	// sum of resource types core count
-	int fullCoresCount;
+	// sum of resource types processors count
+	int processorsCount;
 	//OPERATIONS
 	// init data placement settings
 	void Init(string fName);
@@ -47,19 +42,16 @@ class DataInfo
 	void InitWorkflows(string fName);
 	// init finishing times
 	void InitFinishingTimes();
-	// print typesCores to file
-	void PrintTypesCores();
+	
 	
 public:
 	DataInfo(){}
 	DataInfo(string fSettings);
-	// create a metaWF
-	void CreateMetaWF();
 	// get WF count
 	inline int GetWFCount() {return workflows.size();}
 	inline int GetResourceCount() {return resources.size(); }
 	// get full cores count
-	inline int GetFullCoresCount() {return fullCoresCount;}
+	inline int GetprocessorsCount() {return processorsCount;}
 	int GetResourceType (int coreNumber);
 	void FixBusyIntervals();
 	void ResetBusyIntervals();
@@ -71,17 +63,9 @@ public:
 	const vector<ResourceType> & Resources() const { return resources; }
 	const Workflow& Workflows(int wfNum) const ;
 	ResourceType& Resources(int resNum)  ;
-	const vector<pair<int,int>> & TypesCores() const {return typesCores;}
-	const pair<int,int>& TypesCores(int index) const ;
-	int GetDelta() {return context.GetDelta();}
-	int GetStages() {return context.GetStages();}
 	double GetCCR() {return context.GetCCR();}
-	// get initial core index of resource type
+	// get initial processor index of resource type
 	int GetInitResourceTypeIndex(int type);
-	// do the same
-	int GetTypeCoreIndex(const pair<int,int>& typeCore);
-	// find if we have enough resources as in timeCore from moment tbegin
-	bool GetResources(AllTimeCore & timeCore, int tBegin);
 	// get all packages count
 	int GetPackagesCount();
 	// set priorities to whole packages (packages numbered from zero according to wf order)
