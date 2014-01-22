@@ -88,7 +88,6 @@ double Scheduler::StagedScheme(int firstWfNum){
       vector <double> eff;
       // applying settings of scheduling method for initial WF
       unique_ptr <SchedulingMethod> method = SchedulingFactory::GetMethod(data, methodsSet[firstWfNum], firstWfNum);
-      method->printInfo();
       // getting schedule for first WF
       double oneStepStart = clock();
       eff.push_back(method->GetWFSchedule(oneWFsched));
@@ -130,7 +129,6 @@ double Scheduler::StagedScheme(int firstWfNum){
                method = SchedulingFactory::GetMethod(data, methodsSet[i], i);
                oneWFsched.clear();
                double currentEff = method->GetWFSchedule(oneWFsched);
-               method->printInfo();
                //cout << "Elapsed time: " << (clock()-oneStepStart)/1000.0 << " sec" << endl;
                /*ReadData(i);
                directBellman = false;

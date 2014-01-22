@@ -23,8 +23,6 @@ public:
 	// return value is efficiency
 	// resulting schedule is stored in out parameter
 	virtual double GetWFSchedule(Schedule &out) = 0;
-	// print info
-	virtual void printInfo() = 0;
 	~SchedulingMethod(void);
 };
 

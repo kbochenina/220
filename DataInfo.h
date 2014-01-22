@@ -19,8 +19,6 @@ class DataInfo
 	vector<int> initPackageNumbers;
 	// vector of model workflows
 	vector <Workflow> workflows;
-	// deadlines vector
-	vector <double> deadlines;
 	// vector of model resource types
 	vector <ResourceType> resources;
 	// priorities according to finishing time (vector of package numbers)
@@ -81,7 +79,7 @@ public:
 	// remove some numbers from priorities
 	void RemoveFromPriorities(const vector<int>& toRemove);
 	const double GetDeadline(int wfNum);
-	double GetDeadline() {double maxDeadline = 0.0; for (auto& d: deadlines) if (d > maxDeadline) maxDeadline = d; return maxDeadline;}
+	double GetDeadline();
 	int GetPrioritiesSize() {return priorities.size();}
 	~DataInfo(void);
 };

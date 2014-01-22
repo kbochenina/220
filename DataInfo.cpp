@@ -826,7 +826,15 @@ int DataInfo::GetGlobalProcessorIndex(int resource, int local){
    return global;
 }
 
-
+double DataInfo::GetDeadline(){
+     double maxDeadline = 0.0; 
+     for (int i = 0; i < workflows.size(); i++) {
+         double d = workflows[i].GetDeadline() ;
+         if (d > maxDeadline) 
+             maxDeadline = d; 
+     }
+     return maxDeadline;
+}
 
 // remove some numbers from priorities
 void DataInfo::RemoveFromPriorities(const vector<int>& toRemove){
