@@ -149,6 +149,7 @@ void DataInfo::Init(string settingsFile){
       
       // read all filenames from path
       string resourcesFileName;
+      string bandwidthFileName;
       vector <string> WFFileNames;
       bool isResourcesFileWasFound = false;
       for (directory_iterator it(dir), end; it != end; ++it) 
@@ -156,6 +157,10 @@ void DataInfo::Init(string settingsFile){
          std::cout << "File processed - ";
          std::cout << *it << std::endl;
          string filename = it->path().string();
+         if (filename.find("b") != string::npos) {
+             bandwidthFileName = filename;
+             continue;
+         }
          if (filename.find("res")==string::npos && filename.find("n")==string::npos) continue;
          if (filename.find("res")!=string::npos ){
             resourcesFileName = filename;
@@ -167,6 +172,7 @@ void DataInfo::Init(string settingsFile){
             WFFileNames.push_back(filename);
       }
       InitResources(resourcesFileName, canExecuteOnDiffResources);
+      InitBandwidth(bandwidthFileName);
       for (vector<string>::iterator it = WFFileNames.begin(); it!= WFFileNames.end(); it++)
          InitWorkflows(*it);
       int initNum = 0;
@@ -255,6 +261,13 @@ void DataInfo::InitWorkflows(string f){
             beginStr += errPackagesCount;
             throw UserException(beginStr);
          }
+         vector <vector<double>> transfer;
+         transfer.resize(packagesCount);
+         for (int j = 0; j < packagesCount; j++){
+             transfer[j].resize(packagesCount);
+             for (int k = 0; k < packagesCount; k++)
+                 transfer[j][k] = 0.0;
+         }
          for (int j = 0; j < packagesCount; j++){
             double alpha = 0.0; // part of consequentually executed code
             ++fullPackagesCount;
@@ -322,7 +335,7 @@ void DataInfo::InitWorkflows(string f){
             getline(file,s);
             if (file.eof()) throw UserException(errEarlyEnd);
             ++line;
-            trim = "Cores count: ";
+            trim = "Processors count: ";
             found = s.find(trim);
             if (found != 0) {
                sprintf_s(second, "%d", line);
@@ -360,7 +373,7 @@ void DataInfo::InitWorkflows(string f){
             getline(file,s);
             if (file.eof()) throw UserException(errEarlyEnd);
             ++line;
-            trim = "Computation amount: ";
+            trim = "GFlop: ";
             found = s.find(trim);
             if (found != 0) {
                sprintf_s(second, "%d", line);
@@ -377,6 +390,46 @@ void DataInfo::InitWorkflows(string f){
                throw UserException(errWrongFormatFull);
             }
 
+            // Transfer (packages in a file are numbered from 1)
+            unsigned index = 0;
+            double transferVal = 0.0;
+            getline(file,s);
+            if (file.eof()) throw UserException(errEarlyEnd);
+            ++line;
+            trim = "Transfer: ";
+            found = s.find(trim);
+            if (found != 0) {
+               sprintf_s(second, "%d", line);
+               errWrongFormatFull += second;
+               throw UserException(errWrongFormatFull);
+            }
+            s.erase(0,trim.size());
+            iss.str(s);
+            iss.clear();
+            string current;
+            int outPackageNumber = -1;
+            double dataSize = 0.0;
+            bool isPackageNumber = true;
+            while (iss >> current){
+                   if (iss.fail()) {
+                   sprintf_s(second, "%d", line);
+                   errWrongFormatFull += second;
+                   throw UserException(errWrongFormatFull);
+                }
+                if (isPackageNumber){
+                    current.erase(0,1);
+                    outPackageNumber = atoi(current.c_str());
+                }
+                else {
+                    found = s.find("Mb");
+                    s.erase(found,2);
+                    dataSize = atof(current.c_str());
+                }
+                if (!isPackageNumber)
+                    transfer[fullPackagesCount-1][outPackageNumber-1] = dataSize;
+                isPackageNumber = !isPackageNumber;
+            }
+
             for (unsigned int k = 0; k < types.size(); k++){
                for (unsigned int l = 0; l < cCount.size(); l++){
                   // assume that the core numbers are in ascending order (else continue)
@@ -388,8 +441,7 @@ void DataInfo::InitWorkflows(string f){
                   execTime.insert(make_pair(make_pair(types[k], cCount[l]), exTime));
                }
             }
-            Package p(fullPackagesCount,types,cCount, execTime, amount);
-            //pacs.push_back(std::move(p));
+            Package p(fullPackagesCount,types,cCount, execTime, amount, alpha);
             pacs.push_back(p);
             types.clear();
             execTime.clear();
@@ -425,7 +477,7 @@ void DataInfo::InitWorkflows(string f){
             }
             connectMatrix.push_back(row);
          }
-         Workflow w(workflows.size() + i+1, pacs,connectMatrix, GetT());
+         Workflow w(workflows.size() + i+1, pacs,connectMatrix, GetT(), transfer);
          workflows.push_back(w);
          pacs.clear();
          connectMatrix.clear();
@@ -587,6 +639,47 @@ void DataInfo::InitResources(string f, bool canExecuteOnDiffResources){
       std::system("pause");
       exit(EXIT_FAILURE);
    }
+}
+
+// init bandwidth speed
+// without any verification
+void DataInfo::InitBandwidth(string fName){
+    try{
+        ifstream file(fName, ifstream::in);
+        string s;
+        getline(file,s);
+        string trim = "Types count: ";
+        size_t found = s.find(trim);
+        s.erase(0,trim.size());
+        int resTypes = atoi(s.c_str());
+        if (resTypes != resources.size())
+            throw UserException("DataInfo::InitBandwidth() error. Wrong resource type count");
+        // min bandwidth
+        getline(file,s);
+        // max bandwidth
+        getline(file,s);
+        // koeff
+        getline(file,s);
+        // matrix header
+        getline(file,s);
+        bandwidth.resize(resources.size());
+        for (size_t i = 0; i < resources.size(); i++){
+            getline(file,s);
+            istringstream iss(s);
+            bandwidth[i].resize(resources.size());
+            for (size_t j = 0; j < resources.size(); j++){
+                double val = 0.0;
+                iss >> val;
+                bandwidth[i][j] = val;
+            }
+        }
+    }
+        catch (std::exception& e){
+        cout<<"error : " << e.what() <<endl;
+        std::system("pause");
+        exit(EXIT_FAILURE);
+   }
+
 }
 
 void DataInfo::FixBusyIntervals(){

@@ -15,8 +15,10 @@ class Package
 	times execTimes;
 	// amount
 	long int amount;
+   // alpha - the part of consequtive code in Amdal's law
+   double alpha;
 public:
-	Package(int u, vector<int>r, vector<int>c, times e, long int a) {uid = u; resTypes = r; coreCounts = c; execTimes = e; amount = a;}
+	Package(int u, vector<int>r, vector<int>c, times e, long int a, double al) {uid = u; resTypes = r; coreCounts = c; execTimes = e; amount = a; alpha = al;}
 	// copy constructor
 	Package (const Package & p);
 	// getting execTime for choosed type and core

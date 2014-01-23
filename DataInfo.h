@@ -25,11 +25,15 @@ class DataInfo
 	vector <int> priorities;
 	// sum of resource types processors count
 	int processorsCount;
+   // bandwidth matrix
+   vector<vector<double>> bandwidth;
 	//OPERATIONS
 	// init data placement settings
 	void Init(string fName);
 	// init resources
 	void InitResources(string fName, bool canExecuteOnDiffResources);
+   // init bandwidth speed
+	void InitBandwidth(string fName);
 	// init workflows
 	void InitWorkflows(string fName);
 	// init finishing times

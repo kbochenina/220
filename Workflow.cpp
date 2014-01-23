@@ -2,6 +2,14 @@
 #include "Workflow.h"
 #include <list>
 
+Workflow::Workflow(int u, vector <Package> p, vector<vector<int>> m, double d, vector<vector<double>> t) {
+    uid = u; 
+    packages = p; 
+    matrix = m; 
+    deadline = d; 
+    transfer = t;
+}
+
 double Workflow::GetExecTime ( unsigned int pNum, int type, int cores) const {
    try{
       if (pNum < 0 || pNum > packages.size()-1) 

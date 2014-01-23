@@ -7,7 +7,7 @@ class Workflow
 	int uid;
    // deadline
    double deadline;
-	// packages of WF
+   // packages of WF
 	vector <Package> packages;
 	// connectivity matrix
 	vector<vector<int>> matrix;
@@ -15,6 +15,8 @@ class Workflow
    vector <double> finishingTimes;
    // list of packages priority
    vector <int> priorities;
+   // data sizes 
+   vector<vector<double>> transfer;
 public:
 	const Package& operator[] (int pNum) const { return packages[pNum]; } 
 	// return package count
@@ -43,7 +45,7 @@ public:
 	double GetAmount(const int & pNum) { return packages[pNum].GetAmount(); }
 	// return all successors of package pNum
 	void GetSuccessors(const unsigned int &pNum, vector<int>&out) const;
-	Workflow(int u, vector <Package> p, vector<vector<int>> m, double d) {uid = u; packages = p; matrix = m; deadline = d;}
+	Workflow(int u, vector <Package> p, vector<vector<int>> m, double d, vector<vector<double>> t);
    // setting sub-deadlines for the workflow
    void SetFinishingTimes(double avgCalcPower);
    size_t GetFinishingTimesSize() {return finishingTimes.size();}
