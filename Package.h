@@ -1,6 +1,4 @@
-#include <vector>
 #include <map>
-using namespace std;
 
 typedef map<pair<int,int>, double> times;
 

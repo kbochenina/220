@@ -1,22 +1,14 @@
 #include "StdAfx.h"
 #include "Scheduler.h"
-#include "UserException.h"
+#include "ScheduleToXML.h"
 #include "SchedulingFactory.h"
 #include "CriteriaFactory.h"
-#include "ScheduleToXML.h"
-// in StagedScheme()
-#include <time.h>
-// StagedScheme() : to_string()
-#include <string>
-#include <iostream>
-// StagedScheme() : ofstream
-#include <fstream>
 #include "direct.h"
 
 using namespace std;
 
 
-Scheduler::Scheduler( ModelData& md ): data(md.GetData())
+Scheduler::Scheduler( DataInfo& d ): data(d)
 {
    methodsSet.resize(data.GetWFCount());
    maxEff = 0.0;
@@ -29,10 +21,10 @@ Scheduler::Scheduler( ModelData& md ): data(md.GetData())
       data.Resources(i).GetCurrentWindows(initIntervals);
       vector <BusyIntervals> current;
       current = initIntervals.GetCurrentIntervals();
-      for (int j = 0; j < current.size(); j++){
+      for (size_t j = 0; j < current.size(); j++){
          BusyIntervals & processorIntervals = current[j];
          for (auto it = processorIntervals.begin(); it != processorIntervals.end(); it++){
-            for (int k = 0; k < it->second.size(); k++){
+            for (size_t k = 0; k < it->second.size(); k++){
                maxPossible += eff->EfficiencyByPeriod(1, it->second[k].first, it->second[k].second);
             }
          }
@@ -94,7 +86,7 @@ double Scheduler::StagedScheme(int firstWfNum){
 
       // set local to global packages
       int initNum = data.GetInitPackageNumber(firstWfNum);
-      for (int i = 0; i < oneWFsched.size(); i++)
+      for (size_t i = 0; i < oneWFsched.size(); i++)
          oneWFsched[i].get<0>() += initNum;
 
 
@@ -149,7 +141,7 @@ double Scheduler::StagedScheme(int firstWfNum){
          }
          // set local to global packages
          int initNum = data.GetInitPackageNumber(bestWfNum);
-         for (int i = 0; i < storedSched.size(); i++)
+         for (size_t i = 0; i < storedSched.size(); i++)
             storedSched[i].get<0>() += initNum;
 
          copy(storedSched.begin(), storedSched.end(), back_inserter(fullSchedule));
@@ -179,7 +171,7 @@ double Scheduler::StagedScheme(int firstWfNum){
       BellmanToXML(false);*/
       //PrintFooter(res, eff);
       double sumEff = 0.0;
-      for (int i = 0; i < eff.size(); i++)
+      for (size_t i = 0; i < eff.size(); i++)
          sumEff += eff[i];
       
       data.SetInitBusyIntervals();
@@ -315,7 +307,7 @@ void Scheduler::EfficiencyOrdered(){
 
          // set local to global packages
          int initNum = data.GetInitPackageNumber(bestWFNum);
-         for (int i = 0; i < best.size(); i++)
+         for (size_t i = 0; i < best.size(); i++)
             best[i].get<0>() += initNum;
          // add best schedule to full schedule
          copy(best.begin(), best.end(), back_inserter(fullSchedule));
@@ -410,7 +402,7 @@ void Scheduler::OrderedScheme(int criteriaNumber){
 
          // set local to global packages
          int initNum = data.GetInitPackageNumber(bestWFNum);
-         for (int i = 0; i < best.size(); i++)
+         for (size_t i = 0; i < best.size(); i++)
             best[i].get<0>() += initNum;
          // add best schedule to full schedule
          copy(best.begin(), best.end(), back_inserter(fullSchedule));

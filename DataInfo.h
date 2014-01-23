@@ -59,7 +59,7 @@ public:
 	// get initial processor index of resource type
 	int GetInitResourceTypeIndex(int type);
 	// get all packages count
-	int GetPackagesCount();
+	unsigned int GetPackagesCount();
 	// set priorities to whole packages (packages numbered from zero according to wf order)
 	void SetPriorities();
 	// getting next package with smallest finishing time

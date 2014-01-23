@@ -10,7 +10,7 @@ public:
 	// return value of efficiency function in a point
 	double EfficiencyFunction(double x);
 	// return value of efficiency by period
-	double EfficiencyByPeriod(int busyCores, int tBegin, int tEnd);
+	double EfficiencyByPeriod(int busyCores, double tBegin, double tEnd);
 	~Efficiency(void);
 };
 

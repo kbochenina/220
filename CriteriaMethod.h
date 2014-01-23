@@ -1,6 +1,5 @@
 #include "stdafx.h"
 #include "DataInfo.h"
-#include "Scheduler.h"
 
 #pragma once
 class CriteriaMethod

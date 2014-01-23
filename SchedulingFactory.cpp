@@ -1,7 +1,5 @@
 #include "stdafx.h"
 #include "SchedulingFactory.h"
-#include "UserException.h"
-#include <iostream>
 
 enum Algorithms{ BELLMAN = 1, GREEDY = 2 };
 

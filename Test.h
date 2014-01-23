@@ -1,6 +1,5 @@
 #include "stdafx.h"
 #include "DataInfo.h"
-#include "ScheduletoXML.h"
 
 #pragma once
 class Test

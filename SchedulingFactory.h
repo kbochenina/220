@@ -1,6 +1,5 @@
 #include "SchedulingMethod.h"
 #include "Greedy.h"
-#include "DataInfo.h"
 #include <memory>
 #pragma once
 class SchedulingFactory

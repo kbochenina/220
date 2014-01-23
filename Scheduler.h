@@ -1,5 +1,3 @@
-#include "ModelData.h"
-#include "ScheduleToXML.h"
 #include "Efficiency.h"
 #include "Metrics.h"
 #include "Test.h"
@@ -7,7 +5,6 @@
 
 #pragma once
 
-enum Criteries { RESERVED_TIME = 1, MAX_EFF = 2 };
 
 class Scheduler 
 {
@@ -44,7 +41,7 @@ class Scheduler
 	// add to res file additional schedule information
 	void PrintFooter(ofstream & out, vector<double>&eff);
 public:
-	Scheduler(ModelData& md);
+	Scheduler(DataInfo& d);
 	// fulfill the variable methodsSet according to nonexistent algorithm
 	void SetSchedulingStrategy(int strategyNumber);
 	// get schedule according to scheduleVariant parameter

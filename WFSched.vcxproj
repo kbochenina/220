@@ -91,7 +91,6 @@
     <ClInclude Include="Greedy.h" />
     <ClInclude Include="Intervals.h" />
     <ClInclude Include="Metrics.h" />
-    <ClInclude Include="ModelData.h" />
     <ClInclude Include="ModelingContext.h" />
     <ClInclude Include="Package.h" />
     <ClInclude Include="ReservedTimeCriteria.h" />
@@ -114,7 +113,6 @@
     <ClCompile Include="Greedy.cpp" />
     <ClCompile Include="Intervals.cpp" />
     <ClCompile Include="Metrics.cpp" />
-    <ClCompile Include="ModelData.cpp" />
     <ClCompile Include="ModelingContext.cpp" />
     <ClCompile Include="Package.cpp" />
     <ClCompile Include="ReservedTimeCriteria.cpp" />

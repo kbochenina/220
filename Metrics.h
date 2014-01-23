@@ -1,7 +1,5 @@
-#include "ModelData.h"
-#include "ScheduleToXML.h"
-#include <iostream>
-#include <fstream>
+#include "DataInfo.h"
+
 #pragma once
 class Metrics
 {
@@ -16,7 +14,7 @@ class Metrics
 	void AvgReservedTime();
 public:
 	Metrics(DataInfo& md, string filename) : data(md){  out.open(filename); reservedTime.resize(data.GetWFCount());
-														for (int i = 0; i < reservedTime.size(); i++) reservedTime[i] = numeric_limits<double>::infinity(); }
+														for (size_t i = 0; i < reservedTime.size(); i++) reservedTime[i] = numeric_limits<double>::infinity(); }
 	void GetMetrics(Schedule & sched, string schemeName);
 	~Metrics(void);
 };

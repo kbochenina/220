@@ -1,8 +1,5 @@
 #include "StdAfx.h"
 #include "Package.h"
-#include "UserException.h"
-#include "string"
-#include <iostream>
 
 
 double Package::GetExecTime(int type, int cores) const {

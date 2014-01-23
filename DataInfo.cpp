@@ -1,13 +1,9 @@
 #include "StdAfx.h"
 #include "DataInfo.h"
-#include <fstream>
 #include <sstream> // istringstream
-#include <string>
-#include <iostream>
 #include <boost/filesystem.hpp> // directory_iterator, path
 #include <iterator>
 #include "direct.h"
-#include "UserException.h"
 
 using namespace boost::filesystem; // directory_iterator, path
 
@@ -175,7 +171,7 @@ void DataInfo::Init(string settingsFile){
          InitWorkflows(*it);
       int initNum = 0;
       initPackageNumbers.resize(workflows.size());
-      for (int i = 0; i < workflows.size(); i++){
+      for (size_t i = 0; i < workflows.size(); i++){
          initPackageNumbers[i] = initNum;
          initNum += workflows[i].GetPackageCount();
       }
@@ -686,7 +682,7 @@ ResourceType& DataInfo::Resources(int resNum)  {
 void DataInfo::InitFinishingTimes(){
    int wfIndex = 0;
    double avgCalcPower = 0.0;
-   for (int i = 0; i < resources.size(); i++)
+   for (size_t i = 0; i < resources.size(); i++)
       avgCalcPower += resources[i].GetPerf();
    avgCalcPower /= resources.size();
    // for each workflow
@@ -696,9 +692,9 @@ void DataInfo::InitFinishingTimes(){
 }
 
 // get all packages count
-int DataInfo::GetPackagesCount(){
-   int count = 0;
-   for (int i = 0; i < workflows.size(); i++)
+unsigned int DataInfo::GetPackagesCount(){
+   unsigned int count = 0;
+   for (size_t i = 0; i < workflows.size(); i++)
       count += workflows[i].GetPackageCount();
    return count;
 }
@@ -708,8 +704,8 @@ void DataInfo::SetPriorities(){
    // constructing list of pairs (package number, finishing time)
    list <pair<int, double>> priorityList;
    int pNumber = 0;
-   for (int i = 0; i < workflows.size(); i++){
-      for (int j = 0; j < workflows[i].GetFinishingTimesSize(); j++)
+   for (size_t i = 0; i < workflows.size(); i++){
+      for (size_t j = 0; j < workflows[i].GetFinishingTimesSize(); j++)
          priorityList.insert(priorityList.end(),make_pair(pNumber++, workflows[i].GetFinishingTime(j)));
    }
    double minTime = std::numeric_limits<double>::infinity();
@@ -730,15 +726,15 @@ void DataInfo::SetPriorities(){
       vector<int> dependsOn;
       workflows[wfIndex].GetInput(localPackage, dependsOn);
       bool allPrioretized = true;
-      for (int i = 0; i < dependsOn.size(); i++){
+      for (size_t i = 0; i < dependsOn.size(); i++){
          dependsOn[i] += (minIndex - localPackage);
                   
          if (find(priorities.begin(), priorities.end(), dependsOn[i]) == priorities.end()){
             allPrioretized = false;
-            for (int j = i+1; j < dependsOn.size(); j++)
+            for (size_t j = i+1; j < dependsOn.size(); j++)
                dependsOn[j] += (minIndex - localPackage);
             // find last depend position
-            for (int i = 0; i < dependsOn.size(); i++){
+            for (size_t i = 0; i < dependsOn.size(); i++){
                auto foundPosition = 
                   find(priorityList.begin(), priorityList.end(),
                   make_pair(dependsOn[i], workflows[wfIndex].GetFinishingTime(localPackage)));
@@ -767,7 +763,7 @@ void DataInfo::SetPriorities(){
 // set different wf priorities
 void DataInfo::SetWfPriorities(){
    // constructing list of pairs (package number, finishing time)
-   for (int i = 0; i < workflows.size(); i++){
+   for (size_t i = 0; i < workflows.size(); i++){
       workflows[i].SetPriorities();
    }
    //SetT(maxDeadline);
@@ -807,7 +803,7 @@ int DataInfo::GetNextPackage(){
 // get wfNum and local package number for global package number
 void DataInfo::GetLocalNumbers (const int & current, int &wfNum, int &localNum){
    int aggregated = 0;
-   for (int i = 0; i < workflows.size(); i++){
+   for (size_t i = 0; i < workflows.size(); i++){
       if (current >= aggregated && current < aggregated + workflows[i].GetPackageCount()){
          wfNum = i;
          localNum = current - aggregated;
@@ -828,7 +824,7 @@ int DataInfo::GetGlobalProcessorIndex(int resource, int local){
 
 double DataInfo::GetDeadline(){
      double maxDeadline = 0.0; 
-     for (int i = 0; i < workflows.size(); i++) {
+     for (size_t i = 0; i < workflows.size(); i++) {
          double d = workflows[i].GetDeadline() ;
          if (d > maxDeadline) 
              maxDeadline = d; 

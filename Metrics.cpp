@@ -22,7 +22,7 @@ void Metrics::AvgUnfinischedTime(){
    double summUnfinishedTime = 0;
    int summUnfinishedTasks = 0;
    // for each p
-   for (int i = 0; i < sched.size(); i++){
+   for (size_t i = 0; i < sched.size(); i++){
       int pNum = sched[i].get<0>();
       int tBegin = sched[i].get<1>();
       double execTime = sched[i].get<3>();
@@ -41,7 +41,7 @@ void Metrics::AvgUnfinischedTime(){
    //cout << "Unfinished times: " << endl;
    vector<int> violatedDeadlines;
 
-   for (int i = 0; i < unfinishedTimes.size(); i++){
+   for (size_t i = 0; i < unfinishedTimes.size(); i++){
       // if we have some unscheduled tasks
       if (scheduledTasks[i].size() != data.Workflows(i).GetPackageCount()){
          violatedDeadlines.push_back(i);
@@ -70,7 +70,7 @@ void Metrics::AvgUnfinischedTime(){
    full << "Average deadlines violated: " << static_cast<double>(violatedDeadlines.size())/data.GetWFCount() << endl;
    out << "Average unfinished times and tasks" << endl << "***************************************************" << endl;
    out << "Unfinished times: " << endl;
-   for (int i = 0; i < unfinishedTimes.size(); i++){
+   for (size_t i = 0; i < unfinishedTimes.size(); i++){
       out << "Workflow # " << i+1 << " " << unfinishedTimes[i] << " " << "unfinished tasks: " << unfinishedTasks[i] 
       << " unscheduled tasks: " << unscheduledTasks[i] 
       << " scheduled tasks: " << scheduledTasks[i].size() << endl;
@@ -83,7 +83,7 @@ void Metrics::AvgUnfinischedTime(){
    full << "Avg unfinished time: " << summUnfinishedTime/data.GetWFCount() << endl;
    full << "Avg unfinished tasks: " << static_cast<double>(summUnfinishedTasks)/static_cast<double>(data.GetWFCount()) << endl;
    int sumUnsched = 0;
-   for (int i = 0; i < unscheduledTasks.size(); i++)
+   for (size_t i = 0; i < unscheduledTasks.size(); i++)
       sumUnsched += unscheduledTasks[i];
 
    out << "Unscheduled tasks count: " << sumUnsched << endl;
@@ -96,7 +96,7 @@ void Metrics::AvgUnfinischedTime(){
 
 void Metrics::AvgReservedTime(){
    double summReserved = 0.0;
-   for (int i = 0; i < sched.size(); i++){
+   for (size_t i = 0; i < sched.size(); i++){
       int pNum = sched[i].get<0>();
       int tBegin = sched[i].get<1>();
       double execTime = sched[i].get<3>();
@@ -122,14 +122,14 @@ void Metrics::AvgReservedTime(){
       }
    }
    //cout << "Reserved times" << endl << "***************************************************"  << endl;
-   for (int i = 0; i < reservedTime.size(); i++){
+   for (size_t i = 0; i < reservedTime.size(); i++){
       //cout << "Workflow # " << i+1 << " " << reservedTime[i] << endl;
       summReserved += reservedTime[i];
    }
    //cout << "Avg reserved time: " << static_cast<double>(summReserved)/data.GetWFCount() << endl;
 
    out << "Reserved times" << endl << "***************************************************"  << endl;
-   for (int i = 0; i < reservedTime.size(); i++){
+   for (size_t i = 0; i < reservedTime.size(); i++){
       out << "Workflow # " << i+1 << " " << reservedTime[i] << endl;
    }
    out << "Avg reserved time: " << static_cast<double>(summReserved)/data.GetWFCount() << endl;

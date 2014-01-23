@@ -1,6 +1,5 @@
 #include "StdAfx.h"
 #include "Intervals.h"
-#include "UserException.h"
 
 void Intervals::SetData(vector<BusyIntervals> i, ModelingContext& c){ 
    init = i; 
@@ -23,7 +22,7 @@ bool Intervals::FindPlacement(const double &execTime, int &tbegin, int& processo
    vector <double> tb(numCores, -1);
    int currentProcessor = 0;
    // cycle for resources
-   for (int i = 0; i < current.size(); i++){
+   for (size_t i = 0; i < current.size(); i++){
       const BusyIntervals & bi = current[i];
       // cycle for processors
       for (BusyIntervals::const_iterator j = bi.begin(); j != bi.end(); j++){
@@ -35,7 +34,7 @@ bool Intervals::FindPlacement(const double &execTime, int &tbegin, int& processo
             continue;
          }
          // cycle for intervals
-         for (int k = 0; k < j->second.size(); k++){
+         for (size_t k = 0; k < j->second.size(); k++){
             if (j->second[k].second <= begin)
                continue;
             if (begin + execTime <= j->second[k].first){
@@ -51,9 +50,9 @@ bool Intervals::FindPlacement(const double &execTime, int &tbegin, int& processo
          currentProcessor++;
       }
    }
-   int trealbegin = deadline;
+   double trealbegin = deadline;
    // find resource with earliest finishing time
-   for (int i = 0; i < tb.size(); i++){
+   for (size_t i = 0; i < tb.size(); i++){
       // if we haven't free window on this processor
       // we should miss it
       if (tb[i] == -1)
@@ -65,7 +64,7 @@ bool Intervals::FindPlacement(const double &execTime, int &tbegin, int& processo
          processor = i;
       }
    }
-   tbegin = trealbegin;
+   tbegin = static_cast<int>(trealbegin);
    if (tbegin + 1 > deadline){
       processor = -1;
       tbegin = -1;
@@ -76,10 +75,10 @@ bool Intervals::FindPlacement(const double &execTime, int &tbegin, int& processo
 
 // add busy intervals [tBegin; (tBegin + execTime) round to highest stage border] to cores in coreNumbers
 void Intervals::AddDiaps(vector <int> coreNumbers, int tBegin, double execTime)  {
-   for (int i = 0; i < coreNumbers.size(); i++){
+   for (size_t i = 0; i < coreNumbers.size(); i++){
       int processor = coreNumbers[i];
       int number = 0;
-      for (int i = 0; i < current.size(); i++){
+      for (size_t i = 0; i < current.size(); i++){
          for (BusyIntervals::iterator j = current[i].begin(); j != current[i].end(); j++){
             if (number != processor){
                number++;
@@ -87,19 +86,19 @@ void Intervals::AddDiaps(vector <int> coreNumbers, int tBegin, double execTime) 
             }
             else {
                if (j->second.size() == 0 || tBegin < j->second[0].first){
-                  pair<int,int> newPair = make_pair(tBegin, tBegin + execTime + 1);
+                  pair<int,int> newPair = make_pair(tBegin, static_cast<int>(tBegin + execTime + 1));
                   j->second.insert(j->second.begin(), newPair);
                   return;
                }
 
                // cycle for intervals
-               for (int k = 0; k < j->second.size(); k++){
+               for (size_t k = 0; k < j->second.size(); k++){
                   // if tbegin > last tend
                   if (tBegin >= j->second[k].second )
                      // and this is last interval
                      // or we can insert this interval among two intervals
                      if (k == j->second.size() - 1 || tBegin + execTime <= j->second[k+1].second){
-                     pair<int,int> newPair = make_pair(tBegin, tBegin + execTime + 1);
+                     pair<int,int> newPair = make_pair(tBegin, static_cast<int>(tBegin + execTime + 1));
                      j->second.insert(j->second.begin() + k + 1, newPair);
                      return;
                   }

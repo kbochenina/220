@@ -1,8 +1,5 @@
 #include "StdAfx.h"
 #include "ScheduleToXML.h"
-#include <iostream>
-#include <fstream>
-#include <string>
 #include <memory>
 
 int ScheduleToXML::xmlCount = 0;

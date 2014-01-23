@@ -1,7 +1,5 @@
 #include "stdafx.h"
 #include "Test.h"
-#include "UserException.h"
-#include <iostream>
 
 using namespace std;
 

@@ -20,7 +20,7 @@ public:
 	// return package count
 	inline int GetPackageCount() const { return packages.size(); } 
 	// return execTime of package pNum on resource with type resType and coreCount
-	double GetExecTime (int pNum, int resType, int coreCount) const ;
+	double GetExecTime (unsigned int pNum, int resType, int coreCount) const ;
 	// return vector with possible cores count for package pNum
 	void GetCoresCount(int pNum, vector<int>&out) ;
 	// return vector with possible resource types for package pNum
@@ -32,9 +32,9 @@ public:
 	// return matrix[i][j]
 	int GetMatrixValue(int i, int j) const { return matrix[i][j]; }
 	// return vector with packages that depend from pNum
-	void GetOutput(int pNum, vector<int>& out) const;
+	void GetOutput(unsigned int pNum, vector<int>& out) const;
 	// return vector with packages from which pNum depends 
-	void GetInput(int pNum, vector<int>& in) const;
+	void GetInput(unsigned int pNum, vector<int>& in) const;
 	// return true if the package pNum is last
 	bool IsPackageLast(int pNum) const;
 	// return average exectime of package pNume
@@ -42,11 +42,11 @@ public:
 	// return computational amount of package pNum
 	double GetAmount(const int & pNum) { return packages[pNum].GetAmount(); }
 	// return all successors of package pNum
-	void GetSuccessors(const int &pNum, vector<int>&out) const;
+	void GetSuccessors(const unsigned int &pNum, vector<int>&out) const;
 	Workflow(int u, vector <Package> p, vector<vector<int>> m, double d) {uid = u; packages = p; matrix = m; deadline = d;}
    // setting sub-deadlines for the workflow
    void SetFinishingTimes(double avgCalcPower);
-   int GetFinishingTimesSize() {return finishingTimes.size();}
+   size_t GetFinishingTimesSize() {return finishingTimes.size();}
    double GetFinishingTime (int pNum) {return finishingTimes[pNum];}
    void SetPriorities();
    int GetNextPackage (int pNum) const{return priorities[pNum];}

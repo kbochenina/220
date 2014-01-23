@@ -1,6 +1,5 @@
 #include "stdafx.h"
 #include "Greedy.h"
-#include <iostream>
 
 using namespace std;
 
@@ -21,7 +20,6 @@ double Greedy::GetWFSchedule(Schedule &out){
     }
     return eff;
 }
-
 
 
 double Greedy::GetFullSchedule(Schedule& out){
@@ -61,13 +59,14 @@ void Greedy::FindSchedule(Schedule& out, double &efficiency, int pNum, bool forO
         data.GetLocalNumbers(pNum, wfNum, localNum);
          // should get latest finishing time of previous packages
         data.Workflows(wfNum).GetInput(localNum, dependsOn);
+        //deadline = data.Workflows(wfNum).GetDeadline();
     }
     else {
         data.Workflows(wfNum).GetInput(pNum, dependsOn);
         deadline = data.Workflows(wfNum).GetDeadline();
         localNum = pNum;
     }
-    for (int i = 0; i < dependsOn.size(); i++){
+    for (size_t i = 0; i < dependsOn.size(); i++){
         // set global numbers
         for (auto& j : out){
             int add = 0;
@@ -77,7 +76,7 @@ void Greedy::FindSchedule(Schedule& out, double &efficiency, int pNum, bool forO
                 int resType = data.GetResourceTypeIndex(boost::get<2>(j)[0]);
                 double tEnd = boost::get<1>(j) + boost::get<3>(j);
                 if (tEnd > expectedBegin)
-                    expectedBegin = tEnd + 1;
+                    expectedBegin = static_cast<int>(tEnd) + 1;
 
             }
         }
@@ -86,7 +85,7 @@ void Greedy::FindSchedule(Schedule& out, double &efficiency, int pNum, bool forO
     // getting possible types of resources
     vector <int> resTypes = data.Workflows(wfNum)[localNum].GetResTypes();
     vector <double> execTime;
-    for (int i = 0; i < resTypes.size(); i++){
+    for (size_t i = 0; i < resTypes.size(); i++){
         execTime.push_back(data.Workflows(wfNum)[localNum].GetExecTime(resTypes[i],1));
     }
     vector<int> viewedResources;
@@ -111,8 +110,7 @@ void Greedy::FindSchedule(Schedule& out, double &efficiency, int pNum, bool forO
     }
        
     if (planWasFound){
-        //cout << wfNum << endl;
-        double tbegin = static_cast<double>(savedPlan.get<1>());
+        int tbegin = static_cast<int>(savedPlan.get<1>());
         double execTime = savedPlan.get<2>()-tbegin;
         data.Resources(savedPlan.get<3>()).AddInterval(execTime, 
             tbegin, savedPlan.get<0>());
@@ -122,7 +120,7 @@ void Greedy::FindSchedule(Schedule& out, double &efficiency, int pNum, bool forO
         processors.push_back(procGlobalIndex);
         out.push_back(make_tuple(pNum, tbegin, processors, execTime));
         // add efficiency value
-        int tend = (tbegin + execTime > deadline) ? deadline : tbegin + execTime;
+        int tend = static_cast<int>((tbegin + execTime > deadline) ? deadline : tbegin + execTime);
         efficiency += eff->EfficiencyByPeriod(1, tbegin, tend);
         }
     else {

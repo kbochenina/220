@@ -1,6 +1,5 @@
 #include "stdafx.h"
 #include "CriteriaFactory.h"
-#include "UserException.h"
 #include "ReservedTimeCriteria.h"
 
 CriteriaFactory::CriteriaFactory(void)

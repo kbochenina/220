@@ -1,8 +1,5 @@
-#include <vector>
 #include <map>
 #include "ModelingContext.h"
-#include "Graph.h"
-using namespace std;
 
 #pragma once
 typedef map<int,vector<pair<int,int>>> BusyIntervals;

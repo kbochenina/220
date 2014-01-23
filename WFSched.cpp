@@ -2,12 +2,11 @@
 //
 
 #include "stdafx.h"
-#include "ModelData.h"
+#include "DataInfo.h"
+#include "Scheduler.h"
 #include <cstdlib>
 #include "direct.h"
-#include "Scheduler.h"
-#include <string>
-#include <iostream>
+
 
 using namespace std;
 
@@ -30,10 +29,7 @@ int _tmain(int argc, wchar_t** argv)
 	cout << "File settings name: " << s << endl;
 	// set data
 	DataInfo data(s);
-	
-	// init model data
-	ModelData md(data);
-	Scheduler sched(md);
+	Scheduler sched(data);
 	ofstream f("fullmetrics.txt", ios::trunc);
 	f.close();
 	sched.SetSchedulingStrategy(ONLY_GREEDY);	

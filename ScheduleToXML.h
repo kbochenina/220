@@ -1,9 +1,4 @@
 #include "DataInfo.h"
-#include <boost/tuple/tuple.hpp>
-using namespace boost;
-
-// (globalPackageNum, tBegin, vector<globalCoreNums>, execTime)
-typedef vector <tuples::tuple<int,int,vector<int>,double>> Schedule;
 
 #pragma once
 class ScheduleToXML

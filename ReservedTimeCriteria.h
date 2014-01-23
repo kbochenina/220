@@ -1,5 +1,5 @@
 #pragma once
-#include "criteriamethod.h"
+#include "CriteriaMethod.h"
 #include "DataInfo.h"
 class ReservedTimeCriteria :
 	public CriteriaMethod

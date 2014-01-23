@@ -1,11 +1,8 @@
 #include "StdAfx.h"
 #include "Workflow.h"
-#include "UserException.h"
-#include <string>
-#include <iostream>
 #include <list>
 
-double Workflow::GetExecTime ( int pNum, int type, int cores) const {
+double Workflow::GetExecTime ( unsigned int pNum, int type, int cores) const {
    try{
       if (pNum < 0 || pNum > packages.size()-1) 
          throw UserException("Workflow::GetExecTime() error. Wrong packageNum" + to_string(pNum));
@@ -53,11 +50,11 @@ Workflow::~Workflow(void)
 }
 
 // return vector with packages that depend from pNum
-void Workflow::GetOutput(int pNum, vector<int>& out) const{
+void Workflow::GetOutput(unsigned int pNum, vector<int>& out) const{
    try{
       if (pNum < 0 || pNum > matrix.size()-1)
          throw UserException("Workflow::GetOutput() error. Wrong package number");
-      for (int i = 0; i < matrix.size(); i++){
+      for (size_t i = 0; i < matrix.size(); i++){
          if (matrix[pNum][i] == 1)
             out.push_back(i);
       }
@@ -69,11 +66,11 @@ void Workflow::GetOutput(int pNum, vector<int>& out) const{
    }
 }
 // return vector with packages from which pNum depends 
-void Workflow::GetInput(int pNum, vector<int>& in) const{
+void Workflow::GetInput(unsigned int pNum, vector<int>& in) const{
    try{
       if (pNum < 0 || pNum > matrix.size()-1)
          throw UserException("Workflow::GetInput() error. Wrong package number");
-      for (int i = 0; i < matrix.size(); i++){
+      for (size_t i = 0; i < matrix.size(); i++){
          if (matrix[i][pNum]==1)
             in.push_back(i);
       }
@@ -88,7 +85,7 @@ void Workflow::GetInput(int pNum, vector<int>& in) const{
 // return true if the package pNum is last
 bool Workflow::IsPackageLast(int pNum) const {
    bool isLast = true;
-   for (int i = 0; i < matrix.size(); i++){
+   for (size_t i = 0; i < matrix.size(); i++){
       if (matrix[pNum][i]==1){
          isLast = false;
          return isLast;
@@ -103,7 +100,7 @@ double Workflow::GetAvgExecTime(int pNum) const{
 }
 
 // return all successors of package pNum
-void Workflow::GetSuccessors(const int &pNum, vector<int>&out) const {
+void Workflow::GetSuccessors(const unsigned int &pNum, vector<int>&out) const {
    try{
       if (pNum < 0 || pNum > matrix.size()-1)
          throw UserException("Workflow::GetInput() error. Wrong package number");
@@ -137,7 +134,8 @@ void Workflow::GetSuccessors(const int &pNum, vector<int>&out) const {
  void Workflow::SetFinishingTimes(double avgCalcPower){
      // indexes of packages which finishing time was already setted up 
       vector <int> usedNums;
-      int maxAmount = 0.0, maxTask = -1;
+      double maxAmount = 0.0;
+      int maxTask = -1;
       vector<double> amounts;
       int pCount = packages.size();
       amounts.resize(pCount);
@@ -154,9 +152,9 @@ void Workflow::GetSuccessors(const int &pNum, vector<int>&out) const {
       // linked - packages linked with already calculated
       vector<int> linked;
       vector<int> out;
-      for (int i = 0; i < usedNums.size(); i++){
+      for (size_t i = 0; i < usedNums.size(); i++){
          GetOutput(usedNums[i], out);
-         for (int i = 0; i < out.size(); i++){
+         for (size_t i = 0; i < out.size(); i++){
             if (find(linked.begin(), linked.end(), out[i]) == linked.end())
                linked.push_back(out[i]);
          }
@@ -169,14 +167,14 @@ void Workflow::GetSuccessors(const int &pNum, vector<int>&out) const {
          // get all inputs for linked
          GetInput(current, in);
          bool allUsed = true;
-         for (int k = 0; k < in.size(); k++){
+         for (size_t k = 0; k < in.size(); k++){
             if (find(usedNums.begin(),usedNums.end(),in[k]) == usedNums.end())
                allUsed = false;
          }
          // if all previous values were already calculated
          if (allUsed){
-            int max = 0;
-            for (int k = 0; k < in.size(); k++){
+            double max = 0;
+            for (size_t k = 0; k < in.size(); k++){
                if (amounts[in[k]] > max) max = amounts[in[k]];
             }
             // get latest "time" according to maximum of previous
@@ -192,7 +190,7 @@ void Workflow::GetSuccessors(const int &pNum, vector<int>&out) const {
             GetOutput(current, out);
             // erase current from linked
             linked.erase(linked.begin());
-            for (int i = 0; i < out.size(); i++){
+            for (size_t i = 0; i < out.size(); i++){
                if (find(linked.begin(), linked.end(), out[i]) == linked.end())
                   linked.push_back(out[i]);
             }
@@ -223,7 +221,7 @@ void Workflow::GetSuccessors(const int &pNum, vector<int>&out) const {
 void Workflow::SetPriorities(){
       // get priority list for current wf
       list <pair<int, double>> priorityList;
-      for (int j = 0; j < finishingTimes.size(); j++)
+      for (size_t j = 0; j < finishingTimes.size(); j++)
          priorityList.insert(priorityList.end(),make_pair(j, finishingTimes[j]));
       double minTime = std::numeric_limits<double>::infinity();
       int minIndex = 0;
@@ -241,11 +239,11 @@ void Workflow::SetPriorities(){
          vector<int> dependsOn;
          GetInput(minIndex, dependsOn);
          bool allPrioretized = true;
-         for (int i = 0; i < dependsOn.size(); i++){
+         for (size_t i = 0; i < dependsOn.size(); i++){
             if (find(priorities.begin(), priorities.end(), dependsOn[i]) == priorities.end()){
                allPrioretized = false;
                // find last depend position
-               for (int i = 0; i < dependsOn.size(); i++){
+               for (size_t i = 0; i < dependsOn.size(); i++){
                   auto foundPosition = 
                      find(priorityList.begin(), priorityList.end(),
                      make_pair(dependsOn[i], finishingTimes[dependsOn[i]]));
