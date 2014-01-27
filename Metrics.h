@@ -12,6 +12,7 @@ class Metrics
 	vector<double> reservedTime;
 	void AvgUnfinischedTime();
 	void AvgReservedTime();
+   void AvgCCR();
 public:
 	Metrics(DataInfo& md, string filename) : data(md){  out.open(filename); reservedTime.resize(data.GetWFCount());
 														for (size_t i = 0; i < reservedTime.size(); i++) reservedTime[i] = numeric_limits<double>::infinity(); }

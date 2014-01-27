@@ -7,18 +7,30 @@ void Metrics::GetMetrics(Schedule & s, string name){
    full << name.c_str() << endl;
    AvgUnfinischedTime();
    AvgReservedTime();
+   AvgCCR();
    full << "***************************************************"  << endl;
    full.close();
    out.close();
 }
 
+void Metrics::AvgCCR(){
+
+}
+
 void Metrics::AvgUnfinischedTime(){
    // check
-   vector <double> unfinishedTimes(data.GetWFCount(),0);
-   vector <int> unfinishedTasks(data.GetWFCount(),0);
-   vector <int> unscheduledTasks(data.GetWFCount(),0);
+   int wfCount = data.GetWFCount();
+   vector <double> unfinishedTimes(wfCount,0);
+   vector <int> unfinishedTasks(wfCount,0);
+   vector <int> unscheduledTasks(wfCount,0);
    vector <vector<int>> scheduledTasks;
-   scheduledTasks.resize(data.GetWFCount());
+   vector <double> execTimePerWf(wfCount,0);
+   vector <double> commTimePerWf(wfCount,0);
+   vector <vector<int>> resTypesPerWfPackages;
+   resTypesPerWfPackages.resize(wfCount);
+   for (int i = 0; i < wfCount; i++)
+       resTypesPerWfPackages[i].resize(data.Workflows(i).GetPackageCount());
+   scheduledTasks.resize(wfCount);
    double summUnfinishedTime = 0;
    int summUnfinishedTasks = 0;
    // for each p
@@ -26,9 +38,21 @@ void Metrics::AvgUnfinischedTime(){
       int pNum = sched[i].get<0>();
       int tBegin = sched[i].get<1>();
       double execTime = sched[i].get<3>();
+      int processor = sched[i].get<2>()[0];
+      int type = data.GetResourceTypeIndex(processor) ; // !
       int wfNum, localNum;
       data.GetLocalNumbers(pNum, wfNum, localNum);
+      resTypesPerWfPackages[wfNum][localNum] = type;
       scheduledTasks[wfNum].push_back(localNum);
+      execTimePerWf[wfNum] += execTime;
+      vector <int> in;
+      data.Workflows(wfNum).GetInput(localNum, in);
+      for (size_t j = 0; j < in.size(); j++){
+          double amount = data.Workflows(wfNum).GetTransfer(in[j], localNum);
+          double commRate = data.GetBandwidth(resTypesPerWfPackages[wfNum][in[j]], type);
+          if (commRate) 
+              commTimePerWf[wfNum] += amount/commRate;
+      }
       // DEADLINES FEATURE
       if ( tBegin + execTime > data.GetDeadline(wfNum) ){
          unfinishedTimes[wfNum] += tBegin + execTime - data.GetDeadline(wfNum);
@@ -92,6 +116,27 @@ void Metrics::AvgUnfinischedTime(){
    cout << "Percent of unscheduled tasks: " << static_cast<double>(sumUnsched)/data.GetPackagesCount() << endl;
    full << "Unscheduled tasks count: " << sumUnsched << endl;
    full << "Percent of unscheduled tasks: " << static_cast<double>(sumUnsched)/data.GetPackagesCount() << endl;
+
+   double avgCCR = 0.0;
+
+   for (size_t i = 0; i < wfCount; i++){
+       double currCCR = commTimePerWf[i]/execTimePerWf[i];
+       avgCCR += currCCR;
+       
+       /*out << "Workflow " << i + 1 << endl;
+       out << "Execution time:" << execTimePerWf[i] << endl;
+       out << "Communication time:" << commTimePerWf[i] << endl;
+       out << "CCR: " << currCCR << endl;
+      
+       full << "Workflow " << i + 1 << endl;
+       full << "Execution time:" << execTimePerWf[i] << endl;
+       full << "Communication time:" << commTimePerWf[i] << endl;
+       full << "CCR: " << currCCR << endl;*/
+   }
+
+   avgCCR /= wfCount;
+   out << "Average CCR: " << avgCCR << endl;
+   full << "Average CCR: " << avgCCR << endl;
 }
 
 void Metrics::AvgReservedTime(){
