@@ -62,21 +62,10 @@ double Scheduler::StagedScheme(int firstWfNum){
       int wfCount = data.GetWFCount();
       if (firstWfNum < 0 || firstWfNum > wfCount) 
          throw UserException("Scheduler::StagedScheme(int) error. Wrong init workflow number");
-      // creating XML with init time windows
-      //xmlWriter->SetXMLBaseName("Init_");
-      Schedule oneWFsched;
-      //xmlWriter->CreateXML(oneWFsched, -1);
-      // ??!! think about it !
-      xmlWriter->SetXMLBaseName("Staged_");
-      //double stagedT = clock();
-
-      //string resFileName = "staged_scheme_" + to_string(firstWfNum) + ".txt";
-      //ofstream res(resFileName);
-      //if (res.fail()) 
-      //	throw UserException("Scheduler::StagedScheme(int) error. Unable to create res file");
-      //res << "Stage 1, workflow # " << firstWfNum << endl;
-      //cout << "Stage 1, workflow # " << firstWfNum << endl;
       
+      Schedule oneWFsched;
+      xmlWriter->SetXMLBaseName("Staged_");
+         
       vector <double> eff;
       // applying settings of scheduling method for initial WF
       unique_ptr <SchedulingMethod> method = SchedulingFactory::GetMethod(data, methodsSet[firstWfNum], firstWfNum);
@@ -224,7 +213,7 @@ void Scheduler::GetSchedule(int scheduleVariant){
          cout << "Average time of stage " << end/data.GetWFCount() << endl;
          resTime << "Average time of stage " << end/data.GetWFCount() << endl;
          fullSchedule = storedSched;
-         xmlWriter->CreateXML(fullSchedule, -1);
+         xmlWriter->CreateXML(fullSchedule);
          cout << "Best stage: " << bestStage << endl;
          break;
       case 2:
@@ -268,7 +257,6 @@ void Scheduler::GetSchedule(int scheduleVariant){
 
 void Scheduler::EfficiencyOrdered(){
    try{
-      ofstream file("strange.txt");
       maxEff = 0.0;
       // unscheduled WF numbers
       vector <int> unscheduled;
@@ -330,20 +318,13 @@ void Scheduler::EfficiencyOrdered(){
          }
          unscheduled.erase(idx);
       }
-      file.close();
       data.SetInitBusyIntervals();
       maxEff /= maxPossible;
       cout << "Efficiency ordered scheme eff: " << maxEff << endl;
       
       xmlWriter->SetXMLBaseName("Efficiency_");
       // write result to XML
-      xmlWriter->CreateXML(fullSchedule, -1);
-      string resFileName = "efficiency.txt";
-      ofstream res(resFileName);
-      if (res.fail()) 
-         throw UserException("Scheduler::EfficiencyOrdered error. Unable to create res file");
-      PrintOneWFSched(res, fullSchedule, -1);
-      res.close();
+      xmlWriter->CreateXML(fullSchedule);
    }
    catch (UserException& e){
       cout<<"error : " << e.what() <<endl;
@@ -427,13 +408,8 @@ void Scheduler::OrderedScheme(int criteriaNumber){
       cout << "Ordered scheme eff: " << maxEff << endl;
       xmlWriter->SetXMLBaseName("Ordered_");
       // write result to XML
-      xmlWriter->CreateXML(fullSchedule, -1);
-      string resFileName = "ordered.txt";
-      ofstream res(resFileName);
-      if (res.fail()) 
-         throw UserException("Scheduler::OrderedScheme error. Unable to create res file");
-      PrintOneWFSched(res, fullSchedule, -1);
-      res.close();
+      xmlWriter->CreateXML(fullSchedule);
+ 
    }
    catch (UserException& e){
       cout<<"error : " << e.what() <<endl;
@@ -452,15 +428,9 @@ void Scheduler::SimpleSched(){
    //data.FixBusyIntervals();
    xmlWriter->SetXMLBaseName("Simple_");
    // write result to XML
-   xmlWriter->CreateXML(fullSchedule, -1);
-   string resFileName = "simple.txt";
-   ofstream res(resFileName);
-   if (res.fail()) 
-      throw UserException("Scheduler::SimpleSched error. Unable to create res file");
-   PrintOneWFSched(res, fullSchedule, -1);
+   xmlWriter->CreateXML(fullSchedule);
    data.SetInitBusyIntervals();
-   res.close();
-}
+ }
 
 // add to file info about schedule
 void Scheduler::PrintOneWFSched(ofstream & res, Schedule & sched, int wfNum){

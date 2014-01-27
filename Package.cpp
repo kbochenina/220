@@ -35,9 +35,9 @@ double Package::GetAvgExecTime() const{
 Package::Package (const Package & p){
 	uid = p.uid;
 	resTypes.reserve(p.resTypes.size());
-	coreCounts.reserve(p.resTypes.size());
+	processorsCounts.reserve(p.resTypes.size());
 	copy(p.resTypes.begin(), p.resTypes.end(), back_inserter(resTypes));
-	copy(p.coreCounts.begin(), p.coreCounts.end(), back_inserter(coreCounts));
+	copy(p.processorsCounts.begin(), p.processorsCounts.end(), back_inserter(processorsCounts));
 	execTimes.insert(p.execTimes.begin(), p.execTimes.end());
 	amount = p.amount;
 

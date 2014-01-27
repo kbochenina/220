@@ -10,6 +10,32 @@ Workflow::Workflow(int u, vector <Package> p, vector<vector<int>> m, double d, v
     transfer = t;
 }
 
+void Workflow::SetTransfer(vector<vector<double>> t) {
+    try{
+        if (t.size() != transfer.size())
+            throw UserException("Workflow::SetTransfer() error. Wrong rows count");
+        for (const auto&row: t){
+            if (row.size() != transfer.size())
+                 throw UserException("Workflow::SetTransfer() error. Wrong columns count");
+        }
+        for (size_t i = 0; i < transfer.size(); i++)
+            for (size_t j = 0; j < transfer.size(); j++)
+                transfer[i][j] = t[i][j];
+    }
+    catch (UserException& e){
+        std::cout<<"error : " << e.what() <<endl;
+        std::system("pause");
+        exit(EXIT_FAILURE);
+    }
+}
+
+int Workflow::GetLastPackagesCount() const{
+    int val = 0;
+    for (int i = 0; i < packages.size(); i++)
+        if (IsPackageLast(i)) val++;
+    return val;
+}
+
 double Workflow::GetExecTime ( unsigned int pNum, int type, int cores) const {
    try{
       if (pNum < 0 || pNum > packages.size()-1) 
@@ -277,3 +303,16 @@ void Workflow::SetPriorities(){
       reverse(priorities.begin(), priorities.end());
     
  }
+
+double Workflow::GetTransfer(const int &in, const int &out) const {
+    try{
+        if (in > transfer.size()-1 || in < 0 || out > transfer.size()-1 || out < 0)
+            throw UserException("Workflow::GetTransfer() error. Wrong parameters");
+        return transfer[in][out];
+    }
+    catch (UserException& e){
+      std::cout<<"error : " << e.what() <<endl;
+      std::system("pause");
+      exit(EXIT_FAILURE);
+   }
+}

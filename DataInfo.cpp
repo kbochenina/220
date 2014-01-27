@@ -14,9 +14,75 @@ DataInfo::~DataInfo(void)
 DataInfo::DataInfo( string fSettings )
 {
    Init(fSettings);
-    _mkdir("Output");
+   _mkdir("Output");
    _chdir("Output");
+    SetTransferValues();
   
+}
+
+
+
+void  DataInfo::SetTransferValues(){
+    ofstream file("transfer.txt");
+    int wfNum = 0;
+    double avgBandwidth = 0.0;
+    for (size_t i = 0; i < bandwidth.size(); i++){
+        int resBandwidth = 0;
+        for (size_t j = 0; j < bandwidth.size(); j++)
+            resBandwidth += bandwidth[i][j];
+        resBandwidth *= resources[i].GetProcessorsCount();
+        avgBandwidth += resBandwidth;
+    }
+    avgBandwidth /= processorsCount;
+
+    for (const auto& wf : workflows){
+        vector <vector<double>> transfer;
+        int pCount = wf.GetPackageCount();
+        transfer.resize(pCount);
+        
+        for (int i = 0; i < pCount; i++){
+            for (int j = 0; j < pCount; j++)
+                transfer[i].push_back(0);
+        }
+        
+        if (context.GetCCR() != 0) {
+            double avgResPerf = GetAvgPerf();
+            double conseqAmount = 0.0;
+            for (int i = 0; i < pCount; i++)
+                conseqAmount += wf.GetAmount(i);
+            double avgTime = conseqAmount / avgResPerf;
+            double fullAmount = context.GetCCR() * avgTime / avgBandwidth;
+            // in megabytes
+            double avgAmount = fullAmount / (pCount - wf.GetLastPackagesCount());
+            for (int i = 0; i < pCount; i++){
+                double outPackageAmount = rand()% static_cast<int>(2 * context.GetH() * avgAmount) 
+                    + avgAmount * (1 - context.GetH());
+                vector <int> out;
+                wf.GetOutput(i, out);
+                double avgPackageAmount = outPackageAmount / out.size();
+                for (size_t j = 0; j < out.size(); j++){
+                    transfer[i][out[j]] = avgPackageAmount;
+                }
+            }
+        }
+        file << "Workflow # " << wfNum << endl;
+        for (size_t i = 0; i < transfer.size(); i++){
+            for (size_t j = 0; j < transfer.size(); j++)
+                file << transfer[i][j] << " ";
+            file << endl;
+        }
+        workflows[wfNum].SetTransfer(transfer);
+        wfNum++;
+    }
+    file.close();
+}
+
+double DataInfo::GetAvgPerf(){
+    double perf = 0.0;
+    for (const auto& res: resources){
+        perf += res.GetPerf() * res.GetProcessorsCount();
+    }
+    return perf/processorsCount;
 }
 
 const double DataInfo::GetDeadline(int wfNum){
@@ -145,7 +211,20 @@ void DataInfo::Init(string settingsFile){
       s.erase(0,trim.size());
       CCR = stof(s);
 
-      context.SetContext(T, CCR);	
+      double h = 0.0;
+      getline(file,s);
+      ++line;
+      trim = "h=";
+      found = s.find(trim);
+      if (found != 0) {
+         sprintf_s(second, "%d", line);
+         errWrongFormatFull += second;
+         throw UserException(errWrongFormatFull);
+      }
+      s.erase(0,trim.size());
+      h = stof(s);
+
+      context.SetContext(T, CCR, h);	
       
       // read all filenames from path
       string resourcesFileName;
@@ -203,7 +282,7 @@ void DataInfo::Init(string settingsFile){
    }
 }
 
-// NOTE: types will be recorded from 1!
+// NOTE: type numbers are counted from 1!
 void DataInfo::InitWorkflows(string f){
    try{
       char second[21]; // enough to hold all numbers up to 64-bits
@@ -433,7 +512,7 @@ void DataInfo::InitWorkflows(string f){
             for (unsigned int k = 0; k < types.size(); k++){
                for (unsigned int l = 0; l < cCount.size(); l++){
                   // assume that the core numbers are in ascending order (else continue)
-                  if (resources[k].GetCoresCount() < cCount[l]) break; 
+                  if (resources[k].GetProcessorsCount() < cCount[l]) break; 
                   // Amdal's law
                   double acc = (double) 1.00 / (alpha + (1-alpha)/(l+1));
                   // execTime = amount / (perf * acc)
@@ -720,7 +799,7 @@ int DataInfo::GetResourceType(int number){
          throw UserException("DataInfo::GetResourceType() error. Wrong coreNumber");
       int current = 0;
       for (vector <ResourceType>::iterator it = resources.begin(); it!= resources.end(); it++){
-         int currentCoreCount = it->GetCoresCount();
+         int currentCoreCount = it->GetProcessorsCount();
          if (number >= current && number < current + currentCoreCount) 
             return distance(resources.begin(), it);
          current+=currentCoreCount;
@@ -738,7 +817,7 @@ int DataInfo::GetResourceType(int number){
 int DataInfo::GetInitResourceTypeIndex(int type){
    int index = 0;
    for (int i = 0; i < type; i++)
-      index += resources[i].GetCoresCount();
+      index += resources[i].GetProcessorsCount();
    return index;
 }
 
@@ -867,13 +946,13 @@ void DataInfo::SetWfPriorities(){
 // get resource type by global index
 int DataInfo::GetResourceTypeIndex(int globalIndex){
    int index = 0; 
-   int border = resources[index].GetCoresCount();
+   int border = resources[index].GetProcessorsCount();
    while (1){
       if (globalIndex < border){
          return index;
       }
       index++;
-      border += resources[index].GetCoresCount();
+      border += resources[index].GetProcessorsCount();
    }
 }
 
@@ -910,7 +989,7 @@ void DataInfo::GetLocalNumbers (const int & current, int &wfNum, int &localNum){
 int DataInfo::GetGlobalProcessorIndex(int resource, int local){
    int global = 0;
    for (int i = 0; i < resource; i++)
-      global += resources[i].GetCoresCount();
+      global += resources[i].GetProcessorsCount();
    global += local;
    return global;
 }
@@ -930,5 +1009,18 @@ void DataInfo::RemoveFromPriorities(const vector<int>& toRemove){
    for (const auto& val : toRemove){
       auto & it = find(priorities.begin(), priorities.end(), val);
       if (it != priorities.end()) priorities.erase(it);
+   }
+}
+
+double DataInfo::GetBandwidth(const int& from, const int& to) {
+    try{
+        if (from > bandwidth.size()-1 || from < 0 || to > bandwidth.size()-1 || to < 0)
+            throw UserException("DataInfo::GetBandwidth() error. Wrong parameters");
+        return bandwidth[from][to];
+    }
+      catch (UserException& e){
+      std::cout<<"error : " << e.what() <<endl;
+      std::system("pause");
+      exit(EXIT_FAILURE);
    }
 }

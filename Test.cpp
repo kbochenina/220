@@ -75,7 +75,15 @@ bool Test::TestWFLinks(){
 				// if we find a parent's schedule
 				if (parentSched.get_head() == parent){
 					parentFound = true;
-					if (parentSched.get<1>() + parentSched.get<3>() > packageSched.get<1>()){
+               double transfer = data.Workflows(wfNum).GetTransfer(localPackageNum, parent - initPackageNum);
+               int packageResType = data.GetResourceTypeIndex(packageSched.get<2>()[0]);
+               int parentResType = data.GetResourceTypeIndex(parentSched.get<2>()[0]);
+               double transferTime = 0.0;
+               // if package and its parent calculate on different resources types
+               if (packageResType != parentResType){
+                   transferTime = transfer / data.GetBandwidth(parentResType, packageResType);
+               }
+					if (parentSched.get<1>() + parentSched.get<3>() + transferTime > packageSched.get<1>()){
 						cout << "Test Test::TestWFLinks() is not passed. Global package number = " <<
 						packageSched.get_head() << ", wfNum = " << wfNum  << "localNum = " << localPackageNum << 
 						", intersects with parent " << parent << "(global num)" << endl;

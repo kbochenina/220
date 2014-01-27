@@ -26,8 +26,8 @@ public:
 	// to a resources of this type (also according to checkType). Possible placement will be stored
 	// to out variable. If placement is impossible, function will return false
 	bool Check(const vector<TimeCore>& timeCores, int tBegin, bool checkType, vector<vector<int>>&out);
-	inline int GetCoresCount() const {return numCoresPerOneRes * resCount; }
-	inline double GetPerf() {return perf;}
+	inline int GetProcessorsCount() const {return numCoresPerOneRes * resCount; }
+	inline double GetPerf() const {return perf;}
 	void FixBusyIntervals();
 	void ResetBusyIntervals();
 	void SetInitBusyIntervals();

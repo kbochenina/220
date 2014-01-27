@@ -4,19 +4,52 @@
 
 int ScheduleToXML::xmlCount = 0;
 
-void ScheduleToXML::CreateXML(Schedule currentSchedule, int currentWf){
+struct my_compare_op
+{
+    bool operator()(const PackageSchedule& a, const PackageSchedule& b) const
+    {
+        return boost::get<0>(a) < boost::get<0>(b);
+    }
+};
+
+void ScheduleToXML::CreateXML(Schedule currentSchedule){
 	//std::cout << "ScheduleToXML::CreateXML() was called\n";
-	resFileName = xmlBaseName + to_string(++xmlCount) + ".jed";
+	resFileName = xmlBaseName + to_string(xmlCount) + ".jed";
+   schedFileName = xmlBaseName + to_string(xmlCount) + ".txt";
+   ++xmlCount;
 	ofstream f(resFileName);
 	MetaXMLInfo(f);
 	f << "\t<node_infos>\n";
 	BusyToXML(f);
-	// if we want to get xml with init busy intervals, currentWf will be equal to -1
-	//if (currentWf != -1) 
-		OneWFScheduleToXML(f, currentSchedule, currentWf);
+   sort(currentSchedule.begin(), currentSchedule.end(), my_compare_op());
+  	FullScheduleToXML(f, currentSchedule);
+   PrintSched(currentSchedule);
 	f << "\t</node_infos>\n";
 	f << "</grid_schedule>\n";
 	f.close();
+}
+
+void ScheduleToXML::PrintSched(Schedule & sched){
+   int wfNum = -1, currentWf = -1;
+   ofstream s(schedFileName);
+   // res << "WF " << wfNum << endl;
+   for (Schedule::iterator it = sched.begin(); it!= sched.end(); it++){
+        int globalPackageNumber = it->get<0>();
+        int localNum = -1;
+        data.GetLocalNumbers(globalPackageNumber, currentWf, localNum);
+        if (currentWf != wfNum){
+            s << "----------------------------------------------------------------------------------" << endl << "Workflow " << currentWf + 1 << endl;
+            wfNum = currentWf;
+        }
+        s << "P" << ++localNum << "(" << globalPackageNumber + 1 << ") "<< " Processor numbers: ";
+        for (vector<int>::iterator it2 = it->get<2>().begin(); it2 != it->get<2>().end(); it2++)
+            s << *it2  << " ";
+        s << "Res type: " << data.GetResourceType(it->get<2>()[0]);
+        s << " Start time: " << it->get<1>() << " Exec time: " << it->get<3>() << " End time: " <<
+            it->get<1>() + it->get<3>() << endl;
+   }
+   s << endl;
+   s.close();
 }
 
 void ScheduleToXML::MetaXMLInfo(ofstream &f){
@@ -78,8 +111,9 @@ void ScheduleToXML::BusyToXML(ofstream &f){
 	}
 }
 
-void ScheduleToXML::OneWFScheduleToXML(ofstream&f, Schedule &currentSchedule, int currentWfNum){
+void ScheduleToXML::FullScheduleToXML(ofstream&f, Schedule &currentSchedule){
 	int currentWfPackage = 0;
+   int currentWfNum = 0;
 	for (Schedule::size_type i = 0; i < currentSchedule.size(); i++){
 		int packageNum = currentSchedule[i].get<0>();
 		int tBegin = currentSchedule[i].get<1>();

@@ -21,7 +21,9 @@ using namespace boost;
 using namespace std;
 
 // (globalPackageNum, tBegin, vector<globalCoreNums>, execTime)
-typedef vector <tuples::tuple<int,int,vector<int>,double>> Schedule;
+typedef tuples::tuple<int,int,vector<int>,double> PackageSchedule;
+typedef vector <PackageSchedule> Schedule;
+
 enum Criteries { RESERVED_TIME = 1, MAX_EFF = 2 };
 
 

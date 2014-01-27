@@ -24,7 +24,7 @@ public:
 	// return execTime of package pNum on resource with type resType and coreCount
 	double GetExecTime (unsigned int pNum, int resType, int coreCount) const ;
 	// return vector with possible cores count for package pNum
-	void GetCoresCount(int pNum, vector<int>&out) ;
+	void GetProcessorsCount(int pNum, vector<int>&out) ;
 	// return vector with possible resource types for package pNum
 	void GetResTypes(int pNum, vector<int>&out) ;
 	// return true if package pNum is init
@@ -42,7 +42,7 @@ public:
 	// return average exectime of package pNume
 	double GetAvgExecTime(int pNum) const;
 	// return computational amount of package pNum
-	double GetAmount(const int & pNum) { return packages[pNum].GetAmount(); }
+	double GetAmount(const int & pNum) const { return packages[pNum].GetAmount(); }
 	// return all successors of package pNum
 	void GetSuccessors(const unsigned int &pNum, vector<int>&out) const;
 	Workflow(int u, vector <Package> p, vector<vector<int>> m, double d, vector<vector<double>> t);
@@ -53,6 +53,9 @@ public:
    void SetPriorities();
    int GetNextPackage (int pNum) const{return priorities[pNum];}
    const double GetDeadline() const {return deadline;}
+   double GetTransfer(const int &in, const int &out) const;
+   void SetTransfer(vector<vector<double>> t)  ;
+   int GetLastPackagesCount() const;
    Workflow(){ uid = 0; }
 	~Workflow(void);
 };

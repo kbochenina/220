@@ -38,8 +38,11 @@ class DataInfo
 	void InitWorkflows(string fName);
 	// init finishing times
 	void InitFinishingTimes();
-	
-	
+	// setting data transfer size according to CCR, h and average resources' power
+   void  SetTransferValues();
+   // get average performance of resources
+   double GetAvgPerf();
+  
 public:
 	DataInfo(){}
 	DataInfo(string fSettings);
@@ -85,6 +88,7 @@ public:
 	const double GetDeadline(int wfNum);
 	double GetDeadline();
 	int GetPrioritiesSize() {return priorities.size();}
+   double GetBandwidth(const int& from, const int& to);
 	~DataInfo(void);
 };
 
