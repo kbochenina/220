@@ -5,36 +5,46 @@
 class Clustered :
 	public SchedulingMethod
 {
-	vector <Cluster> clusters;
+	// clusters for each WF
+	vector <vector<Cluster>> clusters;
 	vector <int> clusterized;
-	double GetF();
-	double GetF(int second);
-	double GetFMerged(int currentCluster);
-	double GetFMerged(int currentCluster, int taskToAdd);
-	double maxAvgDiffWeight;
-	double maxSumL;
-	double maxWeight;
-	double minAvgTaskCount;
+	int currentCluster;
+	vector<double> maxAvgDiffWeight;
+	vector<double> maxSumL;
+	// cluster dependencies
+	vector<vector<vector<int>>> dep;
+	//double maxWeight;
+	//double minAvgTaskCount;
+	//double currentF;
+	// clusterize current workflow
+	
+
+	
+	void SetInitClusters();
 	void SetMaxAvgDiffWeight();
 	void SetMaxSumL();
-	int currentCluster;
-	double currentF;
+	void ClusterizeConsequence();
+
+	double GetF();
+	double GetF(int second);
 	double GetAvgDiffWeight();
 	double GetAvgDiffWeight(int second);
-	double GetMaximumWeight();
-	double GetMaximumWeight(int second);
-	void SetMaxWeight();
 	double GetSumL();
 	double GetSumL(int second);
+
+	void Merge(int second, bool isPrev);
+	void SetClusterDep();
+
+	double GetClusterSchedule(Schedule &out);
+
+	//double GetMaximumWeight();
+	//double GetMaximumWeight(int second);
+	//void SetMaxWeight();
+	double GetFMerged(int currentCluster);
+	double GetFMerged(int currentCluster, int taskToAdd);
 	double GetSumLMerged(int currentCluster);
 	double GetSumLMerged(int currentCluster, int taskToAdd);
-	void Merge(int second, bool isPrev);
-	double GetClusterSchedule(Schedule &out);
-	void SetInitClusters();
-	void ClusterizeConsequence();
-	void ClusterizeMerged();
 	void CheckPrecedence();
-	void SetMaxSumL(int currentCluster);
 	void FindCandidates(vector<int>&input, vector<int>&output, vector<int>&outputIndexes);
 	double GetAvgTaskCount(int currentCluster);
 	double GetAvgTaskCount(int currentCluster, int taskToAdd);

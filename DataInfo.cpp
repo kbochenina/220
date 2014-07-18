@@ -604,13 +604,19 @@ void DataInfo::InitWorkflows(string f){
             }
             connectMatrix.push_back(row);
          }
-		double maxLength = GetT() * pacs.size()/PACKS_MAX;
-		double deadline = GetT();
-		double tstart = 0.00;
-		cout << "maxTstart " << GetT() - maxLength << endl;
+
+
+		double maxLength = GetT() * pacs.size()/50;
+		//double deadline = GetT();
+		//double tstart = 0.00;
+		//cout << "maxTstart " << GetT() - maxLength << endl;
 		
-		//tstart = (GetT() == maxLength) ? 0.00 : (rand() / static_cast<double>(RAND_MAX) * (GetT() - maxLength));
-		//deadline = tstart + maxLength;
+		double tstart = (GetT() == maxLength) ? 0.00 : (rand() / static_cast<double>(RAND_MAX) * (GetT() - maxLength));
+		//double tstart = rand() / static_cast<double>(RAND_MAX) * GetT() / 2;
+		//double deadline = tstart - 1;
+		double deadline = tstart + maxLength;
+		//while (deadline < tstart)
+		//	deadline = rand() / static_cast<double>(RAND_MAX) * GetT();
 		
 	     //double deadline = GetT(), tstart = 0;
          Workflow w(workflows.size() + i+1, pacs,connectMatrix, deadline, transfer, tstart);
