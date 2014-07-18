@@ -9,12 +9,15 @@ class Metrics
 	ofstream out;
 	ofstream full;
 	string filename;
+	double avgFine;
+	double eff;
 	vector<double> reservedTime;
 	void AvgUnfinischedTime();
 	void AvgReservedTime();
-   void AvgCCR();
+    void AvgCCR();
+	void IntegralCriterion();
 public:
-	Metrics(DataInfo& md, string filename) : data(md){  out.open(filename); reservedTime.resize(data.GetWFCount());
+	Metrics(DataInfo& md, string filename, double e) : data(md){  eff = e; out.open(filename); reservedTime.resize(data.GetWFCount());
 														for (size_t i = 0; i < reservedTime.size(); i++) reservedTime[i] = numeric_limits<double>::infinity(); }
 	void GetMetrics(Schedule & sched, string schemeName);
 	~Metrics(void);

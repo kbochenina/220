@@ -23,6 +23,19 @@ bool Test::TestIntervals(){
 			localCoreNums.push_back(num - initIndex);
 		// if interval is not busy 
 		const int &tBegin = packageSched.get<1>();
+		const int globalPackageNum = packageSched.get_head();
+		int wfNum, localPackageNum;
+		data.GetLocalNumbers(globalPackageNum, wfNum, localPackageNum);
+		int wfBegin = data.Workflows(wfNum).GetStartTime();
+		if (tBegin < wfBegin){
+			cout << "Test Test::TestIntervals() is not passed. Package start time is less than wf start time. Global package number = " <<
+				globalPackageNum << ", resource type = " << resType << ", processors ";
+			for (const auto & num : localCoreNums)
+				cout << num << " ";
+			cout << "tBegin = " << tBegin << ", wfBegin = " << wfBegin << endl;
+			return false;
+		}
+
 		const double &execTime = packageSched.get<3>();
 		for (const auto & num : localCoreNums){
 			// if interval isn't intersect existing intervals
@@ -32,7 +45,7 @@ bool Test::TestIntervals(){
 			// else return false
 			else {
 				cout << "Test Test::TestIntervals() is not passed. Global package number = " <<
-					packageSched.get_head() << ", resource type = " << resType << ", processors ";
+					globalPackageNum << ", resource type = " << resType << ", processors ";
 				for (const auto & num : localCoreNums)
 					cout << num << " ";
 				cout << "tBegin = " << tBegin << ", execTime = " << execTime << endl;

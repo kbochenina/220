@@ -3,11 +3,13 @@
 
 void Metrics::GetMetrics(Schedule & s, string name){
    sched = s;
+   avgFine = 0.0;
    full.open("fullmetrics.txt", ios::app);
    full << name.c_str() << endl;
    AvgUnfinischedTime();
    AvgReservedTime();
    AvgCCR();
+   IntegralCriterion();
    full << "***************************************************"  << endl;
    full.close();
    out.close();
@@ -20,8 +22,11 @@ void Metrics::AvgCCR(){
 void Metrics::AvgUnfinischedTime(){
    // check
    int wfCount = data.GetWFCount();
+   // fines
+   vector <double> fines(wfCount,0);
    vector <double> unfinishedTimes(wfCount,0);
    vector <int> unfinishedTasks(wfCount,0);
+   vector <double> wfEnds(wfCount,0);
    vector <int> unscheduledTasks(wfCount,0);
    vector <vector<int>> scheduledTasks;
    vector <double> execTimePerWf(wfCount,0);
@@ -33,6 +38,7 @@ void Metrics::AvgUnfinischedTime(){
    scheduledTasks.resize(wfCount);
    double summUnfinishedTime = 0;
    int summUnfinishedTasks = 0;
+  
    // for each p
    for (size_t i = 0; i < sched.size(); i++){
       int pNum = sched[i].get<0>();
@@ -53,10 +59,12 @@ void Metrics::AvgUnfinischedTime(){
           if (commRate) 
               commTimePerWf[wfNum] += amount/commRate;
       }
+	  double taskEnd = tBegin + execTime;
+	  if (taskEnd > wfEnds[wfNum]) wfEnds[wfNum] = taskEnd;
       // DEADLINES FEATURE
-      if ( tBegin + execTime > data.GetDeadline(wfNum) ){
-         unfinishedTimes[wfNum] += tBegin + execTime - data.GetDeadline(wfNum);
-         reservedTime[wfNum] = 0;
+      if ( taskEnd > data.GetDeadline(wfNum) ){
+         unfinishedTimes[wfNum] += taskEnd - data.GetDeadline(wfNum);
+		 reservedTime[wfNum] = 0;
          unfinishedTasks[wfNum]++;
          summUnfinishedTasks++;
       }
@@ -64,6 +72,7 @@ void Metrics::AvgUnfinischedTime(){
    //cout << "Average unfinished times and tasks" << endl << "***************************************************"  << endl;
    //cout << "Unfinished times: " << endl;
    vector<int> violatedDeadlines;
+   vector<double> unschTimes(data.GetWFCount(), 0);
 
    for (size_t i = 0; i < unfinishedTimes.size(); i++){
       // if we have some unscheduled tasks
@@ -72,18 +81,67 @@ void Metrics::AvgUnfinischedTime(){
          for (int j = 0; j < data.Workflows(i).GetPackageCount(); j++ ){
             // if package was not scheduled
             if (find(scheduledTasks[i].begin(), scheduledTasks[i].end(), j) == scheduledTasks[i].end()){
-               unfinishedTimes[i] += data.Workflows(i).GetAvgExecTime(j);
-               unscheduledTasks[i]++;
+			   int globalNum = data.GetInitPackageNumber(i)+j;
+			   unschTimes[i] = data.Workflows(i).GetAvgExecTime(j) + data.GetAvgTransferFrom(globalNum);
+               unfinishedTimes[i] += unschTimes[i];
+			   unscheduledTasks[i]++;
                reservedTime[i] = 0.0;
             }
          }
       }
-
+	  summUnfinishedTime += unfinishedTimes[i];
       /*cout << "Workflow # " << i+1 << " " << unfinishedTimes[i] << " " << "unfinished tasks: " << unfinishedTasks[i] 
       << " unscheduled tasks: " << unscheduledTasks[i] 
       << " scheduled tasks: " << scheduledTasks[i].size() << endl;*/
-      summUnfinishedTime += unfinishedTimes[i];
    }
+   cout << "Workflows count: " << data.GetWFCount() << endl;
+
+   for (int i = 0; i < data.GetWFCount(); i++){
+	   // calculating fineMax
+	  double fineMax = 0;
+	  // if all tasks are scheduled
+	  if (unscheduledTasks[i] == 0){
+		  // if schedule is partly admissible
+		  if (unfinishedTasks[i] != 0){
+	      fineMax = data.GetMaxLastTasksExecTime(i);
+		  fines[i] = wfEnds[i] - data.GetDeadline(i);
+		  if (fines[i] < 0)
+			  cout << endl;
+		  //cout << "Partly admissible " << endl; 
+		  }
+		  
+	  }
+	  // if schedule is incomplete
+	  else {
+		  // for all packages
+		  for (int j = 0; j < data.Workflows(i).GetPackageCount(); j++){
+			  fineMax += data.Workflows(i).GetAvgExecTime(j);
+			  int globalNum = data.GetInitPackageNumber(i) + j;
+			  fineMax += data.GetAvgTransferFrom(globalNum);
+		  }
+		  double deadline = data.GetDeadline(i);
+		  // specific case when part of tasks were finished before deadline,
+		  // and another part was not scheduled
+		  if (wfEnds[i] < deadline)
+			  fines[i] = unschTimes[i];
+		  else
+		  fines[i] = ( wfEnds[i] - deadline + unschTimes[i]  );
+		  if (fines[i] < 0)
+			  cout << "tend " << wfEnds[i] << "unshTimes " << unschTimes[i] << "deadline " << deadline << endl;
+		  //cout << "Incomplete " << endl;
+	  }
+	  out << "Workflow " << i+1 << " Fine: " << fines[i] << " Finemax: " << fineMax;
+	  //cout << "Workflow " << i+1 << " Fine: " << fines[i] << " Finemax: " << fineMax;
+	  if (fineMax != 0) {
+		  fines[i] /= fineMax;
+		  out << " Ratio: " << fines[i] << " \n\t\tTstart: " << data.Workflows(i).GetStartTime() << " Deadline: " 
+			  << data.Workflows(i).GetDeadline() << " Tend: " << wfEnds[i];
+		 // cout << " Ratio: " << fines[i];
+	  }
+	  out << endl;
+	 // cout << endl;
+   }
+
    /*cout << "Avg unfinished time: " << summUnfinishedTime/data.GetWFCount() << endl;
    cout << "Avg unfinished tasks: " << static_cast<double>(summUnfinishedTasks)/static_cast<double>(data.GetWFCount()) << endl;*/
    out << "Deadlines violated: " << violatedDeadlines.size() << endl;
@@ -117,6 +175,14 @@ void Metrics::AvgUnfinischedTime(){
    full << "Unscheduled tasks count: " << sumUnsched << endl;
    full << "Percent of unscheduled tasks: " << static_cast<double>(sumUnsched)/data.GetPackagesCount() << endl;
 
+   avgFine = 0.0;
+   for (auto& i: fines) avgFine += i;
+   avgFine /= data.GetWFCount();
+
+   out << "Average fine: " << avgFine << endl;
+   cout << "Average fine: " << avgFine << endl;
+   full << "Average fine: " << avgFine << endl;
+
    double avgCCR = 0.0;
 
    for (size_t i = 0; i < wfCount; i++){
@@ -137,6 +203,14 @@ void Metrics::AvgUnfinischedTime(){
    avgCCR /= wfCount;
    out << "Average CCR: " << avgCCR << endl;
    full << "Average CCR: " << avgCCR << endl;
+}
+
+
+void Metrics::IntegralCriterion(){
+	double crit = 0.5 * eff - 0.5 * avgFine + 0.5;
+	out << "Integral criterion: " << crit << endl;
+	cout << "Integral criterion: " << crit << endl;
+	full << "Integral criterion: " << crit << endl;
 }
 
 void Metrics::AvgReservedTime(){

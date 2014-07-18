@@ -51,12 +51,12 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>D:\Degree\boost_1_55\boost_1_55_0;D:\dist\boost_1_54_0\boost_1_54_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\ITMO\Degree\Libs\boost_1_55\boost_1_55_0;D:\dist\boost_1_54_0\boost_1_54_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>D:\Degree\boost_1_55\boost_1_55_0\stage\lib;D:\dist\boost_1_54_0\boost_1_54_0\stage\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>D:\ITMO\Degree\Libs\boost_1_55\boost_1_55_0\stage\lib;D:\dist\boost_1_54_0\boost_1_54_0\stage\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -67,7 +67,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>D:\Degree\boost_1_55\boost_1_55_0;D:\dist\boost_1_54_0\boost_1_54_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\ITMO\Degree\Libs\boost_1_55\boost_1_55_0;D:\dist\boost_1_54_0\boost_1_54_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <CompileAsManaged>false</CompileAsManaged>
       <ExceptionHandling>Sync</ExceptionHandling>
@@ -77,13 +77,15 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>D:\Degree\boost_1_55\boost_1_55_0\stage\lib;D:\dist\boost_1_54_0\boost_1_54_0\stage\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>D:\ITMO\Degree\Libs\boost_1_55\boost_1_55_0\stage\lib;D:\dist\boost_1_54_0\boost_1_54_0\stage\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <None Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Cluster.h" />
+    <ClInclude Include="Clustered.h" />
     <ClInclude Include="CriteriaFactory.h" />
     <ClInclude Include="CriteriaMethod.h" />
     <ClInclude Include="DataInfo.h" />
@@ -106,6 +108,8 @@
     <ClInclude Include="Workflow.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Cluster.cpp" />
+    <ClCompile Include="Clustered.cpp" />
     <ClCompile Include="CriteriaFactory.cpp" />
     <ClCompile Include="CriteriaMethod.cpp" />
     <ClCompile Include="DataInfo.cpp" />

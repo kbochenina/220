@@ -10,8 +10,8 @@
 
 using namespace std;
 
-enum SchedulingTypes { ONLY_BELLMAN = 1, ONLY_GREEDY = 2, MIXED = 3 };
-enum SchedulingSchemes { STAGED = 1, EFF_ORDERED = 2, SIMPLE = 3, RESERVED_ORDERED = 4 };
+enum SchedulingTypes { ONLY_BELLMAN = 1, ONLY_GREEDY = 2, CLUST = 3 };
+enum SchedulingSchemes { STAGED = 1, EFF_ORDERED = 2, SIMPLE = 3, RESERVED_ORDERED = 4, CLUSTERED = 5};
 
 int _tmain(int argc, wchar_t** argv)
 {
@@ -27,6 +27,7 @@ int _tmain(int argc, wchar_t** argv)
 	}
 	string s(fileSettings.begin(),fileSettings.end());
 	cout << "File settings name: " << s << endl;
+	srand(time(NULL));
 	// set data
 	DataInfo data(s);
 	Scheduler sched(data);
@@ -38,11 +39,16 @@ int _tmain(int argc, wchar_t** argv)
 	sched.TestSchedule();
 	cout << "***************************************************" << endl;
 	sched.GetSchedule(RESERVED_ORDERED);
-	sched.GetMetrics("reserved_metrics.txt", "StagedReserveTime");
+	sched.GetMetrics("reserved_metrics.txt", "StagedReservedTime");
 	sched.TestSchedule();
 	cout << "***************************************************" << endl;
 	sched.GetSchedule(EFF_ORDERED);
 	sched.GetMetrics("eff_metrics.txt", "StagedEfficiency");
+	sched.TestSchedule();
+	cout << "***************************************************" << endl;
+	sched.SetSchedulingStrategy(CLUST);
+	sched.GetSchedule(CLUSTERED);
+	sched.GetMetrics("clustered.txt", "Clustered");
 	sched.TestSchedule();
 	cout << "***************************************************" << endl;
 	/*sched.GetSchedule(STAGED);

@@ -53,18 +53,37 @@ void Greedy::FindSchedule(Schedule& out, double &efficiency, int pNum, bool forO
     vector<int> dependsOn;    
     int localNum = 0, processor = 0;
     double deadline = 0.0;
+	double tstart = 0.0;
     if (!forOneWf){
-        deadline = data.GetDeadline();
-         // get wfNum and package local num
+        // get wfNum and package local num
         data.GetLocalNumbers(pNum, wfNum, localNum);
+		deadline = data.GetDeadline(wfNum);
          // should get latest finishing time of previous packages
         data.Workflows(wfNum).GetInput(localNum, dependsOn);
+		tstart = data.Workflows(wfNum).GetStartTime();
+		int parentsFound = 0;
+		// check the existence of parents in the schedule
+		for (Schedule::iterator it = out.begin(); it!= out.end(); it++){
+			int currentPackage = it->get_head(), currentWf, currentLocal;
+			data.GetLocalNumbers(currentPackage, currentWf, currentLocal);
+			if (currentWf == wfNum){
+				for (size_t i = 0; i < dependsOn.size(); i++){
+					if (currentLocal == dependsOn[i]){
+						parentsFound++;
+						break;
+					}
+				}
+			}
+		}
+		// cannot find schedule for all the parents of current task
+		if (parentsFound != dependsOn.size()) return;
         //deadline = data.Workflows(wfNum).GetDeadline();
     }
     else {
-        data.Workflows(wfNum).GetInput(pNum, dependsOn);
-        deadline = data.Workflows(wfNum).GetDeadline();
-        localNum = pNum;
+			data.Workflows(wfNum).GetInput(pNum, dependsOn);
+			tstart = data.Workflows(wfNum).GetStartTime();
+			deadline = data.Workflows(wfNum).GetDeadline();
+			localNum = pNum; 
     }
    
     // (resType, finishingTime, transferDataSize) for all input packages
@@ -109,7 +128,8 @@ void Greedy::FindSchedule(Schedule& out, double &efficiency, int pNum, bool forO
     for (auto &res : resTypes){
             // resources indexed from 1
             res -=1;
-            int tbegin = 0;
+            //int tbegin = 0;
+			int tbegin = tstart;
             // get the expected begin time for current resource type
             for (const auto& in : commInfo){
                 double bandwidth = data.GetBandwidth(in.get_head(), res);
@@ -125,6 +145,7 @@ void Greedy::FindSchedule(Schedule& out, double &efficiency, int pNum, bool forO
                     tbegin = static_cast<int>(currResBegin);
                 }
             }
+			if (tbegin > deadline) continue;
             if (data.Resources(res).FindPlacement(execTime[res], tbegin, processor, deadline)){
                 if (tbegin + execTime[res] < bestTimeEnd){
                     savedPlan.get<0>() = processor; 

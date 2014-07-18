@@ -31,6 +31,19 @@ double Package::GetAvgExecTime() const{
 	return sum/counter;
 }
 
+// return maximum exectime of package pNum (on 1 processor)
+double Package::GetMaxExecTime() const{
+	double max = 0.0;
+	for (auto it = execTimes.begin(); it!= execTimes.end(); it++){
+		// for 1 core
+		if (it->first.second == 1){
+			if (it->second > max)
+				max = it->second;
+		}
+	}
+	return max;
+}
+
 // copy constructor
 Package::Package (const Package & p){
 	uid = p.uid;

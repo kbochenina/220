@@ -31,6 +31,8 @@ public:
 	const long int GetAmount() const { return amount;} 
 	// return average exectime of package pNum (on 1 processor)
 	double GetAvgExecTime() const;
+	// return maximum exectime of package pNum (on 1 processor)
+	double GetMaxExecTime() const;
 	~Package(void);
 };
 

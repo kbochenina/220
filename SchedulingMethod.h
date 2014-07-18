@@ -16,7 +16,11 @@ protected:
 	// efficiency finder
 	unique_ptr<Efficiency> eff;
 public:
+	SchedulingMethod();
 	SchedulingMethod(DataInfo &d, int u, int w) : data(d), uid(u), wfNum(w) {
+		eff = unique_ptr<Efficiency> ( new Efficiency(2.00 / data.GetprocessorsCount(), data.GetT()) );
+	}
+	SchedulingMethod(DataInfo &d, int u) : data(d), uid(u), wfNum(0){
 		eff = unique_ptr<Efficiency> ( new Efficiency(2.00 / data.GetprocessorsCount(), data.GetT()) );
 	}
 	// get schedule for current method and WF

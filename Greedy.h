@@ -10,7 +10,7 @@ class Greedy :
 	double GetWFSchedule(Schedule &out);
 	double GetFullSchedule(Schedule& out);
 	double GetOneWFSchedule(Schedule& out);
-   void FindSchedule(Schedule& out, double &eff, int pNum, bool forOneWf);
+    void FindSchedule(Schedule& out, double &eff, int pNum, bool forOneWf);
 	~Greedy(void);
 };
 

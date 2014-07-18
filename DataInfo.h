@@ -72,7 +72,7 @@ public:
 	// getting next package with smallest finishing time
 	int GetNextPackage();
 	// get wfNum and local package number for global package number
-	void GetLocalNumbers (const int &current, int &wfNum, int &localNum);
+	void GetLocalNumbers (const int &current, int &wfNum, int &localNum) const;
 	int GetT() {return context.GetT();}
 	void SetT(double newT) {context.SetT(newT);}
 	// get global processor index 
@@ -88,7 +88,11 @@ public:
 	const double GetDeadline(int wfNum);
 	double GetDeadline();
 	int GetPrioritiesSize() {return priorities.size();}
-   double GetBandwidth(const int& from, const int& to);
+    double GetBandwidth(const int& from, const int& to) const;
+   // get average transfer time from globalPackage to all its childs
+    double GetAvgTransferFrom(const int& globalPackage) const;
+	// get maximum exec time of last task of wfNum (for fine calculating)
+	double GetMaxLastTasksExecTime(int wfNum) const;
 	~DataInfo(void);
 };
 

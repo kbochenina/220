@@ -2,12 +2,13 @@
 #include "Workflow.h"
 #include <list>
 
-Workflow::Workflow(int u, vector <Package> p, vector<vector<int>> m, double d, vector<vector<double>> t) {
+Workflow::Workflow(int u, vector <Package> p, vector<vector<int>> m, double d, vector<vector<double>> t, double tstart) {
     uid = u; 
     packages = p; 
     matrix = m; 
     deadline = d; 
     transfer = t;
+	this->tstart = tstart;
 }
 
 void Workflow::SetTransfer(vector<vector<double>> t) {
@@ -56,7 +57,7 @@ bool Workflow::IsPackageInit(int pNum) const {
    return true;
 }
 
-// return true if first depends on second
+// return true if second depends on first
 bool Workflow::IsDepends(unsigned one, unsigned two) const {
    try {
       string errorMsg = "Workflow::IsDepends() error. Workflow " + to_string(uid) + ", incorrect package num - ";
@@ -133,6 +134,10 @@ double Workflow::GetAvgExecTime(int pNum) const{
    return packages[pNum].GetAvgExecTime();
 }
 
+double Workflow::GetMaximumExecTime(const int& pNum) const{
+	return packages[pNum].GetMaxExecTime();
+}
+
 // return all successors of package pNum
 void Workflow::GetSuccessors(const unsigned int &pNum, vector<int>&out) const {
    try{
@@ -164,6 +169,8 @@ void Workflow::GetSuccessors(const unsigned int &pNum, vector<int>&out) const {
    }
 }
 
+
+// !!make up variant with communications
  // setting sub-deadlines for the workflow
  void Workflow::SetFinishingTimes(double avgCalcPower){
      // indexes of packages which finishing time was already setted up 
@@ -241,14 +248,34 @@ void Workflow::GetSuccessors(const unsigned int &pNum, vector<int>&out) const {
             
       finishingTimes.resize(pCount);
            
-      finishingTimes[maxTask] = maxAmount/avgCalcPower;
-      double deadline = finishingTimes[maxTask];
+      //finishingTimes[maxTask] = maxAmount/avgCalcPower;
+      //double deadline = finishingTimes[maxTask];
+	  finishingTimes[maxTask] = deadline + tstart;
       for (int i = 0; i < pCount; i++){
          if (i != maxTask){
-            finishingTimes[i] = amounts[i]/maxAmount*deadline;
+            finishingTimes[i] = amounts[i]/maxAmount*deadline + tstart;
          }
       }
- 
+	SetStartTimes();
+ }
+
+ void Workflow::SetStartTimes(){
+	 vector<int> pred;
+	 startTimes.resize(packages.size(),tstart);
+	 for (size_t i = 0; i < packages.size(); i++){
+		 GetInput(i,pred);
+		 double maxFinishingPred = 0, currDeadline = 0;
+		 for (vector<int>::iterator it = pred.begin(); it!= pred.end(); it++){
+			 currDeadline = finishingTimes[*it];
+			 if (currDeadline > maxFinishingPred)
+				 maxFinishingPred = currDeadline; 
+		 }
+		 startTimes[i] = maxFinishingPred;
+		// if (startTimes[i]> finishingTimes[i])
+		//	 cout << startTimes[i] << " " << finishingTimes[i] << endl;
+		 pred.clear();
+	 }
+	// cout << endl;
  }
 
  // set different wf priorities

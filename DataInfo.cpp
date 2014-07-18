@@ -7,6 +7,8 @@
 
 using namespace boost::filesystem; // directory_iterator, path
 
+const int PACKS_MAX = 50;
+
 DataInfo::~DataInfo(void)
 {
 }
@@ -20,7 +22,46 @@ DataInfo::DataInfo( string fSettings )
   
 }
 
+double DataInfo::GetAvgTransferFrom(const int& globalNum) const{
+	// getting wfNum, localPackageNum
+	int wfNum, localNum;
+	GetLocalNumbers(globalNum, wfNum, localNum);
+	// getting resTypes for globalNum
+	vector <int> currentResTypes = Workflows(wfNum)[localNum].GetResTypes();
+	vector <int> linked;
+	Workflows(wfNum).GetOutput(localNum, linked);
 
+	double maxAvgTransfer = 0.0;
+
+	for (auto& linkedIt : linked){
+		 double transfer = Workflows(wfNum).GetTransfer(localNum, linkedIt);
+		 vector <int> linkedResTypes = Workflows(wfNum)[linkedIt].GetResTypes(); 
+		 double transferTime = 0.0;
+
+		 for (auto& currentIt : currentResTypes){
+			 for (auto& linkedIt : linkedResTypes){
+				 double band = GetBandwidth(currentIt - 1, linkedIt - 1); 
+				 if (band!= 0) transferTime += transfer / band;
+			}
+		 }
+
+		 double avgTransfer = transferTime / (currentResTypes.size() * linkedResTypes.size());
+		 if (avgTransfer > maxAvgTransfer) maxAvgTransfer = avgTransfer;
+	}
+	return maxAvgTransfer;
+}
+
+double DataInfo::GetMaxLastTasksExecTime(int wfNum) const{
+	double maxTime = 0.0;
+	for (int i = 0; i < Workflows(wfNum).GetPackageCount(); i++){
+		if (Workflows(wfNum).IsPackageLast(i)){
+			double maxPackageTime = Workflows(wfNum).GetMaximumExecTime(i);
+			if (maxPackageTime > maxTime)
+				maxTime = maxPackageTime;
+		}
+	}
+	return maxTime;
+}
 
 void  DataInfo::SetTransferValues(){
     ofstream file("transfer.txt");
@@ -55,8 +96,12 @@ void  DataInfo::SetTransferValues(){
             // in megabytes
             double avgAmount = fullAmount / (pCount - wf.GetLastPackagesCount());
             for (int i = 0; i < pCount; i++){
-                double outPackageAmount = rand()% static_cast<int>(2 * context.GetH() * avgAmount) 
-                    + avgAmount * (1 - context.GetH());
+				double h = context.GetH(), outPackageAmount = 0.0;
+				if (h == 0) 
+					outPackageAmount = avgAmount;
+				else
+					outPackageAmount = rand()% static_cast<int>(2 * h * avgAmount) 
+                    + avgAmount * (1 - h);
                 vector <int> out;
                 wf.GetOutput(i, out);
                 double avgPackageAmount = outPackageAmount / out.size();
@@ -504,8 +549,11 @@ void DataInfo::InitWorkflows(string f){
                     s.erase(found,2);
                     dataSize = atof(current.c_str());
                 }
-                if (!isPackageNumber)
+                if (!isPackageNumber){
+					if (fullPackagesCount - 1 > transfer.size() - 1 || outPackageNumber - 1 > transfer[0].size() - 1)
+						throw UserException("DataInfo::InitWorkflows() : wrong input file, package transfer number is out of range");
                     transfer[fullPackagesCount-1][outPackageNumber-1] = dataSize;
+				}
                 isPackageNumber = !isPackageNumber;
             }
 
@@ -556,7 +604,17 @@ void DataInfo::InitWorkflows(string f){
             }
             connectMatrix.push_back(row);
          }
-         Workflow w(workflows.size() + i+1, pacs,connectMatrix, GetT(), transfer);
+		double maxLength = GetT() * pacs.size()/PACKS_MAX;
+		double deadline = GetT();
+		double tstart = 0.00;
+		cout << "maxTstart " << GetT() - maxLength << endl;
+		
+		//tstart = (GetT() == maxLength) ? 0.00 : (rand() / static_cast<double>(RAND_MAX) * (GetT() - maxLength));
+		//deadline = tstart + maxLength;
+		
+	     //double deadline = GetT(), tstart = 0;
+         Workflow w(workflows.size() + i+1, pacs,connectMatrix, deadline, transfer, tstart);
+		 cout << "Tstart:" << tstart << " Deadline " << deadline << endl;
          workflows.push_back(w);
          pacs.clear();
          connectMatrix.clear();
@@ -973,7 +1031,7 @@ int DataInfo::GetNextPackage(){
 }
 
 // get wfNum and local package number for global package number
-void DataInfo::GetLocalNumbers (const int & current, int &wfNum, int &localNum){
+void DataInfo::GetLocalNumbers (const int & current, int &wfNum, int &localNum) const{
    int aggregated = 0;
    for (size_t i = 0; i < workflows.size(); i++){
       if (current >= aggregated && current < aggregated + workflows[i].GetPackageCount()){
@@ -1012,7 +1070,7 @@ void DataInfo::RemoveFromPriorities(const vector<int>& toRemove){
    }
 }
 
-double DataInfo::GetBandwidth(const int& from, const int& to) {
+double DataInfo::GetBandwidth(const int& from, const int& to) const {
     try{
         if (from > bandwidth.size()-1 || from < 0 || to > bandwidth.size()-1 || to < 0)
             throw UserException("DataInfo::GetBandwidth() error. Wrong parameters");

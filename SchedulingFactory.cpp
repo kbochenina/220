@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "SchedulingFactory.h"
 
-enum Algorithms{ BELLMAN = 1, GREEDY = 2 };
+enum Algorithms{ BELLMAN = 1, GREEDY = 2, CLUSTERED = 3 };
 
 SchedulingFactory::SchedulingFactory(void)
 {
@@ -18,6 +18,8 @@ unique_ptr<SchedulingMethod> SchedulingFactory::GetMethod(DataInfo &d, int uid, 
 			//return unique_ptr<SchedulingMethod> (new BellmanScheme(d, uid, wfNum));
 		case GREEDY:
 			return unique_ptr<SchedulingMethod>(new Greedy(d, uid, wfNum));
+		case CLUSTERED:
+			return unique_ptr<SchedulingMethod>(new Clustered(d,uid));
 		default:
 			throw UserException("SchedulingFactory::GetMethod() error. No valid algorithm found. Current algorithm uid = " + to_string(uid));
 		}
@@ -28,3 +30,4 @@ unique_ptr<SchedulingMethod> SchedulingFactory::GetMethod(DataInfo &d, int uid, 
 		exit(EXIT_FAILURE);
 	}
 }
+

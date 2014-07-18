@@ -49,6 +49,10 @@ void Scheduler::SetSchedulingStrategy(int strategyNumber)
       // only Greedy
    case 2: for (unsigned int i = 0; i < methodsSet.size(); i++)
             methodsSet[i] = 2;
+	   break;
+	   // clustered scheme
+   case 3: for (unsigned int i = 0; i < methodsSet.size(); i++)
+            methodsSet[i] = 3;
       break;
       // mixed
    }
@@ -248,11 +252,35 @@ void Scheduler::GetSchedule(int scheduleVariant){
          full << "Time of executing reserved ordered scheme " << end << endl;
          full << "Reserved scheme eff: " << maxEff << endl;
          break;
+	  case 5:
+		  // clustered scheme
+		 t = clock();
+         Clustered();
+         end = (clock() - t)/1000.0;
+         cout << "Time of executing clustered scheme " << end << endl;
+         resTime << "Time of executing clustered scheme " << end << endl;
+         full << "Time of executing clustered scheme " << end << endl;
+         full << "clustered eff: " << maxEff << endl;
+         break;
       default:
          break;
       }
    resTime.close();
    full.close();
+}
+
+void Scheduler::Clustered()
+{
+	 unique_ptr <SchedulingMethod> method = SchedulingFactory::GetMethod(data, methodsSet[0], -1);
+	 // get full schedule
+	 maxEff = method->GetWFSchedule(fullSchedule);
+	 maxEff = maxEff/maxPossible;
+	 cout << "Efficiency: " << maxEff << endl;
+     //data.FixBusyIntervals();
+     xmlWriter->SetXMLBaseName("Clustered_");
+     // write result to XML
+     xmlWriter->CreateXML(fullSchedule);
+     data.SetInitBusyIntervals();
 }
 
 void Scheduler::EfficiencyOrdered(){
@@ -458,7 +486,7 @@ void Scheduler::PrintFooter(ofstream & res, vector<double>&eff){
 }
 
 void Scheduler::GetMetrics(string filename, string name){
-   Metrics m(data, filename);
+   Metrics m(data, filename, maxEff);
    m.GetMetrics(fullSchedule, name);
    ofstream out(filename, ios::app);
    out << "Efficiency: " << maxEff << endl;

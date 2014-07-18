@@ -33,23 +33,57 @@ bool Intervals::FindPlacement(const double &execTime, int &tbegin, int& processo
             tb[currentProcessor++] = tbegin;
             continue;
          }
-         // cycle for intervals
-         for (size_t k = 0; k < j->second.size(); k++){
-            if (j->second[k].second <= begin)
-               continue;
-            if (begin + execTime <= j->second[k].first){
-               tb[currentProcessor] = begin;
-               break;
-            }
-            else
-               begin = j->second[k].second;
-            if ( k == j->second.size()-1 )
-               tb[currentProcessor] = begin;
+         //// cycle for intervals
+         //for (size_t k = 0; k < j->second.size(); k++){
+         //   if (j->second[k].second <= begin && k != j->second.size()-1 )
+         //      continue;
+         //   if (begin + execTime <= j->second[k].first){
+         //      tb[currentProcessor] = begin;
+         //      break;
+         //   }
+         //   else
+         //      begin = j->second[k].second;
+         //   if ( k == j->second.size()-1 )
+         //      tb[currentProcessor] = begin;
 
-         }
+         //}
+
+		 int intIndex = 0;
+		 int numIntervals = j->second.size();
+		 while (intIndex < numIntervals 
+			 && begin >= j->second[intIndex].second) ++intIndex;
+		 // if begin > right busy border, begin = right border
+		 if (intIndex == j->second.size()){
+			 tb[currentProcessor] = j->second[numIntervals-1].second;
+		 }
+		 else {
+			  while (true){
+				 // if package can be placed into [intIndex-1; intIndex] interval
+				 if (begin + execTime <= j->second[intIndex].first){
+					 tb[currentProcessor] = begin;
+					 break;
+				 }
+				 // if package cannot be placed between last busy interval and previous,
+				 // right border is tbegin
+				 if (intIndex == j->second.size()-1){
+					 tb[currentProcessor] = j->second[intIndex].second;
+					 break;
+				 }
+				// else we try next free diapason
+				begin = j->second[intIndex].second;
+				++intIndex;
+			 }
+		 }
+
          currentProcessor++;
       }
    }
+
+   for (auto& elem : tb){
+	   if (elem < tbegin)
+		   elem = tbegin;
+   }
+
    double trealbegin = deadline;
    // find resource with earliest finishing time
    for (size_t i = 0; i < tb.size(); i++){
