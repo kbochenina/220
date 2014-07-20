@@ -80,6 +80,10 @@ void Cluster::Delete(int index){
 	this->deadline = newDeadline;
 	this->tstart = newStart;
 	this->length = deadline - tstart;
+	if (newDeadline == newStart){
+		cout << "error" << endl;
+		system("pause");
+	}
 }
 
 void Cluster::SetLength(){

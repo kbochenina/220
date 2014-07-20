@@ -15,9 +15,10 @@ ModelingContext::~ModelingContext(void)
 {
 }
 
-void ModelingContext::SetContext( int T,  double CCR, double h )
+void ModelingContext::SetContext( int T,  double CCR, double h, double minLength )
 {
 	this->T = T;
 	this->CCR = CCR;
-   this->h = h;
+    this->h = h;
+	this->minLength = minLength;
 }

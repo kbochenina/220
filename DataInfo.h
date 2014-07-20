@@ -36,12 +36,16 @@ class DataInfo
 	void InitBandwidth(string fName);
 	// init workflows
 	void InitWorkflows(string fName);
+	// init workflows from DAX
+	void InitWorkflowsFromDAX(string fName);
 	// init finishing times
 	void InitFinishingTimes();
 	// setting data transfer size according to CCR, h and average resources' power
    void  SetTransferValues();
    // get average performance of resources
    double GetAvgPerf();
+   // get maximum performance
+   double GetMaxPerf();
   
 public:
 	DataInfo(){}

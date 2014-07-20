@@ -35,7 +35,7 @@ class Clustered :
 	void Merge(int second, bool isPrev);
 	void SetClusterDep();
 
-	double GetClusterSchedule(Schedule &out);
+	double GetClusterSchedule(Schedule &out, int&realBegin, int&realEnd);
 
 	//double GetMaximumWeight();
 	//double GetMaximumWeight(int second);

@@ -30,6 +30,10 @@ void Clustered::SetInitClusters(){
 		double weight = data.Workflows(wfNum).GetAvgExecTime(localNum);
 		double startTime = data.Workflows(wfNum).GetStartTime(localNum);
 		double finishingTime = data.Workflows(wfNum).GetFinishingTime(localNum);
+		if (startTime == finishingTime){
+			cout << "error" << endl;
+			system("pause");
+		}
 		Cluster newCluster;
 		newCluster.Add(globalNum,weight,finishingTime,startTime);
 		newCluster.SetLength();
@@ -80,39 +84,41 @@ void Clustered::ClusterizeConsequence(){
 			// if cluster should be merged with previous cluster
 			else if (f1 <= f2){
 				Merge(currentCluster - 1, true);
+				//cout << 1 << endl;
 				currentF = f1;
 				//cout << "CurrentF: " << f1 << " " << GetAvgDiffWeight()/maxAvgDiffWeight  
 				//	<< " " << GetSumL()/maxSumL  << endl;
 				//cout << "CurrentF: " << f1 << " " << GetMaximumWeight()/maxWeight << " " << GetSumL()/maxSumL << endl;
 				wasMerged = true;
 				
-				file.open("clustersDebugInfo.txt");
+				/*file.open("clustersDebugInfo.txt");
 				file.close();
 				for (size_t i = 0; i < clusters[wfNum].size(); i++){
 					file.open("clustersDebugInfo.txt", ios::app);
 					clusters[wfNum][i].PrintInfo(file);
 					file << endl;
 					file.close();
-				}
+				}*/
 				currentCluster++;
 			}
 			else {
 				//cout << "Before:" << GetAvgDiffWeight(currentCluster + 1) << endl;
 				Merge(currentCluster + 1, false);
+				//cout << 2 << endl;
 				currentF = f2;
 				//cout << "CurrentF: " << f2 << " " << GetAvgDiffWeight()/maxAvgDiffWeight  
 				//	<< " " << GetSumL()/maxSumL  << endl;
 				//cout << "CurrentF: " << f2 << " " << GetMaximumWeight()/maxWeight << " " << GetSumL()/maxSumL << endl;
 				wasMerged = true;
 				
-				file.open("clustersDebugInfo.txt");
+				/*file.open("clustersDebugInfo.txt");
 				file.close();
 				for (size_t i = 0; i < clusters[wfNum].size(); i++){
 					file.open("clustersDebugInfo.txt", ios::app);
 					clusters[wfNum][i].PrintInfo(file);
 					file << endl;
 					file.close();
-				}
+				}*/
 				currentCluster++;
 			}
 		}
@@ -506,18 +512,19 @@ double Clustered::GetWFSchedule(Schedule &out){
 	vector<vector<int>> variants;
 	variants.resize(wfCount);
 
+	vector<int> wfToAddClusters;
+	for (int i = 0; i < wfCount; i++)
+		wfToAddClusters.push_back(i);
+	
+	double minDeadline = numeric_limits<double>::max();
+	double maxWeightLength = 0;
+	
 	while (schedClustersCount != clustersCount){
 		int clustersSetSize = 0;
+		
 		// fill the variants vector
-		for (int wf = 0; wf < wfCount; wf++){
+		for (auto& wf: wfToAddClusters){
 			vector<vector<int>>& wfDep = dep[wf];
-
-			/*for (auto& row : wfDep){
-				for (auto& col : row)
-				cout << col << " ";
-			cout << endl;
-			}
-			cout << endl;*/
 
 			for (size_t i = 0; i < wfDep.size(); i++){
 				bool isVariant = true;
@@ -528,90 +535,122 @@ double Clustered::GetWFSchedule(Schedule &out){
 					}
 				}
 				if (isVariant && 
-					find(unschedClusters[wf].begin(), unschedClusters[wf].end(), i) != unschedClusters[wf].end()){
+					find(unschedClusters[wf].begin(), unschedClusters[wf].end(), i) != unschedClusters[wf].end() &&
+					find(variants[wf].begin(), variants[wf].end(), i) == variants[wf].end()){
 					variants[wf].push_back(i);
+					//cout << "Cluster " << i << " was added to " << wf << "WF." << endl;
+					if (minDeadline > clusters[wf][i].GetDeadline())
+						minDeadline = clusters[wf][i].GetDeadline();
+					double weightLength = clusters[wf][i].GetWeight() / clusters[wf][i].GetLength();
+					//cout << "weightLength = " << weightLength << endl;
+					if (weightLength > maxWeightLength)
+						maxWeightLength = weightLength;
 					clustersSetSize++;
 				}
 			}
 		}
+
+
+	
 		// scheduling variants set
 		int schedSetCount = 0;
 		// while all clusters from the set aren't scheduled
-		while (schedSetCount != clustersSetSize){
-			double bestMetric = std::numeric_limits<double>::max();
-			int bestWf = 0, bestCluster = 0, bestClusterIndex = 0;
-			for (int i = 0; i < wfCount; i++){
-				for (size_t j = 0; j < variants[i].size(); j++){
-					int clusterNum = variants[i][j];
-					double metric = //clusters[i][clusterNum].GetDeadline() +
-						clusters[i][clusterNum].GetWeight() / clusters[i][clusterNum].GetLength();
-					if (metric < bestMetric){
-						bestWf = i;
-						bestClusterIndex = j;
-						bestCluster = clusterNum;
-					}
+		//while (schedSetCount != clustersSetSize){
+		double prevMinDeadline = numeric_limits<double>::max();
+		double prevMaxWeightLength = 0;
+		double bestMetric = 0;
+		int bestWf = 0, bestCluster = 0, bestClusterIndex = 0;
+		for (int i = 0; i < wfCount; i++){
+			for (size_t j = 0; j < variants[i].size(); j++){
+				int clusterNum = variants[i][j];
+				double currWeightLength = clusters[i][clusterNum].GetWeight() / clusters[i][clusterNum].GetLength();
+				double currDeadline = clusters[i][clusterNum].GetDeadline();
+				if (currWeightLength > prevMaxWeightLength && currWeightLength < maxWeightLength)
+					prevMaxWeightLength = currWeightLength;
+				if (currDeadline < prevMinDeadline && currDeadline > minDeadline)
+					prevMinDeadline = currDeadline;
+				double metric =  //data.GetDeadline() / clusters[i][clusterNum].GetDeadline(); //+
+					0.5 * minDeadline / clusters[i][clusterNum].GetDeadline()  + 
+					0.5 * currWeightLength / maxWeightLength;
+				//cout << metric << endl;
+				/*cout << clusters[i][clusterNum].GetDeadline() << " " <<
+					minDeadline / clusters[i][clusterNum].GetDeadline() << " " <<
+						" " << clusters[i][clusterNum].GetWeight() <<  " " << clusters[i][clusterNum].GetLength() << " " 
+						<< clusters[i][clusterNum].GetWeight()  / clusters[i][clusterNum].GetLength() / maxWeightLength<< " ";*/
+				//cout << metric << endl;
+				if (metric > bestMetric){
+					bestWf = i;
+					bestClusterIndex = j;
+					bestCluster = clusterNum;
+					bestMetric = metric;
 				}
 			}
-			currentCluster = bestCluster;
-			wfNum = bestWf;
-			res += GetClusterSchedule(out);
-			//cout << "Cluster " << bestCluster << " of " << bestWf << " was scheduled." << endl;  
-			schedClustersCount++;
-			schedSetCount++;
-			variants[bestWf].erase(variants[bestWf].begin() + bestClusterIndex);
-			auto it = find(unschedClusters[bestWf].begin(), unschedClusters[bestWf].end(), bestCluster);
-			unschedClusters[wfNum].erase(it);
+		}
+		//system("pause");
+		//cout << "Best metric " << bestMetric << endl;
+		currentCluster = bestCluster;
+		wfNum = bestWf;
+		int realBegin, realEnd;
+		res += GetClusterSchedule(out, realBegin, realEnd);
 
-			for (size_t i = 0; i < dep[bestWf].size(); i++){
-				dep[bestWf][bestCluster][i] = 0;
+
+	   /* cout << "Cluster " << bestCluster << " of " << bestWf << " was scheduled." << endl;  
+		cout << "Tstart: " << clusters[bestWf][bestCluster].GetStart() ;
+		cout << " Deadline: " << clusters[bestWf][bestCluster].GetDeadline() ;
+		cout << " Weight: " << clusters[bestWf][bestCluster].GetWeight() << endl;
+		cout << "Real begin: " << realBegin << " realEnd " << realEnd << endl;
+		system("pause");*/
+		/*for (int i = 0; i < unschedClusters.size(); i++){
+			cout << "Unsched clusters for WF" << i << endl;
+			for (int j = 0; j < unschedClusters[i].size(); j++)
+				cout << unschedClusters[i][j] << " ";
+			cout << endl;
+		}*/
+		schedClustersCount++;
+		schedSetCount++;
+		//cout << "Cluster " << variants[bestWf][bestClusterIndex] << " was deleted from " << bestWf <<"WF"<<endl;
+		variants[bestWf].erase(variants[bestWf].begin() + bestClusterIndex);
+		
+		auto it = find(unschedClusters[bestWf].begin(), unschedClusters[bestWf].end(), bestCluster);
+		if (it == unschedClusters[bestWf].end())
+			cout << "error" << endl;
+		unschedClusters[wfNum].erase(it);
+		wfToAddClusters.clear();
+		wfToAddClusters.push_back(bestWf);
+
+		//rearrange minDeadline and prevMinDeadline
+		minDeadline = numeric_limits<double>::max();
+		prevMinDeadline = numeric_limits<double>::max();
+		
+		for (int i = 0; i < wfCount; i++){
+			for (size_t j = 0; j < variants[i].size(); j++){
+				int clusterNum = variants[i][j];
+				double currDeadline = clusters[i][clusterNum].GetDeadline();
+				if (currDeadline < minDeadline){
+					prevMinDeadline = minDeadline;
+					minDeadline = currDeadline;
+				}
 			}
 		}
+
+		//minDeadline = prevMinDeadline;
+		//maxWeightLength = prevMaxWeightLength;
+
+		for (size_t i = 0; i < dep[bestWf].size(); i++)
+			dep[bestWf][bestCluster][i] = 0;
+			
+		
 	}
 
-
-
-
-		//for (size_t j = 0; j < clusters[i].GetSize(); j++){
-		////for (size_t j = 0; j < wfPackages.size(); j++){
-		////	for (size_t k = 0; k < wfPackages[j].second.size(); k++){
-		//		double eff = 0.0;
-		//		int sizeBefore = out.size();
-		////		int pNum = wfPackages[j].second[k];
-		//		/*int wfNum, localNum;
-		//		data.GetLocalNumbers(pNum, wfNum, localNum);
-		//		cout << "(" << wfNum << ", " << localNum << ")" << endl;*/
-		//		int pNum = clusters[i].GetPNum(j);
-		//		alg.FindSchedule(out, eff, pNum, false);
-		//		res += eff;
-		//		if (out.size() == sizeBefore){
-		//			int wfNum, localNum;
-		//			data.GetLocalNumbers(pNum, wfNum, localNum);
-		//			vector <int> succ;
-		//			data.Workflows(wfNum).GetOutput(localNum, succ);
-		//			for (size_t s = 0; s < succ.size(); s++){
-		//				// set global numbers
-		//				succ[s] += data.GetInitPackageNumber(wfNum);
-		//				for (size_t i1 = 0; i1 < clusters.size(); i1++){
-		//					for (size_t j1 = 0; j1 < clusters[i1].GetSize(); j1++){
-		//						if (clusters[i1].GetPNum(j1) == succ[s]){
-		//							clusters[i1].Delete(j1);
-		//							j1--;
-		//						}
-		//					}
-		//				}
-		//			}
-		//		}
-		//	//}// for inner inner
-		//}// for inner
-
-	
 	return res;
 }
 
 
-double Clustered::GetClusterSchedule(Schedule &out){
+double Clustered::GetClusterSchedule(Schedule &out, int&realBegin, int&realEnd){
 	double res = 0.0;
 	Greedy alg(data,-1,-1);
+	realBegin = data.GetT(); 
+	realEnd = 0;
 	// for each packege in cluster
 	//for (size_t i = 0; i < clusters[currentCluster].GetSize(); i++){
 	int clusterSize = clusters[wfNum][currentCluster].GetSize();
@@ -619,13 +658,32 @@ double Clustered::GetClusterSchedule(Schedule &out){
 	while (clusterSize != attempted){
 		int package = clusters[wfNum][currentCluster].GetPNum(attempted);
 		double eff = 0.0;
-		//int sizeBefore = out.size();
+		int sizeBefore = out.size();
 		//cout << "wfNum " << wfNum << " package " << package << endl;
-		alg.FindSchedule(out, eff, package,false);
+		alg.FindSchedule(out, eff, package, false);
+		if (out.size() > sizeBefore){
+			PackageSchedule &cP = out[out.size()-1];
+			int currBegin = cP.get<1>();
+			int currEnd = cP.get<3>() + currBegin;
+			if (currBegin < realBegin) realBegin = currBegin;
+			if (currEnd > realEnd) realEnd = currEnd;
+		}
 		attempted++;
 		/*if (currentCluster == 5 && sizeBefore == out.size())
 			cout << "Cannot find placement for package " << clusters[currentCluster].GetPNum(i) << endl;*/
 		res += eff;
+	}
+	double add = realEnd - clusters[wfNum][currentCluster].GetDeadline();
+	for (int i = 0; i < clusters[wfNum].size(); i++){
+			if (dep[wfNum][currentCluster][i] == 1){
+				double currStart = clusters[wfNum][i].GetStart(),
+					currDeadline = clusters[wfNum][i].GetDeadline();
+				clusters[wfNum][i].SetStart(currStart + add);
+				clusters[wfNum][i].SetDeadline(currDeadline + add);
+				//cout << "Cluster " << i << " of " << wfNum << " has changed: start = " <<
+				//	currStart + add << " , deadline = " << currDeadline + add << endl;
+			}
+		
 	}
 	return res;
 }
@@ -820,6 +878,9 @@ void Clustered::Merge(int second, bool isPrev){
 		}
 		// delete another cluster
 		clusters[wfNum].erase(clusters[wfNum].begin()+currentCluster);
+	}
+	if (clusters[wfNum][currentCluster].GetStart() == clusters[wfNum][currentCluster].GetDeadline()){
+		cout << "error" << endl; system("pause");
 	}
 }
 

@@ -31,6 +31,8 @@ public:
 	int GetPStart(int index){return pstarts[index];}
 	void Change (int index1, int index2);
 	void InsertAfter(int toInsert, int after);
+	void SetStart(double i) {tstart = i;}
+	void SetDeadline(double i){deadline = i;}
 	void Delete(int index);
 	~Cluster(void);
 };

@@ -10,6 +10,7 @@ class Metrics
 	ofstream full;
 	string filename;
 	double avgFine;
+	double fairness;
 	double eff;
 	vector<double> reservedTime;
 	void AvgUnfinischedTime();

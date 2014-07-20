@@ -254,6 +254,8 @@ void Workflow::GetSuccessors(const unsigned int &pNum, vector<int>&out) const {
       for (int i = 0; i < pCount; i++){
          if (i != maxTask){
             finishingTimes[i] = amounts[i]/maxAmount*deadline + tstart;
+			if (finishingTimes[i] < 0)
+				cout << "error" << endl;
          }
       }
 	SetStartTimes();
@@ -264,6 +266,10 @@ void Workflow::GetSuccessors(const unsigned int &pNum, vector<int>&out) const {
 	 startTimes.resize(packages.size(),tstart);
 	 for (size_t i = 0; i < packages.size(); i++){
 		 GetInput(i,pred);
+		 if (pred.size() == 0) {
+			 startTimes[i] = GetStartTime();
+			 continue;
+		 }
 		 double maxFinishingPred = 0, currDeadline = 0;
 		 for (vector<int>::iterator it = pred.begin(); it!= pred.end(); it++){
 			 currDeadline = finishingTimes[*it];

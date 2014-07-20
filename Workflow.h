@@ -70,6 +70,8 @@ public:
    double GetStartTime() const {return tstart;}
    // get maximum exec time of package
    double GetMaximumExecTime(const int& pNum) const;
+   void SetDeadline(double deadline) {this->deadline = deadline;}
+   void SetTStart(double tstart){this->tstart = tstart;}
     Workflow(){ uid = 0; }
 	~Workflow(void);
 };

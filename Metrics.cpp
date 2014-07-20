@@ -32,13 +32,14 @@ void Metrics::AvgUnfinischedTime(){
    vector <double> execTimePerWf(wfCount,0);
    vector <double> commTimePerWf(wfCount,0);
    vector <vector<int>> resTypesPerWfPackages;
+   vector<double> fineMaxWFs;
    resTypesPerWfPackages.resize(wfCount);
    for (int i = 0; i < wfCount; i++)
        resTypesPerWfPackages[i].resize(data.Workflows(i).GetPackageCount());
    scheduledTasks.resize(wfCount);
    double summUnfinishedTime = 0;
    int summUnfinishedTasks = 0;
-  
+   vector<int> violatedDeadlines;
    // for each p
    for (size_t i = 0; i < sched.size(); i++){
       int pNum = sched[i].get<0>();
@@ -63,6 +64,8 @@ void Metrics::AvgUnfinischedTime(){
 	  if (taskEnd > wfEnds[wfNum]) wfEnds[wfNum] = taskEnd;
       // DEADLINES FEATURE
       if ( taskEnd > data.GetDeadline(wfNum) ){
+		 if (find(violatedDeadlines.begin(),violatedDeadlines.end(),wfNum)==violatedDeadlines.end())
+			 violatedDeadlines.push_back(wfNum);
          unfinishedTimes[wfNum] += taskEnd - data.GetDeadline(wfNum);
 		 reservedTime[wfNum] = 0;
          unfinishedTasks[wfNum]++;
@@ -71,25 +74,25 @@ void Metrics::AvgUnfinischedTime(){
    }
    //cout << "Average unfinished times and tasks" << endl << "***************************************************"  << endl;
    //cout << "Unfinished times: " << endl;
-   vector<int> violatedDeadlines;
-   vector<double> unschTimes(data.GetWFCount(), 0);
+    vector<double> unschTimes(data.GetWFCount(), 0);
 
    for (size_t i = 0; i < unfinishedTimes.size(); i++){
       // if we have some unscheduled tasks
       if (scheduledTasks[i].size() != data.Workflows(i).GetPackageCount()){
-         violatedDeadlines.push_back(i);
+         if (find(violatedDeadlines.begin(),violatedDeadlines.end(),i)==violatedDeadlines.end())
+			 violatedDeadlines.push_back(i);
          for (int j = 0; j < data.Workflows(i).GetPackageCount(); j++ ){
             // if package was not scheduled
             if (find(scheduledTasks[i].begin(), scheduledTasks[i].end(), j) == scheduledTasks[i].end()){
 			   int globalNum = data.GetInitPackageNumber(i)+j;
-			   unschTimes[i] = data.Workflows(i).GetAvgExecTime(j) + data.GetAvgTransferFrom(globalNum);
-               unfinishedTimes[i] += unschTimes[i];
+			   unschTimes[i] += data.Workflows(i).GetAvgExecTime(j) + data.GetAvgTransferFrom(globalNum);
+               //unfinishedTimes[i] += unschTimes[i];
 			   unscheduledTasks[i]++;
                reservedTime[i] = 0.0;
             }
          }
       }
-	  summUnfinishedTime += unfinishedTimes[i];
+	  //summUnfinishedTime += unfinishedTimes[i];
       /*cout << "Workflow # " << i+1 << " " << unfinishedTimes[i] << " " << "unfinished tasks: " << unfinishedTasks[i] 
       << " unscheduled tasks: " << unscheduledTasks[i] 
       << " scheduled tasks: " << scheduledTasks[i].size() << endl;*/
@@ -99,42 +102,39 @@ void Metrics::AvgUnfinischedTime(){
    for (int i = 0; i < data.GetWFCount(); i++){
 	   // calculating fineMax
 	  double fineMax = 0;
+	  for (int j = 0; j < data.Workflows(i).GetPackageCount(); j++){
+				fineMax += data.Workflows(i).GetAvgExecTime(j);
+				int globalNum = data.GetInitPackageNumber(i) + j;
+				fineMax += data.GetAvgTransferFrom(globalNum);
+	  }
 	  // if all tasks are scheduled
 	  if (unscheduledTasks[i] == 0){
 		  // if schedule is partly admissible
-		  if (unfinishedTasks[i] != 0){
-	      fineMax = data.GetMaxLastTasksExecTime(i);
-		  fines[i] = wfEnds[i] - data.GetDeadline(i);
-		  if (fines[i] < 0)
-			  cout << endl;
+		  //fineMax = data.GetMaxLastTasksExecTime(i);
+		  if (unfinishedTasks[i] != 0)
+			fines[i] = wfEnds[i] - data.GetDeadline(i);
+		 
 		  //cout << "Partly admissible " << endl; 
-		  }
-		  
-	  }
+      }
 	  // if schedule is incomplete
 	  else {
-		  // for all packages
-		  for (int j = 0; j < data.Workflows(i).GetPackageCount(); j++){
-			  fineMax += data.Workflows(i).GetAvgExecTime(j);
-			  int globalNum = data.GetInitPackageNumber(i) + j;
-			  fineMax += data.GetAvgTransferFrom(globalNum);
-		  }
 		  double deadline = data.GetDeadline(i);
 		  // specific case when part of tasks were finished before deadline,
 		  // and another part was not scheduled
 		  if (wfEnds[i] < deadline)
 			  fines[i] = unschTimes[i];
 		  else
-		  fines[i] = ( wfEnds[i] - deadline + unschTimes[i]  );
+		  fines[i] = unschTimes[i] + unfinishedTimes[i];
 		  if (fines[i] < 0)
 			  cout << "tend " << wfEnds[i] << "unshTimes " << unschTimes[i] << "deadline " << deadline << endl;
 		  //cout << "Incomplete " << endl;
 	  }
 	  out << "Workflow " << i+1 << " Fine: " << fines[i] << " Finemax: " << fineMax;
-	  //cout << "Workflow " << i+1 << " Fine: " << fines[i] << " Finemax: " << fineMax;
+	  cout << "Workflow " << i+1 << " Fine: " << fines[i] << " Finemax: " << fineMax << endl;
+	  fineMaxWFs.push_back(fineMax);
 	  if (fineMax != 0) {
-		  fines[i] /= fineMax;
-		  out << " Ratio: " << fines[i] << " \n\t\tTstart: " << data.Workflows(i).GetStartTime() << " Deadline: " 
+		  //fines[i] /= fineMax;
+		  out << " Ratio: " << fines[i]/fineMax << " \n\t\tTstart: " << data.Workflows(i).GetStartTime() << " Deadline: " 
 			  << data.Workflows(i).GetDeadline() << " Tend: " << wfEnds[i];
 		 // cout << " Ratio: " << fines[i];
 	  }
@@ -176,12 +176,52 @@ void Metrics::AvgUnfinischedTime(){
    full << "Percent of unscheduled tasks: " << static_cast<double>(sumUnsched)/data.GetPackagesCount() << endl;
 
    avgFine = 0.0;
-   for (auto& i: fines) avgFine += i;
+   double maxFine = 0.0;
+    for (int i = 0; i < fineMaxWFs.size(); i++) {
+	     if (fineMaxWFs[i] > maxFine)
+			   maxFine = fineMaxWFs[i];
+	  }
+   
+   int count = 0;
+   for (auto& i: fines) {
+	   avgFine += i / fineMaxWFs[count++];
+   }
    avgFine /= data.GetWFCount();
+
+  // double maxAvg = maxFine / count;
+   //cout << "MaxAvgFine = " << maxAvg << endl;
+
+   // avg fine diff
+   count = 0;
+   double sum = 0.0;
+   for (int i = 0; i < fines.size(); i++) {
+	   for (int j = 0; j < fines.size(); j++){
+		   if (i!=j){
+			if (abs(fines[i]-fines[j]) > sum)
+				sum = abs(fines[i]-fines[j]);
+			//maxFine += max(fines[i], fines[j]);
+			count++;
+		   }
+	   }
+   }
+
+  // sum /= count;
+   
+   //cout << "Avg diff fine :" << sum << endl;
+
+   //if (maxAvg > 0) fairness = sum / maxAvg;
+   //else fairness = 0;
+   fairness = sum / maxFine;
+   cout << "maxFine " << sum << " max possible fine " << maxFine << endl;
+   fairness = 1 - fairness;
+  // cout << "Avg diff " << sum << " MaxAvgDiff " << maxAvg << endl;
+   cout << "Fairness: " << fairness << endl;
 
    out << "Average fine: " << avgFine << endl;
    cout << "Average fine: " << avgFine << endl;
    full << "Average fine: " << avgFine << endl;
+
+
 
    double avgCCR = 0.0;
 
@@ -207,7 +247,8 @@ void Metrics::AvgUnfinischedTime(){
 
 
 void Metrics::IntegralCriterion(){
-	double crit = 0.5 * eff - 0.5 * avgFine + 0.5;
+	//double crit = 0.5 * eff + 0.5 * (1 - avgFine);
+	double crit = 0.5* (1 - avgFine) + 0.5 * fairness ;
 	out << "Integral criterion: " << crit << endl;
 	cout << "Integral criterion: " << crit << endl;
 	full << "Integral criterion: " << crit << endl;
@@ -252,10 +293,10 @@ void Metrics::AvgReservedTime(){
       out << "Workflow # " << i+1 << " " << reservedTime[i] << endl;
    }
    out << "Avg reserved time: " << static_cast<double>(summReserved)/data.GetWFCount() << endl;
-   cout << "Avg reserved time: " << static_cast<double>(summReserved)/data.GetWFCount() << endl;
+   //cout << "Avg reserved time: " << static_cast<double>(summReserved)/data.GetWFCount() << endl;
    full << "Avg reserved time: " << static_cast<double>(summReserved)/data.GetWFCount() << endl;
    out << "Avg reserved time (part of T): " << static_cast<double>(summReserved)/data.GetWFCount()/data.GetT() << endl;
-   cout << "Avg reserved time (part of T): " << static_cast<double>(summReserved)/data.GetWFCount()/data.GetT() << endl;
+  // cout << "Avg reserved time (part of T): " << static_cast<double>(summReserved)/data.GetWFCount()/data.GetT() << endl;
    full << "Avg reserved time (part of T): " << static_cast<double>(summReserved)/data.GetWFCount()/data.GetT() << endl;
 }
 

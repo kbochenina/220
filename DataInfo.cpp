@@ -18,7 +18,7 @@ DataInfo::DataInfo( string fSettings )
    Init(fSettings);
    _mkdir("Output");
    _chdir("Output");
-    SetTransferValues();
+    //SetTransferValues();
   
 }
 
@@ -147,6 +147,7 @@ void DataInfo::Init(string settingsFile){
       unsigned int line = 0;
       string s, trim;
       int T = 0, delta = 0;
+	  double mL = 0.0;
       getline(file,s);
       ++line;
       if (file.eof()) throw UserException(errEarlyEnd);
@@ -241,7 +242,33 @@ void DataInfo::Init(string settingsFile){
       }
       s.erase(0,trim.size());
       T = stoi(s);
+	  // minLength=minLengthValue
+	  getline(file,s);
+      ++line;
+      trim = "minLength=";
+      found = s.find(trim);
+      if (found != 0) {
+         sprintf_s(second, "%d", line);
+         errWrongFormatFull += second;
+         throw UserException(errWrongFormatFull);
+      }
+      s.erase(0,trim.size());
+      mL = stof(s);
       
+	  double koeff = 0.0;
+	  // minLength=minLengthValue
+	  getline(file,s);
+      ++line;
+      trim = "koeff=";
+      found = s.find(trim);
+      if (found != 0) {
+         sprintf_s(second, "%d", line);
+         errWrongFormatFull += second;
+         throw UserException(errWrongFormatFull);
+      }
+      s.erase(0,trim.size());
+      koeff = stof(s);
+
       double CCR = 0.0;
       
       getline(file,s);
@@ -269,7 +296,8 @@ void DataInfo::Init(string settingsFile){
       s.erase(0,trim.size());
       h = stof(s);
 
-      context.SetContext(T, CCR, h);	
+	  
+      
       
       // read all filenames from path
       string resourcesFileName;
@@ -298,7 +326,37 @@ void DataInfo::Init(string settingsFile){
       InitResources(resourcesFileName, canExecuteOnDiffResources);
       InitBandwidth(bandwidthFileName);
       for (vector<string>::iterator it = WFFileNames.begin(); it!= WFFileNames.end(); it++)
-         InitWorkflows(*it);
+         InitWorkflowsFromDAX(*it);
+
+	  
+	  T = mL + workflows.size() * koeff * mL;
+	  context.SetContext(T, CCR, h, mL);	
+
+	  for (int i = 0; i < workflows.size(); i++){
+		  double deadline = rand() / static_cast<double>(RAND_MAX) * (T - mL) + mL;
+		 double tstart = rand() / static_cast<double>(RAND_MAX) * (deadline-mL);
+		  //double deadline = rand() / static_cast<double>(RAND_MAX) * (T - mL) + mL;
+		  //double tstart = 0;
+		  workflows[i].SetDeadline(deadline);
+		  workflows[i].SetTStart(tstart);
+		  cout << "Tstart:" << tstart << " Deadline " << deadline << endl;
+	  }
+	  // setting deadlines and tstarts
+	  //double singleLength = 20000;
+	  //T = singleLength;
+	  //context.SetT(T);
+	  //double currentLength = singleLength + (workflows.size()-1) * singleLength / GetT() * singleLength / 2;
+	  //cout << currentLength << endl;
+	  //double maxLength = rand()%50000 + 30000;//GetT() * pacs.size()/50;
+	  //for (int i = 0; i < workflows.size(); i++){
+		 // double tstart = (GetT() == currentLength) ? 0.00 : (rand() / static_cast<double>(RAND_MAX) * (GetT() - currentLength));
+		 // double deadline = tstart + currentLength;
+		 // //tstart = 0;
+		 // //deadline = T;
+		 // workflows[i].SetDeadline(deadline);
+		 // workflows[i].SetTStart(tstart);
+		 // cout << "Tstart:" << tstart << " Deadline " << deadline << endl;
+	  //}
       int initNum = 0;
       initPackageNumbers.resize(workflows.size());
       for (size_t i = 0; i < workflows.size(); i++){
@@ -325,6 +383,188 @@ void DataInfo::Init(string settingsFile){
       std::system("pause");
       exit(EXIT_FAILURE);
    }
+}
+
+void DataInfo::InitWorkflowsFromDAX(string fname){
+	try{
+		ifstream file(fname, ifstream::in);
+		string errOpen = "File " + fname + " was not open";
+		string errEarlyEnd = "Unexpected end of file " + fname;
+		string errWrongFormat = "Wrong format in file " + fname + " at line ";
+		string errConnMatrix = "Wrong value in connectivity matrix";
+		string errJobsCount = "Can not find jobs count value in file " + fname;
+		string errWrongFormatFull = errWrongFormat;
+		if (file.fail()) throw UserException(errOpen);
+		double maxPerf = GetMaxPerf();
+		bool jobsCountFound = false;
+		int jobsCount = 0;
+		string s;
+		while (!jobsCountFound){
+			getline(file,s);
+			size_t found = s.find("jobCount=\"");
+			if (found != std::string::npos){
+				
+				s.erase(0,found+10);
+				istringstream iss(s);
+				iss >> jobsCount;
+				jobsCountFound = true;
+			}
+			if (file.eof()) throw UserException(errJobsCount);
+		}
+		cout << jobsCount << endl;
+		vector<vector<pair<string, double>>> inputFiles;
+		vector<vector<pair<string,double>>> outputFiles;
+		vector <vector<double>> transfer;
+		vector <vector <int>> connectMatrix;
+		vector<string> jobNames;
+		inputFiles.resize(jobsCount);
+		outputFiles.resize(jobsCount);
+		transfer.resize(jobsCount);
+		connectMatrix.resize(jobsCount);
+		jobNames.resize(jobsCount);
+		for (auto &row: transfer)
+			row.resize(jobsCount);
+		for (auto &row: connectMatrix)
+			row.resize(jobsCount);
+		vector <Package> pacs;
+		getline(file,s);
+		getline(file,s);
+		for (int i = 0; i < jobsCount; i++){
+			getline(file,s);
+			if (s.find("job ")!= std::string::npos){
+				size_t foundFirst = s.find("\"");
+				size_t foundSecond = s.find("\"",foundFirst);
+				string jobName = s.substr(foundFirst, foundSecond);
+				//cout << jobName << endl;
+				size_t runtimePos = s.find("runtime=\"");
+				s.erase(0,runtimePos+9);
+				double runTime = 0.0;
+				istringstream iss(s);
+				iss >> runTime;
+				//cout << runTime << endl;
+				double amount = maxPerf / runTime * 60;
+				//cout << amount << endl;
+				map <pair <int,int>, double> execTime;
+				vector<int> types;
+				vector<int> cCount;
+				cCount.push_back(1);
+				for (int j = 0; j < resources.size(); j++){
+					double currentTime = amount / (resources[j].GetPerf() / maxPerf);
+					execTime.insert(make_pair(make_pair(j+1, 1), currentTime));
+					//cout << currentTime << endl;
+					types.push_back(j+1);
+				}
+				Package p(i ,types, cCount, execTime, static_cast<long int>(amount), 0);
+				pacs.push_back(p);
+				bool isNextJob = false;
+				while (!isNextJob){
+					getline(file,s);
+					if (s.find("</job>") != std::string::npos) {
+						isNextJob = true;
+						//std::system("pause");
+						continue;
+					}
+					if (s.find("<!--") != std::string::npos){
+						isNextJob = true;
+						continue;
+					}
+					size_t foundFirst = s.find("\"");
+					size_t foundSecond = s.find("\"",foundFirst+1);
+					string fileName = s.substr(foundFirst+1, foundSecond-foundFirst-1);
+					foundFirst = s.find("\"", foundSecond+1);
+					foundSecond = s.find("\"",foundFirst+1);
+					string direction = s.substr(foundFirst+1, foundSecond-foundFirst-1);
+					foundFirst = s.find("size=\"", foundSecond);
+					s.erase(0,foundFirst+6);
+					double size;
+					istringstream iss(s);
+					iss >> size;
+					size /= 1048576;
+					if (direction=="input"){
+						inputFiles[i].push_back(make_pair(fileName,size));
+					}
+					else {
+						outputFiles[i].push_back(make_pair(fileName,size));
+					}
+					//cout << fileName << " " << direction << " " << size << endl;
+				} 
+			}
+
+		}
+		// set dependencies
+		for (int i = 0; i < jobsCount; i++){
+			for (int j = 0; j < jobsCount; j++){
+				for (auto & output: outputFiles[i]){
+					string fileName = output.first;
+					for (auto& input: inputFiles[j]){
+						if (fileName == input.first){
+							connectMatrix[i][j] = 1;
+							transfer[i][j] = output.second;
+						}
+					}
+				}
+			}
+		}
+
+	/*	for (int i = 0; i < jobsCount; i++){
+			for (int j = 0; j < jobsCount; j++){
+				cout << connectMatrix[i][j] << " ";
+			}
+			cout << endl;
+		}
+
+		for (int i = 0; i < jobsCount; i++){
+			for (int j = 0; j < jobsCount; j++){
+				cout << transfer[i][j] << " ";
+			}
+			cout << endl;
+		}*/
+		//double tstart = 0.0;
+		//double deadline = GetT();
+		double maxLength = rand()%10000 + 10000;//GetT() * pacs.size()/50;
+		double tstart = (GetT() == maxLength) ? 0.00 : (rand() / static_cast<double>(RAND_MAX) * (GetT() - maxLength));
+		//double tstart = rand() / static_cast<double>(RAND_MAX) * GetT() / 3;
+		double deadline = tstart + maxLength;
+		/*if (workflows.size()==0){
+			tstart = 0;
+		    deadline = 5000;
+		}
+		if (workflows.size()==1){
+			tstart = 2500;
+			deadline = 6500;
+		}
+		if (workflows.size()==2) {
+			tstart = 5000;
+			deadline = 9500;
+		}*/
+		//double deadline = tstart - 1;
+		//double deadline = tstart + maxLength;
+		Workflow w(workflows.size() + 1, pacs,connectMatrix, deadline, transfer, tstart);
+		//cout << "Tstart:" << tstart << " Deadline " << deadline << endl;
+		workflows.push_back(w);
+		//std::system("pause");
+	}
+	catch (UserException& e){
+      cout<<"error : " << e.what() <<endl;
+      std::system("pause");
+      exit(EXIT_FAILURE);
+   }
+   catch (std::exception& e){
+      cout<<"error : " << e.what() <<endl;
+      std::system("pause");
+      exit(EXIT_FAILURE);
+   }
+
+}
+
+double DataInfo::GetMaxPerf(){
+	double res = 0.0;
+	for (int i = 0; i < resources.size(); i++){
+		double currentPerf = resources[i].GetPerf();
+		if (currentPerf > res)
+			res = currentPerf;
+	}
+	return res;
 }
 
 // NOTE: type numbers are counted from 1!
@@ -606,7 +846,7 @@ void DataInfo::InitWorkflows(string f){
          }
 
 
-		double maxLength = GetT() * pacs.size()/50;
+		double maxLength = 20000;//GetT() * pacs.size()/50;
 		//double deadline = GetT();
 		//double tstart = 0.00;
 		//cout << "maxTstart " << GetT() - maxLength << endl;
@@ -763,13 +1003,16 @@ void DataInfo::InitResources(string f, bool canExecuteOnDiffResources){
                      errWrongFormatFull += second;
                      throw UserException(errWrongFormatFull);
                   }
-                  oneResDiaps.push_back(make_pair(one,two));
+                  //oneResDiaps.push_back(make_pair(one,two));
                }
                busyIntervals.insert(make_pair(k+1, oneResDiaps));
+			   // !!!
+			  //busyIntervals.clear();
             }
             // add busyIntervals for current resource to a vector <BusyIntervals>
             typeBI.push_back(busyIntervals);
          }
+		
          ResourceType r(i+1,resourcesCount, coresCount, perf, typeBI, canExecuteOnDiffResources, context);
          resources.push_back(r);
          processorsCount += coresCount * resourcesCount;
