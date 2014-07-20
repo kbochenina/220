@@ -337,6 +337,8 @@ void DataInfo::Init(string settingsFile){
 		 double tstart = rand() / static_cast<double>(RAND_MAX) * (deadline-mL);
 		  //double deadline = rand() / static_cast<double>(RAND_MAX) * (T - mL) + mL;
 		  //double tstart = 0;
+		  //double tstart =  0;
+		 // double deadline = T;
 		  workflows[i].SetDeadline(deadline);
 		  workflows[i].SetTStart(tstart);
 		  cout << "Tstart:" << tstart << " Deadline " << deadline << endl;
