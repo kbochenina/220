@@ -516,7 +516,7 @@ double Clustered::GetWFSchedule(Schedule &out){
 	for (size_t wf = 0; wf < clusters.size(); wf++){
 		double weight = 0.0;
 		double lastEnd = 0.0;
-		
+		double scheduled = 0;
 		for (size_t cluster = 0; cluster < clusters[wf].size(); cluster++){
 			auto it = find(unschedClusters[wf].begin(), unschedClusters[wf].end(), cluster);
 			// if current cluster is already scheduled
@@ -524,11 +524,16 @@ double Clustered::GetWFSchedule(Schedule &out){
 				double currDeadline = clusters[wf][cluster].GetDeadline();
 				if (currDeadline > lastEnd)
 					lastEnd = currDeadline;
+				scheduled += clusters[wf][cluster].GetSize();
 			}
-			else
+			else {
 				weight += clusters[wf][cluster].GetWeight();
+
+			}
 		}
-		wfMetric.push_back(data.Workflows(wf).GetDeadline() - (lastEnd + weight));
+		double percentScheduled = scheduled / data.Workflows(wf).GetPackageCount();
+		//wfMetric.push_back(data.Workflows(wf).GetDeadline() - (lastEnd + weight));
+		wfMetric.push_back(data.Workflows(wf).GetDeadline() - lastEnd);//weight);// + percentScheduled );
 	}
 
 	vector<int> wfToAddClusters;
@@ -585,6 +590,8 @@ double Clustered::GetWFSchedule(Schedule &out){
 				bestWf = wf;
 			}
 		}
+		//cout << "Best metric: " << bestMetric << " wf " << bestWf << endl;
+		//system("pause");
 		maxWeightLength = 0;
 		minDeadline = numeric_limits<double>::max();
 		double bestClusterMetric = 0.0;
@@ -652,20 +659,27 @@ double Clustered::GetWFSchedule(Schedule &out){
 
 		double bestWfWeight = 0.0,
 			bestWfLastEnd = 0;
-
+		double scheduled = 0;
 		for (int i = 0; i < clusters[bestWf].size(); i++){
 			auto it = find(unschedClusters[bestWf].begin(), unschedClusters[bestWf].end(), i);
 			if (it != unschedClusters[bestWf].end()){
 				bestWfWeight += clusters[bestWf][i].GetWeight();
+				
 			}
-			else if (clusters[bestWf][i].GetDeadline() > bestWfLastEnd)
-				bestWfLastEnd = clusters[bestWf][i].GetDeadline();
+			else {
+				if (clusters[bestWf][i].GetDeadline() > bestWfLastEnd)
+					bestWfLastEnd = clusters[bestWf][i].GetDeadline();
+				scheduled += clusters[bestWf][i].GetSize();
+			}
 		}
-		
+		double percentScheduled = scheduled / data.Workflows(bestWf).GetPackageCount();
+		//cout << "Best wf weight: " << bestWfWeight << endl;
+		//cout << "Best wf lastEnd: " << bestWfLastEnd << endl;
+		//cout << "Best wf lastEnd: " << percentScheduled << endl;
 	    if (unschedClusters[bestWf].size() == 0)
 			wfMetric[bestWf] = numeric_limits<double>::max();
 		else 
-			wfMetric[bestWf] = data.Workflows(bestWf).GetDeadline() - (bestWfLastEnd + bestWfWeight);
+			wfMetric[bestWf] = (data.Workflows(bestWf).GetDeadline() - bestWfLastEnd);// / bestWfWeight;// + percentScheduled;
 		
 		//minDeadline = prevMinDeadline;
 		//maxWeightLength = prevMaxWeightLength;

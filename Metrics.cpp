@@ -286,7 +286,7 @@ void Metrics::AvgReservedTime(){
       //cout << "Workflow # " << i+1 << " " << reservedTime[i] << endl;
       summReserved += reservedTime[i];
    }
-   //cout << "Avg reserved time: " << static_cast<double>(summReserved)/data.GetWFCount() << endl;
+   cout << "Avg reserved time: " << static_cast<double>(summReserved)/data.GetWFCount() << endl;
 
    out << "Reserved times" << endl << "***************************************************"  << endl;
    for (size_t i = 0; i < reservedTime.size(); i++){

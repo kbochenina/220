@@ -341,7 +341,7 @@ void DataInfo::Init(string settingsFile){
 		 // double deadline = T;
 		  workflows[i].SetDeadline(deadline);
 		  workflows[i].SetTStart(tstart);
-		  cout << "Tstart:" << tstart << " Deadline " << deadline << endl;
+		  cout << "WfNum: " << i <<" Tstart:" << tstart << " Deadline " << deadline << endl;
 	  }
 	  // setting deadlines and tstarts
 	  //double singleLength = 20000;
