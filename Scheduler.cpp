@@ -485,9 +485,9 @@ void Scheduler::PrintFooter(ofstream & res, vector<double>&eff){
    res << endl << "Max eff: " << maxEff << endl << endl;
 }
 
-void Scheduler::GetMetrics(string filename, string name){
+void Scheduler::GetMetrics(string filename, string name, string metricsFileName){
    Metrics m(data, filename, maxEff);
-   m.GetMetrics(fullSchedule, name);
+   m.GetMetrics(fullSchedule, name, metricsFileName);
    ofstream out(filename, ios::app);
    out << "Efficiency: " << maxEff << endl;
 }

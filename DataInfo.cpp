@@ -4,6 +4,8 @@
 #include <boost/filesystem.hpp> // directory_iterator, path
 #include <iterator>
 #include "direct.h"
+#include <windows.h> // for  GetModuleFileName
+
 
 using namespace boost::filesystem; // directory_iterator, path
 
@@ -13,9 +15,10 @@ DataInfo::~DataInfo(void)
 {
 }
 
-DataInfo::DataInfo( string fSettings )
+DataInfo::DataInfo( string fSettings, double mL )
 {
-   Init(fSettings);
+   minL = mL;
+    Init(fSettings);
    _mkdir("Output");
    _chdir("Output");
     //SetTransferValues();
@@ -143,11 +146,20 @@ void DataInfo::Init(string settingsFile){
       string errWrongValue = "Wrong value of parameter ";
       string errWrongFormatFull = errWrongFormat;
       string errEarlyEnd = "Unexpected end of file " + settingsFile;
-      if (file.fail()) throw UserException(errOpen);
+
+      wchar_t buffer[100];
+      GetModuleFileName( NULL, buffer, MAX_PATH );
+      cout << "Current dir: " ;
+      wcout << buffer;
+      cout << endl;
+
+      if (file.fail()) 
+          throw UserException(errOpen);
+           
       unsigned int line = 0;
       string s, trim;
       int T = 0, delta = 0;
-	  double mL = 0.0;
+	   double mL = 0.0;
       getline(file,s);
       ++line;
       if (file.eof()) throw UserException(errEarlyEnd);
@@ -328,7 +340,8 @@ void DataInfo::Init(string settingsFile){
       for (vector<string>::iterator it = WFFileNames.begin(); it!= WFFileNames.end(); it++)
          InitWorkflowsFromDAX(*it);
 
-	  
+	  mL = this->minL;
+
 	  T = mL + workflows.size() * koeff * mL;
 	  context.SetContext(T, CCR, h, mL);	
 
@@ -413,7 +426,7 @@ void DataInfo::InitWorkflowsFromDAX(string fname){
 			}
 			if (file.eof()) throw UserException(errJobsCount);
 		}
-		cout << jobsCount << endl;
+		//cout << jobsCount << endl;
 		vector<vector<pair<string, double>>> inputFiles;
 		vector<vector<pair<string,double>>> outputFiles;
 		vector <vector<double>> transfer;

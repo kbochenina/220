@@ -31,7 +31,7 @@ void Clustered::SetInitClusters(){
 		double startTime = data.Workflows(wfNum).GetStartTime(localNum);
 		double finishingTime = data.Workflows(wfNum).GetFinishingTime(localNum);
 		if (startTime == finishingTime){
-			cout << "error" << endl;
+			cout << "Clustered::SetInitClusters(). Start time = finishing time" << endl;
 			system("pause");
 		}
 		Cluster newCluster;
@@ -928,7 +928,7 @@ void Clustered::Merge(int second, bool isPrev){
 		clusters[wfNum].erase(clusters[wfNum].begin()+currentCluster);
 	}
 	if (clusters[wfNum][currentCluster].GetStart() == clusters[wfNum][currentCluster].GetDeadline()){
-		cout << "error" << endl; system("pause");
+		cout << "GetStart()==Deadline()" << endl; system("pause");
 	}
 }
 

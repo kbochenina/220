@@ -1,7 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Express 2012 for Windows Desktop
+# Visual Studio 2012
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WFSched", "WFSched.vcxproj", "{C4B932DF-52E4-447D-9E40-2DC9CD2526B4}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AggregateExperRes", "..\AggregateExperRes\AggregateExperRes.vcxproj", "{8D9ADB6D-EA35-4583-8339-BD24A34A174F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,6 +15,10 @@ Global
 		{C4B932DF-52E4-447D-9E40-2DC9CD2526B4}.Debug|Win32.Build.0 = Debug|Win32
 		{C4B932DF-52E4-447D-9E40-2DC9CD2526B4}.Release|Win32.ActiveCfg = Release|Win32
 		{C4B932DF-52E4-447D-9E40-2DC9CD2526B4}.Release|Win32.Build.0 = Release|Win32
+		{8D9ADB6D-EA35-4583-8339-BD24A34A174F}.Debug|Win32.ActiveCfg = Debug|Win32
+		{8D9ADB6D-EA35-4583-8339-BD24A34A174F}.Debug|Win32.Build.0 = Debug|Win32
+		{8D9ADB6D-EA35-4583-8339-BD24A34A174F}.Release|Win32.ActiveCfg = Release|Win32
+		{8D9ADB6D-EA35-4583-8339-BD24A34A174F}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

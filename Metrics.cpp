@@ -1,10 +1,10 @@
 #include "stdafx.h"
 #include "Metrics.h"
 
-void Metrics::GetMetrics(Schedule & s, string name){
+void Metrics::GetMetrics(Schedule & s, string name, string metricsFileName){
    sched = s;
    avgFine = 0.0;
-   full.open("fullmetrics.txt", ios::app);
+   full.open(metricsFileName, ios::app);
    full << name.c_str() << endl;
    AvgUnfinischedTime();
    AvgReservedTime();

@@ -51,7 +51,7 @@ public:
 	// 2 - staged scheme with known order
 	void GetSchedule(int scheduleVariant);
 	// get metrics
-	void GetMetrics(string filename, string name);
+	void GetMetrics(string filename, string name, string metricsFileName);
 	// test full schedule
 	void TestSchedule();
 	~Scheduler(void);

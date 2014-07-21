@@ -3,6 +3,7 @@
 #include "ModelingContext.h"
 #include "memory.h"
 
+
 using namespace std;
 
 typedef vector <TimeCore> AllTimeCore;
@@ -25,6 +26,8 @@ class DataInfo
 	vector <int> priorities;
 	// sum of resource types processors count
 	int processorsCount;
+	// min length for experiments
+	double minL;
    // bandwidth matrix
    vector<vector<double>> bandwidth;
 	//OPERATIONS
@@ -49,7 +52,7 @@ class DataInfo
   
 public:
 	DataInfo(){}
-	DataInfo(string fSettings);
+	DataInfo(string fSettings, double mL);
 	// get WF count
 	inline int GetWFCount() {return workflows.size();}
 	inline int GetResourceCount() {return resources.size(); }

@@ -18,9 +18,9 @@ class Metrics
     void AvgCCR();
 	void IntegralCriterion();
 public:
-	Metrics(DataInfo& md, string filename, double e) : data(md){  eff = e; out.open(filename); reservedTime.resize(data.GetWFCount());
+	Metrics(DataInfo& md, string filename, double e) : data(md){   eff = e; out.open(filename); reservedTime.resize(data.GetWFCount());
 														for (size_t i = 0; i < reservedTime.size(); i++) reservedTime[i] = numeric_limits<double>::infinity(); }
-	void GetMetrics(Schedule & sched, string schemeName);
+	void GetMetrics(Schedule & sched, string schemeName, string metricsFileName);
 	~Metrics(void);
 };
 
