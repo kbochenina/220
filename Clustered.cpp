@@ -71,16 +71,24 @@ void Clustered::SetInitClusters(){
 
 void Clustered::ClusterizeConsequence(){
 	ofstream file;
+   ofstream f("currentFinfo.txt");
 	bool wasMerged = true;
-	double currentF = GetF();
+   currentADW = 0.0;
+//    double t = clock();
+	double currentF = GetF(currentADW);
+  // cout << "Time of get first F: " << (clock()-t)/1000.0 << endl;
 	// while there was at least one merge during pass through the loop
 	while (wasMerged){
-		cout << "Workflow # " << wfNum <<"\nClusters: " << clusters[wfNum].size() << endl;
+		//cout << "Workflow # " << wfNum <<"\nClusters: " << clusters[wfNum].size() << endl;
+     // f << currentF << endl;
 		wasMerged = false;
 		currentCluster = 1;
 		for (size_t i = currentCluster; i < clusters[wfNum].size()-1; i++){
-			double f1 = GetF(currentCluster - 1);
-			double f2 = GetF(currentCluster + 1);
+         double adw1, adw2;
+        // double t = clock();
+			double f1 = GetF(currentCluster - 1, adw1);
+        // cout << "Time of getF: " << (clock()-t)/1000.0 << endl;
+			double f2 = GetF(currentCluster + 1, adw2);
 			if (currentF < f1 && currentF < f2){
 				currentCluster++;
 			}
@@ -89,6 +97,7 @@ void Clustered::ClusterizeConsequence(){
 				Merge(currentCluster - 1, true);
 				//cout << 1 << endl;
 				currentF = f1;
+            currentADW = adw1;
 				//cout << "CurrentF: " << f1 << " " << GetAvgDiffWeight()/maxAvgDiffWeight  
 				//	<< " " << GetSumL()/maxSumL  << endl;
 				//cout << "CurrentF: " << f1 << " " << GetMaximumWeight()/maxWeight << " " << GetSumL()/maxSumL << endl;
@@ -109,6 +118,7 @@ void Clustered::ClusterizeConsequence(){
 				Merge(currentCluster + 1, false);
 				//cout << 2 << endl;
 				currentF = f2;
+            currentADW = adw2;
 				//cout << "CurrentF: " << f2 << " " << GetAvgDiffWeight()/maxAvgDiffWeight  
 				//	<< " " << GetSumL()/maxSumL  << endl;
 				//cout << "CurrentF: " << f2 << " " << GetMaximumWeight()/maxWeight << " " << GetSumL()/maxSumL << endl;
@@ -135,6 +145,7 @@ void Clustered::ClusterizeConsequence(){
 		file << endl;
 		file.close();
 	}
+   f.close();
 
 }
 
@@ -203,10 +214,10 @@ double Clustered::GetWFSchedule(Schedule &out){
 		wfNum = i;
       double t = clock();
 		ClusterizeConsequence();
-      cout << "t = " << t << " clock()=" << clock() << endl;
-      cout << "Time of clusterization: " << (clock()-t)/1000.0 << endl;
+     // cout << "t = " << t << " clock()=" << clock() << endl;
+     // cout << "Time of clusterization: " << (clock()-t)/1000.0 << endl;
 		//SetClusterDep();
-      cout << "Time of setting clusters dependency: " << (clock()-t)/1000.0 << endl;
+     // cout << "Time of setting clusters dependency: " << (clock()-t)/1000.0 << endl;
 	}
 
   
@@ -258,8 +269,8 @@ double Clustered::GetWFSchedule(Schedule &out){
 	double minDeadline = numeric_limits<double>::max();
 	double maxWeightLength = 0;
 	
-   double t = clock();
-   cout << "t = " << t << endl;
+   //double t = clock();
+  // cout << "t = " << t << endl;
 
 	while (schedClustersCount != clustersCount){
 		int clustersSetSize = 0;
@@ -410,8 +421,8 @@ double Clustered::GetWFSchedule(Schedule &out){
 
 
 
-   cout << "t = " << t << " clock()=" << clock() << endl;
-   cout << "Time of scheduling: " << (clock()-t)/1000.0 << endl;
+   //cout << "t = " << t << " clock()=" << clock() << endl;
+   //cout << "Time of scheduling: " << (clock()-t)/1000.0 << endl;
 	return res;
 }
 
@@ -476,9 +487,9 @@ void Clustered::SetMaxSumL(){
 	
 }
 
-double Clustered::GetF(){
+double Clustered::GetF(double&avgDiffWeight){
 	double res = 0.0;
-	double avgDiffWeight = GetAvgDiffWeight();
+	avgDiffWeight = GetAvgDiffWeight();
 	double sumL = GetSumL();
 	//res = maxW/maxWeight + sumL/maxSumL;
 	res = avgDiffWeight/maxAvgDiffWeight[wfNum]  + sumL/maxSumL[wfNum];
@@ -487,12 +498,13 @@ double Clustered::GetF(){
 	return res;
 }
 
-double Clustered::GetF(int second){
+double Clustered::GetF(int second, double& avgDiffWeight){
 	double res = 0.0;
-	double avgDiffWeight = GetAvgDiffWeight(second);
-	//cout << "GetF() weight " << avgDiffWeight << " ";
+   avgDiffWeight = GetAvgDiffWeight(second, avgDiffWeight); // GetAvgDiffWeight(second)
+  	//cout << "GetF() weight " << avgDiffWeight << " ";
 	//double maxW = GetMaximumWeight(second);
 	double sumL = GetSumL(second);
+   
 	//res = maxW/maxWeight + sumL/maxSumL;
 	//cout << "GetF() sum " << sumL << endl;
 	res = avgDiffWeight/maxAvgDiffWeight[wfNum]  + sumL/maxSumL[wfNum] ;
@@ -546,6 +558,7 @@ double Clustered::GetAvgDiffWeight(){
 		currNum++;
 	}
 //	debug.close();
+   //cout << "Iterations for simple " << iterations << endl;
 	return sum/iterations;
 }
 
@@ -554,6 +567,30 @@ double Clustered::GetSumL(){
 	for (size_t i = 0; i < clusters[wfNum].size(); i++)
 		sumL += clusters[wfNum][i].GetLength();
 	return sumL;
+}
+
+
+double Clustered::GetAvgDiffWeight(int second, double adw){
+    int size = clusters[wfNum].size();
+    double sum = currentADW * size * (size-1)/2;
+    double currWeight = clusters[wfNum][currentCluster].GetWeight(), secondWeight = clusters[wfNum][second].GetWeight();
+    double mergeWeight = currWeight + secondWeight;
+    int iterations = 0;
+    for (int i = 0; i < size; i++){
+        if ( i!= currentCluster) {
+            sum -= abs(currWeight - clusters[wfNum][i].GetWeight());
+         }
+        if ( i!= second) {
+            sum -= abs(secondWeight - clusters[wfNum][i].GetWeight());
+        }
+        if ( i!= currentCluster && i != second )
+            sum += abs(mergeWeight - clusters[wfNum][i].GetWeight());
+        iterations++;
+    }
+    sum += abs(currWeight - secondWeight);
+    sum /= (size - 1) * (size - 2) / 2;
+    //cout << "Iterations for hard " << iterations << endl;
+    return sum;
 }
 
 double Clustered::GetAvgDiffWeight(int second){

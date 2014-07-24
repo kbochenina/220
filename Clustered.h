@@ -9,6 +9,7 @@ class Clustered :
 	vector <vector<Cluster>> clusters;
 	vector <int> clusterized;
 	int currentCluster;
+   double currentADW;
 	vector<double> maxAvgDiffWeight;
 	vector<double> maxSumL;
 	// cluster dependencies
@@ -25,10 +26,11 @@ class Clustered :
 	void SetMaxSumL();
 	void ClusterizeConsequence();
 
-	double GetF();
-	double GetF(int second);
+	double GetF(double&adw);
+	double GetF(int second, double&adw);
 	double GetAvgDiffWeight();
 	double GetAvgDiffWeight(int second);
+   double GetAvgDiffWeight(int second, double adw);
 	double GetSumL();
 	double GetSumL(int second);
 
