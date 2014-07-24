@@ -378,10 +378,12 @@ void DataInfo::Init(string settingsFile){
          initPackageNumbers[i] = initNum;
          initNum += workflows[i].GetPackageCount();
       }
-      ofstream resTime("Output/time.txt");
+      ofstream resTime("Output/time.txt", ios::app);
       cout << "Start to init finishing times..." << endl;
       double t = clock();
       InitFinishingTimes();
+      for (size_t i = 0; i < workflows.size(); i++)
+          workflows[i].PrintStartFinishingTimes();
       double end = (clock()-t)/1000.0 ;
       cout << "Time of init finishing times " << end << endl;
       resTime << "Time of init finishing times " << end << endl;
@@ -456,9 +458,9 @@ void DataInfo::InitWorkflowsFromDAX(string fname){
 				double runTime = 0.0;
 				istringstream iss(s);
 				iss >> runTime;
-				//cout << runTime << endl;
+            //cout << runTime << endl;
 				double amount = maxPerf / runTime * 60;
-				//cout << amount << endl;
+           	//cout << amount << endl;
 				map <pair <int,int>, double> execTime;
 				vector<int> types;
 				vector<int> cCount;
@@ -469,8 +471,8 @@ void DataInfo::InitWorkflowsFromDAX(string fname){
 					//cout << currentTime << endl;
 					types.push_back(j+1);
 				}
-				Package p(i ,types, cCount, execTime, static_cast<long int>(amount), 0);
-				pacs.push_back(p);
+				Package p(i ,types, cCount, execTime, amount, 0);
+         	pacs.push_back(p);
 				bool isNextJob = false;
 				while (!isNextJob){
 					getline(file,s);
@@ -534,26 +536,10 @@ void DataInfo::InitWorkflowsFromDAX(string fname){
 			}
 			cout << endl;
 		}*/
-		//double tstart = 0.0;
-		//double deadline = GetT();
-		double maxLength = rand()%10000 + 10000;//GetT() * pacs.size()/50;
-		double tstart = (GetT() == maxLength) ? 0.00 : (rand() / static_cast<double>(RAND_MAX) * (GetT() - maxLength));
-		//double tstart = rand() / static_cast<double>(RAND_MAX) * GetT() / 3;
-		double deadline = tstart + maxLength;
-		/*if (workflows.size()==0){
-			tstart = 0;
-		    deadline = 5000;
-		}
-		if (workflows.size()==1){
-			tstart = 2500;
-			deadline = 6500;
-		}
-		if (workflows.size()==2) {
-			tstart = 5000;
-			deadline = 9500;
-		}*/
-		//double deadline = tstart - 1;
-		//double deadline = tstart + maxLength;
+		
+		double tstart = 0.0;
+		double deadline = 0.0;
+		
 		Workflow w(workflows.size() + 1, pacs,connectMatrix, deadline, transfer, tstart);
 		//cout << "Tstart:" << tstart << " Deadline " << deadline << endl;
 		workflows.push_back(w);

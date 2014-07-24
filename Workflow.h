@@ -13,6 +13,8 @@ class Workflow
 	vector <Package> packages;
 	// connectivity matrix
 	vector<vector<int>> matrix;
+   // matrix of successors
+	vector<vector<int>> deep;
    // sub-deadlines
    vector <double> finishingTimes;
    // expected start times
@@ -23,6 +25,9 @@ class Workflow
    vector<vector<double>> transfer;
    // set start times after setting finishing times
    void SetStartTimes();
+   // set successors
+   void SetDeep();
+   
 public:
 	const Package& operator[] (int pNum) const { return packages[pNum]; } 
 	// return package count
@@ -72,6 +77,10 @@ public:
    double GetMaximumExecTime(const int& pNum) const;
    void SetDeadline(double deadline) {this->deadline = deadline;}
    void SetTStart(double tstart){this->tstart = tstart;}
+   // print finishing times and starting times
+   void PrintStartFinishingTimes();
+   //get dependency matrix
+   void GetDep(vector<vector<int>>&m) const;
     Workflow(){ uid = 0; }
 	~Workflow(void);
 };

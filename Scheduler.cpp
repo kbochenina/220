@@ -252,9 +252,9 @@ void Scheduler::GetSchedule(int scheduleVariant){
          full << "Time of executing reserved ordered scheme " << end << endl;
          full << "Reserved scheme eff: " << maxEff << endl;
          break;
-	  case 5:
-		  // clustered scheme
-		 t = clock();
+	    case 5:
+		   // clustered scheme
+		   t = clock();
          Clustered();
          end = (clock() - t)/1000.0;
          cout << "Time of executing clustered scheme " << end << endl;

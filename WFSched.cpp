@@ -21,7 +21,7 @@ int _tmain(int argc, wchar_t**argv)
 	// it is a first command line argument
 	// if program is started without arguments, filename is "settings.txt"
 	double minLInit = 20000;
-   int periodsCount = 12, experCount = 5;
+   int periodsCount = 1, experCount = 1;
 	wstring fileSettings;
 	if (argc == 2 ) {
 		fileSettings=L"settings.txt";
@@ -42,6 +42,10 @@ int _tmain(int argc, wchar_t**argv)
 		// set data
 		double minLength = minLInit + koeff*i * minLInit;
 		cout << "Minlength = " << minLength << endl;
+      _chdir("D:\\ITMO\\Degree\\Programs\\WFSched\\Output");
+      string timeFileName = "time.txt";
+      ofstream timeFile(timeFileName);
+      timeFile.close();
      //system("pause");
       for (int j = 0; j < experCount; j++){
           _chdir("D:\\ITMO\\Degree\\Programs\\WFSched\\Output");
@@ -58,14 +62,14 @@ int _tmain(int argc, wchar_t**argv)
 		    ofstream f("fullmetrics.txt", ios::trunc);
 		    f.close();
 		    sched.SetSchedulingStrategy(ONLY_GREEDY);	
-		    sched.GetSchedule(SIMPLE);
+		    /*sched.GetSchedule(SIMPLE);
 		    sched.GetMetrics("simple_metrics.txt", "SimpleSched",metricsFileName);
 		    sched.TestSchedule();
 		    cout << "***************************************************" << endl;
 		    sched.GetSchedule(RESERVED_ORDERED);
 		    sched.GetMetrics("reserved_metrics.txt", "StagedReservedTime",metricsFileName);
 		    sched.TestSchedule();
-		    cout << "***************************************************" << endl;
+		    cout << "***************************************************" << endl;*/
 		    /*sched.GetSchedule(EFF_ORDERED);
 		    sched.GetMetrics("eff_metrics.txt", "StagedEfficiency");
 		    sched.TestSchedule();

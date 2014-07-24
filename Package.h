@@ -14,11 +14,11 @@ class Package
 	// exec times for pairs (resType, coreCount)
 	times execTimes;
 	// amount
-	long int amount;
+	double amount;
    // alpha - the part of consequtive code in Amdal's law
    double alpha;
 public:
-	Package(int u, vector<int>r, vector<int>c, times e, long int a, double al) {uid = u; resTypes = r; processorsCounts = c; execTimes = e; amount = a; alpha = al;}
+	Package(int u, vector<int>r, vector<int>c, times e, double a, double al) {uid = u; resTypes = r; processorsCounts = c; execTimes = e; amount = a; alpha = al;}
 	// copy constructor
 	Package (const Package & p);
 	// getting execTime for choosed type and core
@@ -28,7 +28,7 @@ public:
 	const vector <int>& GetResTypes() const {return resTypes;}
 	const vector <int>& GetprocessorsCounts() const {return processorsCounts;}
 	const times& GetExecTimes() const {return execTimes;}
-	const long int GetAmount() const { return amount;} 
+	const double GetAmount() const { return amount;} 
 	// return average exectime of package pNum (on 1 processor)
 	double GetAvgExecTime() const;
 	// return maximum exectime of package pNum (on 1 processor)

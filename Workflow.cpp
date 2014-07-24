@@ -8,7 +8,22 @@ Workflow::Workflow(int u, vector <Package> p, vector<vector<int>> m, double d, v
     matrix = m; 
     deadline = d; 
     transfer = t;
+    //SetDeep();
 	this->tstart = tstart;
+}
+
+void Workflow::SetDeep(){
+    double t = clock();
+    int pCount = packages.size();
+    deep.resize(pCount);
+    for (size_t i = 0; i < pCount; i++){
+        deep[i].resize(pCount);
+        for (size_t j = 0; j < pCount; j++){
+            if (IsDepends(i,j))
+                deep[i][j] = 1;
+        }
+    }
+    cout << "Time of setting up deep dep " << (clock()-t)/1000.0 << endl;
 }
 
 void Workflow::SetTransfer(vector<vector<double>> t) {
@@ -254,8 +269,8 @@ void Workflow::GetSuccessors(const unsigned int &pNum, vector<int>&out) const {
       for (int i = 0; i < pCount; i++){
          if (i != maxTask){
             finishingTimes[i] = amounts[i]/maxAmount*deadline + tstart;
-			if (finishingTimes[i] < 0)
-				cout << "error" << endl;
+         if (finishingTimes[i] < 0)
+				cout << "Workflow::SetFinishingTimes() error. Finising time < 0 for package " << i  << endl;
          }
       }
 	SetStartTimes();
@@ -277,11 +292,29 @@ void Workflow::GetSuccessors(const unsigned int &pNum, vector<int>&out) const {
 				 maxFinishingPred = currDeadline; 
 		 }
 		 startTimes[i] = maxFinishingPred;
-		// if (startTimes[i]> finishingTimes[i])
-		//	 cout << startTimes[i] << " " << finishingTimes[i] << endl;
+		if (startTimes[i] == finishingTimes[i]){
+          cout << "Workflow::SetStartTimes() error. Start time = finishing time for task " << i << endl;
+          for (vector<int>::iterator it = pred.begin(); it!= pred.end(); it++){
+              cout << "Pred: " << *it << " finishing time: " << finishingTimes[*it] << endl;
+              cout << startTimes[i] << " " << finishingTimes[i] << endl;
+          }
+          exit(1);
+		   
+      }
 		 pred.clear();
 	 }
 	// cout << endl;
+ }
+
+ void Workflow::PrintStartFinishingTimes(){
+     string filename = "wf" + uid;
+     filename.append("sf.txt");
+     ofstream file(filename);
+     for (size_t i = 0; i < packages.size(); i++){
+         file << i+1 << " " << startTimes[i] << " " << finishingTimes[i] << endl;
+     }
+
+     file.close();
  }
 
  // set different wf priorities
@@ -348,4 +381,14 @@ double Workflow::GetTransfer(const int &in, const int &out) const {
       std::system("pause");
       exit(EXIT_FAILURE);
    }
+}
+
+void Workflow::GetDep(vector<vector<int>>&m) const{
+    if (m.size() != 0){
+        cout << "Workflow::GetDep(vector<vector<int>>&) error. Parameter vector should be empty!";
+        exit(1);
+    }
+    for (auto& row: matrix){
+        m.push_back(row);
+    }
 }

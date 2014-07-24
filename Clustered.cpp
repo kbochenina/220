@@ -31,8 +31,8 @@ void Clustered::SetInitClusters(){
 		double startTime = data.Workflows(wfNum).GetStartTime(localNum);
 		double finishingTime = data.Workflows(wfNum).GetFinishingTime(localNum);
 		if (startTime == finishingTime){
-			cout << "Clustered::SetInitClusters(). Start time = finishing time" << endl;
-			system("pause");
+			cout << "Clustered::SetInitClusters(). Start time = finishing time = " << startTime << endl;
+			exit(1);
 		}
 		Cluster newCluster;
 		newCluster.Add(globalNum,weight,finishingTime,startTime);
@@ -55,6 +55,9 @@ void Clustered::SetInitClusters(){
 
 	SetMaxAvgDiffWeight();
 	SetMaxSumL();
+   // initial clusters dependencies are equal to wf dependencies
+   for (int i = 0; i < data.GetWFCount(); i++)
+       data.Workflows(i).GetDep(dep[i]);
 	//SetMaxWeight();
 	//cout << "Max weight : " << maxWeight << endl;
 	//double initWeight = GetAvgDiffWeight();
@@ -72,7 +75,7 @@ void Clustered::ClusterizeConsequence(){
 	double currentF = GetF();
 	// while there was at least one merge during pass through the loop
 	while (wasMerged){
-		//cout << "Workflow # " << wfNum <<"\nClusters: " << clusters[wfNum].size() << endl;
+		cout << "Workflow # " << wfNum <<"\nClusters: " << clusters[wfNum].size() << endl;
 		wasMerged = false;
 		currentCluster = 1;
 		for (size_t i = currentCluster; i < clusters[wfNum].size()-1; i++){
@@ -132,50 +135,11 @@ void Clustered::ClusterizeConsequence(){
 		file << endl;
 		file.close();
 	}
-	//cout << "Resulting f: " << currentF << endl;
-	//cout << "Number of clusters: " << clusters.size() << endl;
-	//cout << "MaximumWeight: " << GetMaximumWeight() << endl;
-	//cout << "AvgDiffWeight: " << GetAvgDiffWeight() << endl;
-	//cout << "SumL: " << GetSumL() << endl;
 
-	//for (currentCluster = 0; currentCluster < clusters.size(); currentCluster++){
-		//cout << "Scheduling cluster # " << currentCluster << endl;
-		// sort cluster upward weigth/length ratio with non-violating precedence constraints
-		//bool flag = true;
-		//while (flag){
-		//	flag = false;
-		//	for (size_t current = 0; current < clusters[currentCluster].GetSize() - 1; current++){
-		//		double firstWeigth = clusters[currentCluster].GetWeight(current), 
-		//			firstDeadline = clusters[currentCluster].GetDeadline(current),
-		//			secondWeigth = clusters[currentCluster].GetWeight(current + 1),
-		//			secondDeadline = clusters[currentCluster].GetDeadline(current + 1);
-		//		double first = firstWeigth / firstDeadline ,
-		//			second = secondWeigth / secondDeadline;
-		//		bool isPred = false;
-		//		int firstWf, secondWf, firstNum, secondNum;
-		//		data.GetLocalNumbers(current, firstWf, firstNum);
-		//		data.GetLocalNumbers(current + 1, secondWf, secondNum);
-		//		if (firstWf == secondWf)
-		//			if (data.Workflows(firstWf).IsDepends(secondNum, firstNum)){
-		//				isPred = true;
-		//				//cout << firstNum << " was found before " << secondNum << endl;
-		//			}
-		//		if (second < first && !isPred) {
-		//			clusters[currentCluster].Change(current, current + 1);
-		//			//cout << clusters[currentCluster].GetPNum(current) << " was changed with " 
-		//			//	<< clusters[currentCluster].GetPNum(current+1) << endl;
-		//			flag = true;
-		//		}
-		//	}
-		//}
-		/*cout << "Before: " << endl;
-		for (size_t i = 0; i < clusters[currentCluster].GetSize(); i++)
-			cout << clusters[currentCluster].GetPNum(i) << " ";
-		cout << endl;*/
 }
 
 void Clustered::SetClusterDep(){
-	vector <vector<int>> matrix;
+	vector <vector<int>> &matrix = dep[wfNum];
 	matrix.resize(clusters[wfNum].size());
 	for (auto &ind : matrix)
 		ind.resize(clusters[wfNum].size());
@@ -213,86 +177,9 @@ void Clustered::SetClusterDep(){
 		cout << endl;
 	}
 	cout << endl;*/
-	dep[wfNum] = matrix;
+	//dep[wfNum] = matrix;
 }
 
-//void Clustered::CheckPrecedence(){
-//	// check precedence constraints
-//		bool wasInsertion = true;
-//
-//		while (wasInsertion)
-//		{
-//			wasInsertion = false;
-//			for (size_t first = 0; first < clusters[currentCluster].GetSize() - 1; first++){
-//				int firstWf, secondWf, firstNum, secondNum;
-//				for (size_t second = first + 1; second < clusters[currentCluster].GetSize() ; second++){
-//					int firstGlobal = clusters[currentCluster].GetPNum(first),
-//						secondGlobal = clusters[currentCluster].GetPNum(second);
-//					data.GetLocalNumbers(firstGlobal, firstWf, firstNum);
-//					data.GetLocalNumbers(secondGlobal, secondWf, secondNum);
-//					if (firstWf == secondWf)
-//						if (data.Workflows(firstWf).IsDepends(secondNum, firstNum)) {
-//							//if (firstNum == 28 || firstNum == 30 || firstNum == 32 ) 
-//							//if (firstWf == 15){
-//							//	//if (data.Workflows(firstWf).IsDepends(secondNum, firstNum)) 
-//							//	//	cout << firstNum << "depends on " << secondNum << endl;
-//							//	cout << firstWf << " " << firstNum << " " << secondWf << " " << secondNum << endl;
-//							//	cout << "first: " << clusters[currentCluster].GetPNum(first) << 
-//							//		" second :" << clusters[currentCluster].GetPNum(second) << endl;
-//							//}
-//							clusters[currentCluster].InsertAfter(first, second);
-//							second = first + 1;
-//							/*if (firstNum == 28 || firstNum == 30 || firstNum == 32 ) 
-//							if (firstWf == 15){
-//								for (size_t i = 0; i < clusters[currentCluster].GetSize(); i++)
-//									cout << clusters[currentCluster].GetPNum(i) << " ";
-//								cout << endl << firstNum << "of " << firstWf << " was inserted after " << secondNum << "of " << firstWf << endl;
-//								char c; cin >>c;
-//								}*/
-//							wasInsertion = true;
-//						}
-//				}
-//			}
-//		}
-//		
-//		//cout << "After: " << endl;
-//		//cout << "Current cluster: " << currentCluster << endl;
-//		//for (size_t i = 0; i < clusters[currentCluster].GetSize(); i++){
-//		//	//if (currentCluster == 5) 
-//		//	cout << clusters[currentCluster].GetPNum(i) << " ";
-//		//	if (clusters[currentCluster].GetPNum(i) == 251 || clusters[currentCluster].GetPNum(i)== 254) cout << "!!!" << endl;
-//		//}
-//		//cout << endl;
-//}
-
-
-//double Clustered::GetFMerged(int currentCluster){
-//	double res;
-//	SetMaxSumL(currentCluster); // sum of lengths of all tasks
-//	double sumL = GetSumLMerged(currentCluster); // length of cluster
-//	double avgDiffWeight = GetAvgDiffWeight(currentCluster);
-//	//double avgTaskCount = GetAvgTaskCount(currentCluster);
-//	//cout << "MaxSumL: " << maxSumL << " SumL: " << sumL << " SumL/maxSumL: " << sumL/maxSumL;
-//	//cout << endl << "1 - avgTaskCount: " << 1 - avgTaskCount << endl;
-//	// res = 0.5 * sumL/maxSumL + 0.5 * (1 - avgTaskCount);
-//	//res = maxW/maxWeight + sumL/maxSumL;
-//	res = avgDiffWeight/maxAvgDiffWeight[wfNum]  + sumL/maxSumL[wfNum];
-//	//res = avgDiffWeight/maxAvgDiffWeight ;
-//	//res = sumL/maxSumL;
-//	return res;
-//}
-
-//double Clustered::GetFMerged(int currentCluster, int candIndex){
-//	double res;
-//	SetMaxSumL(currentCluster);
-//	maxSumL += clusters[candIndex].GetPLength(0);
-//	double sumL = GetSumLMerged(currentCluster, candIndex);
-//	double avgTaskCount = GetAvgTaskCount(currentCluster, candIndex);
-//	//cout << "MaxSumL: " << maxSumL << " SumL: " << sumL << " SumL/maxSumL: " << sumL/maxSumL;
-//	//cout << endl << "1 - avgTaskCount: " << 1 - avgTaskCount << endl;
-//	res = 0.5 * sumL/maxSumL + 0.5 * (1 - avgTaskCount);
-//	return res;
-//}
 
 // should be called before merging any clusters
 void Clustered::SetMaxAvgDiffWeight(){
@@ -307,184 +194,6 @@ void Clustered::SetMaxAvgDiffWeight(){
 }
 
 
-//double Clustered::GetSumLMerged(int index){
-//	double res = 0;
-//	double start = data.GetT(), deadline = 0;
-//	for (size_t i = 0; i < clusters[wfNum][index].GetSize(); i++){
-//		double currStart = clusters[wfNum][index].GetPStart(i),
-//			currDeadline = clusters[wfNum][index].GetDeadline(i);
-//		if (currStart < start) start = currStart;
-//		if (currDeadline > deadline) deadline = currDeadline;
-//	}
-//	return deadline-start;
-//}
-//double Clustered::GetSumLMerged(int currentCluster, int clusterIndex){
-//	double res = GetSumLMerged(currentCluster);
-//	double start = clusters[clusterIndex].GetStart(),
-//		deadline = clusters[clusterIndex].GetDeadline();
-//	if (start < clusters[currentCluster].GetStart())
-//		res += clusters[currentCluster].GetStart() - start;
-//	if (deadline > clusters[currentCluster].GetDeadline())
-//		res+= deadline-clusters[currentCluster].GetDeadline();
-//	return res;
-//}
-
-//double Clustered::GetAvgTaskCount(int index){
-//	vector <int> wfNums;
-//	vector <int> counts;
-//	for (size_t i = 0; i < clusters[index].GetSize(); i++){
-//		int globalNum = clusters[index].GetPNum(i);
-//		int wfNum, localNum;
-//		data.GetLocalNumbers(globalNum, wfNum, localNum);
-//		vector<int>::iterator it = find(wfNums.begin(), wfNums.end(), wfNum);
-//		if (it == wfNums.end()){
-//			wfNums.push_back(wfNum);
-//			counts.push_back(1);
-//		}
-//		else {
-//			counts[it-wfNums.begin()]++;
-//		}
-//	}
-//	double sum = 0;
-//	for (size_t i = 0; i < counts.size(); i++){
-//		sum += static_cast<double>(counts[i])/static_cast<double>(data.Workflows(wfNums[i]).GetPackageCount());
-//	}
-//	double res = sum/counts.size();
-//	return res;
-//}
-//
-//double Clustered::GetAvgTaskCount(int index, int clusterIndex){
-//	vector <int> wfNums;
-//	vector <int> counts;
-//	for (size_t i = 0; i < clusters[index].GetSize(); i++){
-//		int globalNum = clusters[index].GetPNum(i);
-//		int wfNum, localNum;
-//		data.GetLocalNumbers(globalNum, wfNum, localNum);
-//		vector<int>::iterator it = find(wfNums.begin(), wfNums.end(), wfNum);
-//		if (it == wfNums.end()){
-//			wfNums.push_back(wfNum);
-//			counts.push_back(1);
-//		}
-//		else {
-//			counts[it-wfNums.begin()]++;
-//		}
-//	}
-//	int newPNum = clusters[clusterIndex].GetPNum(0);
-//	int wfNum, localNum;
-//	data.GetLocalNumbers(newPNum, wfNum, localNum);
-//	vector<int>::iterator it = find(wfNums.begin(), wfNums.end(), wfNum);
-//	if (it == wfNums.end()){
-//		wfNums.push_back(wfNum);
-//		counts.push_back(1);
-//	}
-//	else {
-//		counts[it-wfNums.begin()]++;
-//	}
-//	double sum = 0;
-//	for (size_t i = 0; i < counts.size(); i++){
-//		sum += static_cast<double>(counts[i])/static_cast<double>(data.Workflows(wfNums[i]).GetPackageCount());
-//	}
-//	double res = sum/counts.size();
-//	return res;
-//}
-
-//void Clustered::FindCandidates(vector<int>&input, vector<int>&candidates, vector<int>&candIndexes){
-//	// for all tasks in current cluster
-//	for (size_t in = 0; in < input.size(); in++){
-//		int globalNum = input[in];
-//		int wfNum, localNum;
-//		data.GetLocalNumbers(globalNum, wfNum, localNum);
-//		int index = 0;
-//		for (vector<Cluster>::iterator cand = clusters.begin(); cand != clusters.end(); cand++){
-//			if (cand->GetPNum(0) == globalNum) continue;
-//			if (cand->GetSize() == 1){
-//				int candNum = cand->GetPNum(0);
-//				if (find(candidates.begin(), candidates.end(),candNum) != candidates.end()) continue;
-//				int wfCandNum, localCandNum;
-//				data.GetLocalNumbers(candNum, wfCandNum, localCandNum);
-//				// if wf is the same
-//				if (wfCandNum == wfNum){
-//					// if task is the direct parent of another task
-//					if (data.Workflows(wfNum).IsParent(localNum, localCandNum)){
-//						candidates.push_back(candNum);
-//						candIndexes.push_back(cand-clusters.begin());
-//						continue;
-//					}
-//					// or task is independent and all its parents are already clustered
-//					if (!data.Workflows(wfNum).IsDepends(localNum, localCandNum)){
-//						vector <int> parentsCandNum;
-//						data.Workflows(wfNum).GetInput(localCandNum, parentsCandNum);
-//						bool allParentsClusterized = true;
-//						for (vector<int>::iterator parentsIt = parentsCandNum.begin();
-//							parentsIt != parentsCandNum.end(); parentsIt++){
-//								*parentsIt += data.GetInitPackageNumber(wfCandNum);
-//								if (find(clusterized.begin(), clusterized.end(), *parentsIt) == clusterized.end()){
-//									allParentsClusterized = false;
-//									break;
-//								}
-//						}
-//						if (allParentsClusterized) {
-//							candidates.push_back(candNum);
-//							candIndexes.push_back(cand-clusters.begin());
-//						}
-//					}
-//				} // if (wfCandNum == wfNum)
-//				else {
-//					vector <int> parentsCandNum;
-//					data.Workflows(wfCandNum).GetInput(localCandNum,parentsCandNum);
-//					// if task has no parents and it is not clusterized yet
-//					if (parentsCandNum.size() == 0){
-//						candidates.push_back(candNum);
-//						candIndexes.push_back(cand-clusters.begin());
-//					}
-//					else {
-//						bool allParentsClusterized = true;
-//						for (vector<int>::iterator parentsIt = parentsCandNum.begin();
-//							parentsIt != parentsCandNum.end(); parentsIt++){
-//								*parentsIt += data.GetInitPackageNumber(wfCandNum);
-//								if (find(clusterized.begin(), clusterized.end(), *parentsIt) == clusterized.end()){
-//									allParentsClusterized = false;
-//									break;
-//								}
-//						}
-//						if (allParentsClusterized) {
-//							candidates.push_back(candNum);
-//							candIndexes.push_back(cand-clusters.begin());
-//						}
-//					}
-//				}
-//			}
-//			index++;
-//		} // cycle on clusters
-//	}
-//}
-//
-//struct CompareFirst
-//{
-//  CompareFirst(int val) : val_(val) {}
-//  bool operator()(const std::pair<int,vector<int>>& elem) const {
-//    return val_ == elem.first;
-//  }
-//  private:
-//    int val_;
-//};
-//
-//void Clustered::SetWfPackages(vector<pair<int,vector<int>>>&wfPackages, int clusterIndex){
-//	for (size_t i = 0; i < clusters[clusterIndex].GetSize(); i++){
-//		int pNum = clusters[clusterIndex].GetPNum(i);
-//		int wfNum, localNum;
-//		data.GetLocalNumbers(pNum, wfNum, localNum);
-//		auto it = find_if(wfPackages.begin(),wfPackages.end(), CompareFirst(wfNum)) ;
-//		if (it == wfPackages.end()){
-//			vector<int> newVec;
-//			newVec.push_back(pNum);
-//			wfPackages.push_back(make_pair(wfNum, newVec));
-//		}
-//		else {
-//			it->second.push_back(pNum);
-//		}
-//	}
-//}
 
 double Clustered::GetWFSchedule(Schedule &out){
 	double res = 0.0;
@@ -492,9 +201,15 @@ double Clustered::GetWFSchedule(Schedule &out){
 	SetInitClusters();
 	for (size_t i = 0; i < clusters.size(); i++){
 		wfNum = i;
+      double t = clock();
 		ClusterizeConsequence();
-		SetClusterDep();
+      cout << "t = " << t << " clock()=" << clock() << endl;
+      cout << "Time of clusterization: " << (clock()-t)/1000.0 << endl;
+		//SetClusterDep();
+      cout << "Time of setting clusters dependency: " << (clock()-t)/1000.0 << endl;
 	}
+
+  
 
 	int clustersCount = 0;
 	for (auto &wfDep : dep)
@@ -543,6 +258,9 @@ double Clustered::GetWFSchedule(Schedule &out){
 	double minDeadline = numeric_limits<double>::max();
 	double maxWeightLength = 0;
 	
+   double t = clock();
+   cout << "t = " << t << endl;
+
 	while (schedClustersCount != clustersCount){
 		int clustersSetSize = 0;
 		
@@ -690,6 +408,10 @@ double Clustered::GetWFSchedule(Schedule &out){
 		
 	}
 
+
+
+   cout << "t = " << t << " clock()=" << clock() << endl;
+   cout << "Time of scheduling: " << (clock()-t)/1000.0 << endl;
 	return res;
 }
 
@@ -901,6 +623,7 @@ double Clustered::GetSumL(int second){
 
 void Clustered::Merge(int second, bool isPrev){
 	clusterInfo secondInfo;
+   int toDelete = 0;
 	if (!isPrev){
 		clusters[wfNum][second].GetInfo(secondInfo);
 		// add packages to current cluster
@@ -913,6 +636,7 @@ void Clustered::Merge(int second, bool isPrev){
 		}
 		// delete another cluster
 		clusters[wfNum].erase(clusters[wfNum].begin()+second);
+      toDelete = second;
 	}
 	else {
 		clusters[wfNum][currentCluster].GetInfo(secondInfo);
@@ -926,7 +650,14 @@ void Clustered::Merge(int second, bool isPrev){
 		}
 		// delete another cluster
 		clusters[wfNum].erase(clusters[wfNum].begin()+currentCluster);
+      toDelete = currentCluster;
 	}
+   // rearrange dependecies
+   // delete row
+   dep[wfNum].erase(dep[wfNum].begin()+toDelete);
+   for (auto& row: dep[wfNum])
+       row.erase(row.begin()+toDelete);
+
 	if (clusters[wfNum][currentCluster].GetStart() == clusters[wfNum][currentCluster].GetDeadline()){
 		cout << "GetStart()==Deadline()" << endl; system("pause");
 	}
