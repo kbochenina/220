@@ -216,7 +216,7 @@ double Clustered::GetWFSchedule(Schedule &out){
 		ClusterizeConsequence();
      // cout << "t = " << t << " clock()=" << clock() << endl;
      // cout << "Time of clusterization: " << (clock()-t)/1000.0 << endl;
-		//SetClusterDep();
+		SetClusterDep();
      // cout << "Time of setting clusters dependency: " << (clock()-t)/1000.0 << endl;
 	}
 
@@ -235,6 +235,12 @@ double Clustered::GetWFSchedule(Schedule &out){
 		for (size_t j = 0; j < dep[i].size(); j++)
 			unschedClusters[i].push_back(j);
 		
+   for (int i = 0; i < dep[0].size(); i++){
+       for (int j = 0; j < dep[0].size(); j++)
+           cout << dep[0][i][j] << " " ;
+       cout << endl;
+   }
+
 	vector<vector<int>> variants;
 	variants.resize(wfCount);
 
@@ -362,7 +368,7 @@ double Clustered::GetWFSchedule(Schedule &out){
 		res += GetClusterSchedule(out, realBegin, realEnd);
 
 
-	   //cout << "Cluster " << bestCluster << " of " << bestWf << " was scheduled." << endl;  
+	   cout << "Cluster " << bestCluster << " of " << bestWf << " was scheduled." << endl;  
 		/*cout << "Tstart: " << clusters[bestWf][bestCluster].GetStart() ;
 		cout << " Deadline: " << clusters[bestWf][bestCluster].GetDeadline() ;
 		cout << " Weight: " << clusters[bestWf][bestCluster].GetWeight() << endl;

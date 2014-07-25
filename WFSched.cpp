@@ -21,7 +21,7 @@ int _tmain(int argc, wchar_t**argv)
 	// it is a first command line argument
 	// if program is started without arguments, filename is "settings.txt"
 	double minLInit = 20000;
-   int periodsCount = 1, experCount = 3;
+   int periodsCount = 1, experCount = 1;
 	wstring fileSettings;
 	if (argc == 2 ) {
 		fileSettings=L"settings.txt";
