@@ -6,7 +6,7 @@
 #include "direct.h"
 #include <windows.h> // for  GetModuleFileName
 
-
+using std::string;
 using namespace boost::filesystem; // directory_iterator, path
 
 const int PACKS_MAX = 50;
@@ -458,18 +458,37 @@ void DataInfo::InitWorkflowsFromDAX(string fname){
 				double runTime = 0.0;
 				istringstream iss(s);
 				iss >> runTime;
+            size_t resTypesPos = s.find("resTypes=\"");
+				s.erase(0,resTypesPos+10);
+            int currentType = -1;
+            istringstream issTypes(s);
+           
+           	issTypes >> currentType;
+            vector<int> types;
+            types.push_back(currentType);
+        
+            while (s.find(",")!= std::string::npos){
+                s.erase(0,2); // don't do that!!
+                istringstream iss(s);
+				    iss >> currentType;
+                types.push_back(currentType);
+            }
+
+
             //cout << runTime << endl;
 				double amount = maxPerf / runTime * 60;
+
            	//cout << amount << endl;
 				map <pair <int,int>, double> execTime;
-				vector<int> types;
+				
 				vector<int> cCount;
 				cCount.push_back(1);
 				for (int j = 0; j < resources.size(); j++){
 					double currentTime = amount / (resources[j].GetPerf() / maxPerf);
-					execTime.insert(make_pair(make_pair(j+1, 1), currentTime));
+					if (find(types.begin(), types.end(), j+1) != types.end()) 
+                   execTime.insert(make_pair(make_pair(j+1, 1), currentTime));
 					//cout << currentTime << endl;
-					types.push_back(j+1);
+					//types.push_back(j+1);
 				}
 				Package p(i ,types, cCount, execTime, amount, 0);
          	pacs.push_back(p);

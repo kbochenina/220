@@ -125,6 +125,7 @@ void Greedy::FindSchedule(Schedule& out, double &efficiency, int pNum, bool forO
     boost::tuple<int, double, double, int> savedPlan;
     double bestTimeEnd = std::numeric_limits<double>::infinity();
     bool planWasFound = false;
+    int resIndex = 0;
     for (auto &res : resTypes){
             // resources indexed from 1
             res -=1;
@@ -146,16 +147,17 @@ void Greedy::FindSchedule(Schedule& out, double &efficiency, int pNum, bool forO
                 }
             }
 			if (tbegin > deadline) continue;
-            if (data.Resources(res).FindPlacement(execTime[res], tbegin, processor, deadline)){
-                if (tbegin + execTime[res] < bestTimeEnd){
+            if (data.Resources(res).FindPlacement(execTime[resIndex], tbegin, processor, deadline)){
+                if (tbegin + execTime[resIndex] < bestTimeEnd){
                     savedPlan.get<0>() = processor; 
                     savedPlan.get<1>() = tbegin;
-                    savedPlan.get<2>() = tbegin + execTime[res]; 
+                    savedPlan.get<2>() = tbegin + execTime[resIndex]; 
                     savedPlan.get<3>() = res;
-                    bestTimeEnd = tbegin + execTime[res];
+                    bestTimeEnd = tbegin + execTime[resIndex];
                 }
                 planWasFound = true;
             }
+            resIndex++;
     }
        
     if (planWasFound){
