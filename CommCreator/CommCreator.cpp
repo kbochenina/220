@@ -47,7 +47,9 @@ void GetEstimations(map<int,double>&estimations, map<int,int>&taskId, vector<vec
     ofstream add("addInfo.dat");
     current_path(basePath);
     // taskID, (inCommTime, outCommTime)
-    map <int, pair<double, double>> inOut;
+    //map <int, pair<double, double>> inOut;
+    // taskID, (scriptBegin, taskBegin, scriptEnd, taskEnd)
+    map <int, tuple<double,double,double,double>> times;
     directory_iterator dirIt(current_path()), dirEnd;
     while (dirIt != dirEnd){
         path current = *dirIt++;
@@ -98,33 +100,51 @@ void GetEstimations(map<int,double>&estimations, map<int,int>&taskId, vector<vec
         file.close();
         
         int task = taskId[clavireId];
-        double inCommTime = taskBegin - scriptBegin,
+        times[task] = make_tuple(scriptBegin, taskBegin, taskEnd, scriptEnd);
+       /* double inCommTime = taskBegin - scriptBegin,
             outCommTime = scriptEnd - taskEnd;
-        inOut[task] = make_pair(inCommTime, outCommTime);
-
-        add << task << " " << clavireId << " " << scriptBegin - 10185 << " " << taskBegin - 10185 << " " << taskEnd - 10185 << " " << scriptEnd - 10185 << endl;
+        inOut[task] = make_pair(inCommTime, outCommTime);*/
 
         current_path(basePath);
     }
-    for (auto &task : inOut){
+
+    // find minimum starting time
+    double startTime = std::numeric_limits<double>::infinity();
+    for (auto &task : times){
+        if (get<0>(task.second) < startTime)
+            startTime = get<0>(task.second);
+    }
+
+    for (auto &task : times){
+        add << get<0>(task) << " "  << get<0>(task.second) - startTime << " " << get<2>(task.second) - startTime << " " 
+            << get<2>(task.second) - startTime << " " << get<3>(task.second) - startTime << endl;
+    }
+
+    for (auto &task : times){
+        double est = 0.0;
         int taskId = task.first;
-        // first component - time of sending data from server
-        double est = task.second.first;
-        double maxOut = 0.0;
-        // find maximum output comminication time for all parents of current task
+        double maxParentsFin = 0.0;
+        bool isInitTask = true;
+        // find finishing times for all parents of current task
         for (int i = 0; i < matrix.size(); i++){
             // if task has parents
             if (matrix[i][taskId - 1] != 0){
-                double out = inOut[i+1].second;
-                if (out > maxOut)
-                    maxOut = out;
+                double fin = get<2>(times[i+1]);
+                if (fin > maxParentsFin)
+                    maxParentsFin = fin;
+                isInitTask = false;
             }
         }
-        // add to communication time value of uploading data from parents
-        est += maxOut;
+        // time before start of initial task is time between start of the script and start of task execution
+        if (isInitTask)
+            est = get<0>(task.second) - startTime;
+        // otherwise it is the length of period between finish of all parent tasks and start of current task
+        else 
+            est = get<1>(task.second) - maxParentsFin;
         estimations[taskId] = est;
     }
     current_path(basePath);
+    add << endl;
     add.close();
 }
 
