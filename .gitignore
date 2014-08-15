@@ -21,6 +21,9 @@
 *.exe
 *.filters
 *.user
+stdafx.cpp
+stdafx.h
+targetver.h
 
 #Unused directories
 /Debug

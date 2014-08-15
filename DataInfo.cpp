@@ -346,8 +346,10 @@ void DataInfo::Init(string settingsFile){
 	  context.SetContext(T, CCR, h, mL);	
 
 	  for (int i = 0; i < workflows.size(); i++){
-		  double deadline = rand() / static_cast<double>(RAND_MAX) * (T - mL) + mL;
-		 double tstart = rand() / static_cast<double>(RAND_MAX) * (deadline-mL);
+		double deadline = rand() / static_cast<double>(RAND_MAX) * (T - mL) + mL;
+		double tstart = rand() / static_cast<double>(RAND_MAX) * (deadline-mL);
+       // double tstart = 0;
+      //  double deadline = T;
 		  //double deadline = rand() / static_cast<double>(RAND_MAX) * (T - mL) + mL;
 		  //double tstart = 0;
 		  //double tstart =  0;
@@ -473,10 +475,15 @@ void DataInfo::InitWorkflowsFromDAX(string fname){
 				    iss >> currentType;
                 types.push_back(currentType);
             }
+            
+            /* // if resource list is empty, job can be executed on all available resources 
+            if (types.size() == 0)
+            for (int i = 0; i < resources.size(); i++)
+                types.push_back(i);
 
-
+            */
             //cout << runTime << endl;
-				double amount = maxPerf / runTime * 60;
+				double amount = maxPerf * runTime;
 
            	//cout << amount << endl;
 				map <pair <int,int>, double> execTime;
