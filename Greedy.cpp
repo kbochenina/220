@@ -53,31 +53,31 @@ void Greedy::FindSchedule(Schedule& out, double &efficiency, int pNum, bool forO
     vector<int> dependsOn;    
     int localNum = 0, processor = 0;
     double deadline = 0.0;
-	double tstart = 0.0;
+	 double tstart = 0.0;
+    // for SIMPLE scheduling
     if (!forOneWf){
         // get wfNum and package local num
         data.GetLocalNumbers(pNum, wfNum, localNum);
-		deadline = data.GetDeadline(wfNum);
-         // should get latest finishing time of previous packages
+		  deadline = data.GetDeadline(wfNum);
+        // getting all the parents of current task in array dependsOn
         data.Workflows(wfNum).GetInput(localNum, dependsOn);
-		tstart = data.Workflows(wfNum).GetStartTime();
-		int parentsFound = 0;
-		// check the existence of parents in the schedule
-		for (Schedule::iterator it = out.begin(); it!= out.end(); it++){
-			int currentPackage = it->get_head(), currentWf, currentLocal;
-			data.GetLocalNumbers(currentPackage, currentWf, currentLocal);
-			if (currentWf == wfNum){
-				for (size_t i = 0; i < dependsOn.size(); i++){
-					if (currentLocal == dependsOn[i]){
-						parentsFound++;
-						break;
-					}
-				}
-			}
-		}
+		  tstart = data.Workflows(wfNum).GetStartTime();
+        int parentsFound = 0;
+        // check the existence of parents in the schedule
+        for (Schedule::iterator it = out.begin(); it!= out.end(); it++){
+	         int currentPackage = it->get_head(), currentWf, currentLocal;
+	         data.GetLocalNumbers(currentPackage, currentWf, currentLocal);
+	         if (currentWf == wfNum){
+	             for (size_t i = 0; i < dependsOn.size(); i++){
+		              if (currentLocal == dependsOn[i]){
+				            parentsFound++;
+				            break;
+		              }
+	             }
+	         }
+        }
 		// cannot find schedule for all the parents of current task
 		if (parentsFound != dependsOn.size()) return;
-        //deadline = data.Workflows(wfNum).GetDeadline();
     }
     else {
 			data.Workflows(wfNum).GetInput(pNum, dependsOn);
@@ -86,34 +86,50 @@ void Greedy::FindSchedule(Schedule& out, double &efficiency, int pNum, bool forO
 			localNum = pNum; 
     }
    
-    // (resType, finishingTime, transferDataSize) for all input packages
+    // (resType, finishingTime, transferDataSize) for all input packages - I version
+    // (resType, finishingTime, transferTime) for all input packages - II version (transfer time will be equal for all input packages)
     vector <boost::tuple<int, double, double>> commInfo;
-      
+    // I version
+    //for (size_t i = 0; i < dependsOn.size(); i++){
+    //    // set global numbers
+    //    for (auto& j : out){
+    //        int add = 0;
+    //        if (!forOneWf) add += pNum - localNum;
+    //        // for input package
+    //        if (boost::get<0>(j) == dependsOn[i] + add)
+    //        {
+    //            int resType = data.GetResourceTypeIndex(boost::get<2>(j)[0]);
+    //            double tEnd = boost::get<1>(j) + boost::get<3>(j) + 1;
+    //            int initPackageNumber = data.GetInitPackageNumber(wfNum);
+    //            double transfer = 0.0;
+    //            if (!forOneWf)
+    //                transfer = data.Workflows(wfNum).GetTransfer(boost::get<0>(j) - initPackageNumber, 
+    //                pNum - initPackageNumber);
+    //            else 
+    //                transfer = data.Workflows(wfNum).GetTransfer(boost::get<0>(j), pNum);
+    //            commInfo.push_back(make_tuple(resType, tEnd, transfer));
+    //            /*if (tEnd > expectedBegin)
+    //                expectedBegin = static_cast<int>(tEnd) + 1;*/
+
+    //        }
+    //    }
+    //}
+    // II version
     for (size_t i = 0; i < dependsOn.size(); i++){
-        // set global numbers
         for (auto& j : out){
             int add = 0;
             if (!forOneWf) add += pNum - localNum;
-            // for input package
-            if (boost::get<0>(j) == dependsOn[i] + add)
-            {
+            // when package is found in schedule
+            if (boost::get<0>(j) == dependsOn[i] + add){
                 int resType = data.GetResourceTypeIndex(boost::get<2>(j)[0]);
                 double tEnd = boost::get<1>(j) + boost::get<3>(j) + 1;
-                int initPackageNumber = data.GetInitPackageNumber(wfNum);
-                double transfer = 0.0;
-                if (!forOneWf)
-                    transfer = data.Workflows(wfNum).GetTransfer(boost::get<0>(j) - initPackageNumber, 
-                    pNum - initPackageNumber);
-                else 
-                    transfer = data.Workflows(wfNum).GetTransfer(boost::get<0>(j), pNum);
-                commInfo.push_back(make_tuple(resType, tEnd, transfer));
-                /*if (tEnd > expectedBegin)
-                    expectedBegin = static_cast<int>(tEnd) + 1;*/
-
+                double commTime = data.Workflows(wfNum).GetCommTime(localNum);
+                commInfo.push_back(make_tuple(resType, tEnd, commTime));
             }
         }
     }
-   
+
+
     // getting possible types of resources
     vector <int> resTypes = data.Workflows(wfNum)[localNum].GetResTypes();
     vector <double> execTime;
@@ -130,18 +146,23 @@ void Greedy::FindSchedule(Schedule& out, double &efficiency, int pNum, bool forO
             // resources indexed from 1
             res -=1;
             //int tbegin = 0;
-			int tbegin = tstart;
+			   int tbegin = tstart;
             // get the expected begin time for current resource type
             for (const auto& in : commInfo){
-                double bandwidth = data.GetBandwidth(in.get_head(), res);
-                double currResBegin = 0.0;
-                if (bandwidth == 0)
-                    currResBegin = in.get<1>();
-                // currBegin = tEnd + transferSize/bandwidth
-                else
-                    currResBegin = in.get<1>() + in.get<2>()/bandwidth;
+                // I version
+                //double bandwidth = data.GetBandwidth(in.get_head(), res);
+                //double currResBegin = 0.0;
+                //if (bandwidth == 0)
+                //    currResBegin = in.get<1>();
+                //else
+                //    currResBegin = in.get<1>() + in.get<2>()/bandwidth;
+                //if (currResBegin > tbegin){
+                //    // for rounding to upper int
+                //    currResBegin += 0.5;
+                //    tbegin = static_cast<int>(currResBegin);
+                //}
+                double currResBegin = in.get<1>() + in.get<2>();
                 if (currResBegin > tbegin){
-                    // for rounding to upper int
                     currResBegin += 0.5;
                     tbegin = static_cast<int>(currResBegin);
                 }

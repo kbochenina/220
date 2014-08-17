@@ -27,6 +27,8 @@ class Workflow
    void SetStartTimes();
    // set successors
    void SetDeep();
+   // delay (communication) times
+   vector <double> commTime;
    
 public:
 	const Package& operator[] (int pNum) const { return packages[pNum]; } 
@@ -56,7 +58,7 @@ public:
 	double GetAmount(const int & pNum) const { return packages[pNum].GetAmount(); }
 	// return all successors of package pNum
 	void GetSuccessors(const unsigned int &pNum, vector<int>&out) const;
-	Workflow(int u, vector <Package> p, vector<vector<int>> m, double d, vector<vector<double>> t, double start);
+	Workflow(int u, vector <Package> p, vector<vector<int>> m, double d, vector<vector<double>> t, double start, vector<double> commTime);
    // setting sub-deadlines for the workflow
    void SetFinishingTimes(double avgCalcPower);
    size_t GetFinishingTimesSize() {return finishingTimes.size();}
@@ -81,6 +83,9 @@ public:
    void PrintStartFinishingTimes();
    //get dependency matrix
    void GetDep(vector<vector<int>>&m) const;
+   // get communication time for task pNum (length of period between latest finishing time of parent tasks and beginning time of this task)
+   // this value is obtained during profiling process
+   double GetCommTime(const int &pNum) const;
     Workflow(){ uid = 0; }
 	~Workflow(void);
 };

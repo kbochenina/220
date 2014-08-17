@@ -54,12 +54,12 @@ void Metrics::AvgUnfinischedTime(){
       execTimePerWf[wfNum] += execTime;
       vector <int> in;
       data.Workflows(wfNum).GetInput(localNum, in);
-      for (size_t j = 0; j < in.size(); j++){
+      /*for (size_t j = 0; j < in.size(); j++){
           double amount = data.Workflows(wfNum).GetTransfer(in[j], localNum);
           double commRate = data.GetBandwidth(resTypesPerWfPackages[wfNum][in[j]], type);
           if (commRate) 
               commTimePerWf[wfNum] += amount/commRate;
-      }
+      }*/
 	  double taskEnd = tBegin + execTime;
 	  if (taskEnd > wfEnds[wfNum]) wfEnds[wfNum] = taskEnd;
       // DEADLINES FEATURE
@@ -85,7 +85,9 @@ void Metrics::AvgUnfinischedTime(){
             // if package was not scheduled
             if (find(scheduledTasks[i].begin(), scheduledTasks[i].end(), j) == scheduledTasks[i].end()){
 			   int globalNum = data.GetInitPackageNumber(i)+j;
-			   unschTimes[i] += data.Workflows(i).GetAvgExecTime(j) + data.GetAvgTransferFrom(globalNum);
+            int wfNum, localNum;
+            data.GetLocalNumbers(globalNum, wfNum, localNum);
+			   unschTimes[i] += data.Workflows(i).GetAvgExecTime(j) + data.Workflows(wfNum).GetCommTime(localNum);//data.GetAvgTransferFrom(globalNum);
                //unfinishedTimes[i] += unschTimes[i];
 			   unscheduledTasks[i]++;
                reservedTime[i] = 0.0;
@@ -105,7 +107,9 @@ void Metrics::AvgUnfinischedTime(){
 	  for (int j = 0; j < data.Workflows(i).GetPackageCount(); j++){
 				fineMax += data.Workflows(i).GetAvgExecTime(j);
 				int globalNum = data.GetInitPackageNumber(i) + j;
-				fineMax += data.GetAvgTransferFrom(globalNum);
+            int wfNum, localNum;
+            data.GetLocalNumbers(globalNum, wfNum, localNum);
+				fineMax += data.Workflows(wfNum).GetCommTime(localNum); //data.GetAvgTransferFrom(globalNum);
 	  }
 	  // if all tasks are scheduled
 	  if (unscheduledTasks[i] == 0){

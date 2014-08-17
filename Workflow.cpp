@@ -2,14 +2,17 @@
 #include "Workflow.h"
 #include <list>
 
-Workflow::Workflow(int u, vector <Package> p, vector<vector<int>> m, double d, vector<vector<double>> t, double tstart) {
+Workflow::Workflow(int u, vector <Package> p, vector<vector<int>> m, double d, vector<vector<double>> t, double tstart, vector<double> commTime) {
     uid = u; 
     packages = p; 
+    if (packages.size() == 0)
+        throw UserException("Worklow::Workflow() error. Empty list of packages");
     matrix = m; 
     deadline = d; 
     transfer = t;
     //SetDeep();
-	this->tstart = tstart;
+    this->tstart = tstart;
+    this->commTime = commTime;
 }
 
 void Workflow::SetDeep(){
@@ -211,9 +214,22 @@ void Workflow::GetSuccessors(const unsigned int &pNum, vector<int>&out) const {
       for (size_t i = 0; i < usedNums.size(); i++){
          GetOutput(usedNums[i], out);
          for (size_t i = 0; i < out.size(); i++){
-            if (find(linked.begin(), linked.end(), out[i]) == linked.end())
-               linked.push_back(out[i]);
+            if (find(linked.begin(), linked.end(), out[i]) == linked.end()){
+               // if tasks have another parents which sub-deadline was not already calculated
+               // we should not add these tasks to queue
+               vector <int> parents;
+               GetInput(out[i], parents);
+               bool allCalculated = true;
+               for (auto & parent : parents){
+                   if (find(usedNums.begin(), usedNums.end(), parent) == usedNums.end()){
+                       allCalculated = false;
+                       break;
+                   }
+               }
+               if (allCalculated) linked.push_back(out[i]);
+            }
          }
+         out.clear();
       }
       // while we don't find all values
       while (linked.size()!=0){
@@ -224,7 +240,7 @@ void Workflow::GetSuccessors(const unsigned int &pNum, vector<int>&out) const {
          GetInput(current, in);
          bool allUsed = true;
          for (size_t k = 0; k < in.size(); k++){
-            if (find(usedNums.begin(),usedNums.end(),in[k]) == usedNums.end())
+            if (find(usedNums.begin(), usedNums.end(), in[k]) == usedNums.end())
                allUsed = false;
          }
          // if all previous values were already calculated
@@ -262,7 +278,8 @@ void Workflow::GetSuccessors(const unsigned int &pNum, vector<int>&out) const {
       // calculating last finishing times for all tasks
             
       finishingTimes.resize(pCount);
-           
+      if (maxTask == -1)
+          throw UserException("Workflow::SetFinishingTimes() error. Wrong package index");
       //finishingTimes[maxTask] = maxAmount/avgCalcPower;
       //double deadline = finishingTimes[maxTask];
 	  finishingTimes[maxTask] = deadline + tstart;
@@ -391,4 +408,12 @@ void Workflow::GetDep(vector<vector<int>>&m) const{
     for (auto& row: matrix){
         m.push_back(row);
     }
+}
+
+// get communication time for task pNum (length of period between latest finishing time of parent tasks and beginning time of this task)
+// this value is obtained during profiling process
+double Workflow::GetCommTime(const int &pNum) const{
+    if (pNum < 0 || pNum > commTime.size())
+        throw UserException("Workflow::GetCommTime() error. Wrong package number");
+    return commTime[pNum];
 }

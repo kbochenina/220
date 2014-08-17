@@ -341,30 +341,34 @@ void DataInfo::Init(string settingsFile){
 
 
       InitResources(resourcesFileName, canExecuteOnDiffResources);
-      InitBandwidth(bandwidthFileName);
+      //InitBandwidth(bandwidthFileName);
 
-      s += "\\wfset";
-      for (directory_iterator it(dir), end; it != end; ++it) {
-          if (!is_directory(*it)){
-            std::cout << "File processed - ";
-            std::cout << *it << std::endl;
-            string filename = it->path().string();
-            if (filename.find(".dax") != string::npos)
-                WFFileNames.push_back(filename);
-          }
-      }
+        dir += "\\wfset";
+        for (directory_iterator it(dir), end; it != end; ++it) {
+            if (!is_directory(*it)){
+                string filename = it->path().string();
+                if (filename.find(".dax") != string::npos){
+                    WFFileNames.push_back(filename);
+                    std::cout << "File processed - ";
+                    std::cout << *it << std::endl;
+                }
+            }
+        }
 
       for (vector<string>::iterator it = WFFileNames.begin(); it!= WFFileNames.end(); it++)
          InitWorkflowsFromDAX(*it);
 
 	  mL = this->minL;
 
-	  T = mL + workflows.size() * koeff * mL;
+	  //T = mL + workflows.size() * koeff * mL;
+     T = mL;
 	  context.SetContext(T, CCR, h, mL);	
 
 	  for (int i = 0; i < workflows.size(); i++){
-		double deadline = rand() / static_cast<double>(RAND_MAX) * (T - mL) + mL;
-		double tstart = rand() / static_cast<double>(RAND_MAX) * (deadline-mL);
+		//double deadline = rand() / static_cast<double>(RAND_MAX) * (T - mL) + mL;
+		//double tstart = rand() / static_cast<double>(RAND_MAX) * (deadline-mL);
+         double deadline = mL;
+         double tstart = 0;
        // double tstart = 0;
       //  double deadline = T;
 		  //double deadline = rand() / static_cast<double>(RAND_MAX) * (T - mL) + mL;
@@ -398,14 +402,14 @@ void DataInfo::Init(string settingsFile){
          initNum += workflows[i].GetPackageCount();
       }
       ofstream resTime("Output/time.txt", ios::app);
-      cout << "Start to init finishing times..." << endl;
+      cout << "Start of assigning of sub-deadlines..." << endl;
       double t = clock();
       InitFinishingTimes();
       for (size_t i = 0; i < workflows.size(); i++)
           workflows[i].PrintStartFinishingTimes();
       double end = (clock()-t)/1000.0 ;
-      cout << "Time of init finishing times " << end << endl;
-      resTime << "Time of init finishing times " << end << endl;
+      //cout << "Time of of assigning of sub-deadlines..." << end << endl;
+      resTime << "Time of of assigning of sub-deadlines..." << end << endl;
       resTime.close();
       ex.close();
    }
@@ -422,135 +426,154 @@ void DataInfo::Init(string settingsFile){
 }
 
 void DataInfo::InitWorkflowsFromDAX(string fname){
-	try{
-		ifstream file(fname, ifstream::in);
-		string errOpen = "File " + fname + " was not open";
-		string errEarlyEnd = "Unexpected end of file " + fname;
-		string errWrongFormat = "Wrong format in file " + fname + " at line ";
-		string errConnMatrix = "Wrong value in connectivity matrix";
-		string errJobsCount = "Can not find jobs count value in file " + fname;
-		string errWrongFormatFull = errWrongFormat;
-		if (file.fail()) throw UserException(errOpen);
-		double maxPerf = GetMaxPerf();
-		bool jobsCountFound = false;
-		int jobsCount = 0;
-		string s;
-		while (!jobsCountFound){
-			getline(file,s);
-			size_t found = s.find("jobCount=\"");
-			if (found != std::string::npos){
+    try{
+        ifstream file(fname, ifstream::in);
+        string errOpen = "File " + fname + " was not open";
+        string errEarlyEnd = "Unexpected end of file " + fname;
+        string errWrongFormat = "Wrong format in file " + fname + " at line ";
+        string errConnMatrix = "Wrong value in connectivity matrix";
+        string errJobsCount = "Can not find jobs count value in file " + fname;
+        string errWrongFormatFull = errWrongFormat;
+        if (file.fail()) throw UserException(errOpen);
+        double maxPerf = GetMaxPerf();
+        bool jobsCountFound = false;
+        int jobsCount = 0;
+        string s;
+        while (!jobsCountFound){
+	         getline(file,s);
+	         size_t found = s.find("jobCount=\"");
+	         if (found != std::string::npos){
 				
-				s.erase(0,found+10);
-				istringstream iss(s);
-				iss >> jobsCount;
-				jobsCountFound = true;
-			}
-			if (file.eof()) throw UserException(errJobsCount);
-		}
-		//cout << jobsCount << endl;
-		vector<vector<pair<string, double>>> inputFiles;
-		vector<vector<pair<string,double>>> outputFiles;
-		vector <vector<double>> transfer;
-		vector <vector <int>> connectMatrix;
-		vector<string> jobNames;
-		inputFiles.resize(jobsCount);
-		outputFiles.resize(jobsCount);
-		transfer.resize(jobsCount);
-		connectMatrix.resize(jobsCount);
-		jobNames.resize(jobsCount);
-		for (auto &row: transfer)
-			row.resize(jobsCount);
-		for (auto &row: connectMatrix)
-			row.resize(jobsCount);
-		vector <Package> pacs;
-		getline(file,s);
-		getline(file,s);
-		for (int i = 0; i < jobsCount; i++){
-			getline(file,s);
-			if (s.find("job ")!= std::string::npos){
-				size_t foundFirst = s.find("\"");
-				size_t foundSecond = s.find("\"",foundFirst);
-				string jobName = s.substr(foundFirst, foundSecond);
-				//cout << jobName << endl;
-				size_t runtimePos = s.find("runtime=\"");
-				s.erase(0,runtimePos+9);
-				double runTime = 0.0;
-				istringstream iss(s);
-				iss >> runTime;
-            size_t resTypesPos = s.find("resTypes=\"");
-				s.erase(0,resTypesPos+10);
-            int currentType = -1;
-            istringstream issTypes(s);
-           
-           	issTypes >> currentType;
-            vector<int> types;
+	         s.erase(0,found+10);
+	         istringstream iss(s);
+	         iss >> jobsCount;
+	         jobsCountFound = true;
+	         }
+	         if (file.eof()) throw UserException(errJobsCount);
+        }
+        //cout << jobsCount << endl;
+        vector<vector<pair<string, double>>> inputFiles;
+        vector<vector<pair<string,double>>> outputFiles;
+        vector <vector<double>> transfer;
+        vector <vector <int>> connectMatrix;
+        vector<string> jobNames;
+        inputFiles.resize(jobsCount);
+        outputFiles.resize(jobsCount);
+        transfer.resize(jobsCount);
+        connectMatrix.resize(jobsCount);
+        jobNames.resize(jobsCount);
+        for (auto &row: transfer)
+	         row.resize(jobsCount);
+        for (auto &row: connectMatrix)
+	         row.resize(jobsCount);
+        vector <Package> pacs;
+        getline(file,s);
+        getline(file,s);
+        for (int i = 0; i < jobsCount; i++){
+            while (s.find("job ")== std::string::npos) 
+                getline(file,s);
+			
+        size_t foundFirst = s.find("\"");
+        size_t foundSecond = s.find("\"",foundFirst);
+        string jobName = s.substr(foundFirst, foundSecond);
+        //cout << jobName << endl;
+        size_t runtimePos = s.find("runtime=\"");
+        s.erase(0,runtimePos+9);
+        double runTime = 0.0;
+        istringstream iss(s);
+        iss >> runTime;
+        size_t resTypesPos = s.find("resTypes=\"");
+        s.erase(0,resTypesPos+10);
+        int currentType = -1;
+        istringstream issTypes(s);
+        issTypes >> currentType;
+        vector<int> types;
+        if (currentType != -1){
             types.push_back(currentType);
         
             while (s.find(",")!= std::string::npos){
                 s.erase(0,2); // don't do that!!
                 istringstream iss(s);
-				    iss >> currentType;
+	             iss >> currentType;
                 types.push_back(currentType);
             }
-            
-            /* // if resource list is empty, job can be executed on all available resources 
-            if (types.size() == 0)
-            for (int i = 0; i < resources.size(); i++)
-                types.push_back(i);
+        }
+        else {   
+         // if resource list is empty, job can be executed on all available resources 
+        for (int i = 0; i < resources.size(); i++)
+            types.push_back(i + 1);
+        }
+        
+        //cout << runTime << endl;
+        double amount = maxPerf * runTime;
 
-            */
-            //cout << runTime << endl;
-				double amount = maxPerf * runTime;
-
-           	//cout << amount << endl;
-				map <pair <int,int>, double> execTime;
+        //cout << amount << endl;
+        map <pair <int,int>, double> execTime;
 				
-				vector<int> cCount;
-				cCount.push_back(1);
-				for (int j = 0; j < resources.size(); j++){
-					double currentTime = amount / (resources[j].GetPerf() / maxPerf);
-					if (find(types.begin(), types.end(), j+1) != types.end()) 
-                   execTime.insert(make_pair(make_pair(j+1, 1), currentTime));
-					//cout << currentTime << endl;
-					//types.push_back(j+1);
-				}
-				Package p(i ,types, cCount, execTime, amount, 0);
+        vector<int> cCount;
+        cCount.push_back(1);
+
+        double avgTime = 0.0;
+
+        for (int j = 0; j < resources.size(); j++){
+	         double currentTime = amount / (resources[j].GetPerf() / maxPerf);
+	         if (find(types.begin(), types.end(), j+1) != types.end()) 
+                execTime.insert(make_pair(make_pair(j+1, 1), currentTime));
+                avgTime += currentTime;
+	         //cout << currentTime << endl;
+	         //types.push_back(j+1);
+				
+
+            avgTime /= execTime.size();
+            // in older version forth parameter - amount
+				Package p(i ,types, cCount, execTime, avgTime, 0);
          	pacs.push_back(p);
-				bool isNextJob = false;
-				while (!isNextJob){
-					getline(file,s);
-					if (s.find("</job>") != std::string::npos) {
-						isNextJob = true;
-						//std::system("pause");
-						continue;
-					}
-					if (s.find("<!--") != std::string::npos){
-						isNextJob = true;
-						continue;
-					}
-					size_t foundFirst = s.find("\"");
-					size_t foundSecond = s.find("\"",foundFirst+1);
-					string fileName = s.substr(foundFirst+1, foundSecond-foundFirst-1);
-					foundFirst = s.find("\"", foundSecond+1);
-					foundSecond = s.find("\"",foundFirst+1);
-					string direction = s.substr(foundFirst+1, foundSecond-foundFirst-1);
-					foundFirst = s.find("size=\"", foundSecond);
-					s.erase(0,foundFirst+6);
-					double size;
-					istringstream iss(s);
-					iss >> size;
-					size /= 1048576;
-					if (direction=="input"){
-						inputFiles[i].push_back(make_pair(fileName,size));
-					}
-					else {
-						outputFiles[i].push_back(make_pair(fileName,size));
-					}
-					//cout << fileName << " " << direction << " " << size << endl;
+
+            while (s.find("<uses") == string::npos)
+                getline(file, s);
+				
+				while (s.find("<uses") != string::npos){
+                string currentS = s;
+		          size_t foundFirst = currentS.find("\"");
+		          size_t foundSecond = currentS.find("\"",foundFirst+1);
+		          string fileName = currentS.substr(foundFirst+1, foundSecond-foundFirst-1);
+		          foundFirst = currentS.find("\"", foundSecond+1);
+		          foundSecond = currentS.find("\"",foundFirst+1);
+		          string direction = currentS.substr(foundFirst+1, foundSecond-foundFirst-1);
+		          foundFirst = currentS.find("size=\"", foundSecond);
+		          currentS.erase(0,foundFirst+6);
+		          double size;
+		          istringstream iss(currentS);
+		          iss >> size;
+		          size /= 1048576;
+		          if (direction=="input"){
+				        inputFiles[i].push_back(make_pair(fileName,size));
+		          }
+		          else if (direction=="output"){
+				        outputFiles[i].push_back(make_pair(fileName,size));
+		          }
+		          getline(file,s);
 				} 
 			}
 
 		}
+      // reading information about communication time from file
+      ifstream commTimeFile("InputFiles\\aggComm.dat");
+      if (commTimeFile.fail())
+          throw UserException("Error while opening aggComm.dat");
+      vector <double> commTime;
+
+      while (getline(commTimeFile, s)){
+          istringstream iss(s);
+          double val;
+          iss >> val;
+          iss >> val;
+          iss >> val;
+          if (iss.fail())
+              throw UserException("Error while reading communication time from aggComm.dat");
+          commTime.push_back(val);
+      }
+
 		// set dependencies
 		for (int i = 0; i < jobsCount; i++){
 			for (int j = 0; j < jobsCount; j++){
@@ -560,6 +583,9 @@ void DataInfo::InitWorkflowsFromDAX(string fname){
 						if (fileName == input.first){
 							connectMatrix[i][j] = 1;
 							transfer[i][j] = output.second;
+                     // else last Montage task will have cycle edge
+                     if (i == j)
+                         connectMatrix[i][j] = 0;
 						}
 					}
 				}
@@ -583,7 +609,7 @@ void DataInfo::InitWorkflowsFromDAX(string fname){
 		double tstart = 0.0;
 		double deadline = 0.0;
 		
-		Workflow w(workflows.size() + 1, pacs,connectMatrix, deadline, transfer, tstart);
+		Workflow w(workflows.size() + 1, pacs,connectMatrix, deadline, transfer, tstart, commTime);
 		//cout << "Tstart:" << tstart << " Deadline " << deadline << endl;
 		workflows.push_back(w);
 		//std::system("pause");
@@ -901,14 +927,15 @@ void DataInfo::InitWorkflows(string f){
 		double deadline = tstart + maxLength;
 		//while (deadline < tstart)
 		//	deadline = rand() / static_cast<double>(RAND_MAX) * GetT();
-		
-	     //double deadline = GetT(), tstart = 0;
-         Workflow w(workflows.size() + i+1, pacs,connectMatrix, deadline, transfer, tstart);
-		 cout << "Tstart:" << tstart << " Deadline " << deadline << endl;
-         workflows.push_back(w);
-         pacs.clear();
-         connectMatrix.clear();
-      }
+      // for compatibility
+		vector <double> commTime;
+        //double deadline = GetT(), tstart = 0;
+        Workflow w(workflows.size() + i+1, pacs,connectMatrix, deadline, transfer, tstart, commTime);
+        cout << "Tstart:" << tstart << " Deadline " << deadline << endl;
+        workflows.push_back(w);
+        pacs.clear();
+        connectMatrix.clear();
+    }
 
    }
    catch (UserException& e){
@@ -958,7 +985,7 @@ void DataInfo::InitResources(string f, bool canExecuteOnDiffResources){
       }
       s.erase(0,trim.size());
       int typesCount = stoi(s);
-      int resourcesCount = 0, coresCount = 0;
+      int resourcesCount = 0, coresCount = 1;
 
       for (int i = 0; i < typesCount; i++)
       {
@@ -1032,7 +1059,7 @@ void DataInfo::InitResources(string f, bool canExecuteOnDiffResources){
             typeBI.push_back(busyIntervals);
          }
 		
-         ResourceType r(i+1,resourcesCount, coresCount, 0.0, typeBI, canExecuteOnDiffResources, context);
+         ResourceType r(i+1, resourcesCount, coresCount, 1.0, typeBI, canExecuteOnDiffResources, context);
          resources.push_back(r);
          processorsCount += resourcesCount;
       }
@@ -1278,6 +1305,8 @@ int DataInfo::GetResourceTypeIndex(int globalIndex){
          return index;
       }
       index++;
+      if (index > resources.size() - 1)
+          throw UserException("DataInfo::GetResourceTypeIndex error. Wrong index of resource type");
       border += resources[index].GetProcessorsCount();
    }
 }
