@@ -42,7 +42,7 @@ double ParseData(string s){
 }
 
 // get estimations from directory
-void GetEstimations(map<int,double>&estimations, map<int,int>&taskId, vector<vector<int>>& matrix){
+void GetEstimations(map<int,pair<double, double>>&estimations, map<int,int>&taskId, vector<vector<int>>& matrix){
     path basePath = current_path();
     ofstream add("addInfo.dat");
     current_path(basePath);
@@ -116,12 +116,12 @@ void GetEstimations(map<int,double>&estimations, map<int,int>&taskId, vector<vec
     }
 
     for (auto &task : times){
-        add << get<0>(task) << " "  << get<0>(task.second) - startTime << " " << get<2>(task.second) - startTime << " " 
+        add << get<0>(task) << " "  << get<0>(task.second) - startTime << " " << get<1>(task.second) - startTime << " " 
             << get<2>(task.second) - startTime << " " << get<3>(task.second) - startTime << endl;
     }
 
     for (auto &task : times){
-        double est = 0.0;
+        double estComm = 0.0, estTime = get<2>(task.second) - get<1>(task.second);
         int taskId = task.first;
         double maxParentsFin = 0.0;
         bool isInitTask = true;
@@ -137,11 +137,12 @@ void GetEstimations(map<int,double>&estimations, map<int,int>&taskId, vector<vec
         }
         // time before start of initial task is time between start of the script and start of task execution
         if (isInitTask)
-            est = get<0>(task.second) - startTime;
+            estComm = get<0>(task.second) - startTime;
         // otherwise it is the length of period between finish of all parent tasks and start of current task
-        else 
-            est = get<1>(task.second) - maxParentsFin;
-        estimations[taskId] = est;
+        else { 
+            estComm = get<1>(task.second) - maxParentsFin;
+        }
+        estimations[taskId] = make_pair(estTime, estComm);
     }
     current_path(basePath);
     add << endl;
@@ -237,8 +238,8 @@ void InitComm(){
     log.close();
 
     cout << "Log has been successfully read " << endl;
-
-    vector <map<int,double>> estimations;
+    // vector of [task id, (execTime, delayTime)]
+    vector <map<int,pair<double, double>>> estimations;
 
     directory_iterator dirIt(current_path()), dirEnd;
     path basePath = current_path();
@@ -248,7 +249,7 @@ void InitComm(){
             string pathStr = current.string();
             if (pathStr.find("Temp_") != string::npos){
                 current_path(current);
-                map <int,double> est;
+                map <int,pair<double, double>> est;
                 GetEstimations(est, taskId, matrix);
                 estimations.push_back(est);
             }
@@ -257,8 +258,8 @@ void InitComm(){
     }
 
     cout << "Estimations have been successfully taken " << endl;
-
-    map<int,double> resultEstimations;
+    // task id, (execTime, delayTime)
+    map<int,pair<double, double>> resultEstimations;
     ofstream resFile("commTime.dat");
     if (estimations.size() == 0){
         cout << "Estimations vector cannot have zero size " << endl;
@@ -267,22 +268,24 @@ void InitComm(){
     for (auto &estVector: estimations){
         for (auto& est: estVector){
             //resFile << est.first << " " << est.second << endl;
-            resultEstimations[est.first] += est.second;
+            resultEstimations[est.first].first += est.second.first;
+            resultEstimations[est.first].second += est.second.second;
         }
         //resFile << endl;
     }
        
-    int jobCount = estimations.size();
+    int estCount = estimations.size();
 
     for (auto& resEst: resultEstimations){
-        resEst.second /= jobCount;
-        resFile << resEst.first << " " << resEst.second << endl;
+        resEst.second.first /= estCount;
+        resEst.second.second /= estCount;
+        resFile << resEst.first << " " << resEst.second.first << " " << resEst.second.second << endl;
 
     }
      resFile.close();
 }
 
-void GetEstimations(map <int,double>& est){
+void GetEstimations(map <int,pair<double, double>>& est){
     ifstream comm("commTime.dat");
     if (comm.fail()){
         cout << "Failed to open commtime.dat" << endl;
@@ -291,25 +294,32 @@ void GetEstimations(map <int,double>& est){
     string s;
     while (getline(comm,s)){
         int task;
-        double e;
+        double execTime, commTime;
         istringstream iss(s);
         iss >> task;
         if (iss.fail()){
             cout << "Failed to get number of tasks" << endl;
             exit(1);
         }
-        iss >> e;
+        iss >> execTime;
         if (iss.fail()){
-            cout << "Failed to get extimation" << endl;
+            cout << "Failed to get execution time" << endl;
             exit(1);
         }
-        est[task] += e;
+        iss >> commTime;
+        if (iss.fail()){
+            cout << "Failed to get communication time" << endl;
+            exit(1);
+        }
+        est[task].first += execTime;
+        est[task].second += commTime;
+
     }
 }
 
 void AggComm(){
     int estCount = 0;
-    map <int,double> est;
+    map <int,pair<double, double>> est;
 
     directory_iterator dirIt(current_path()), dirEnd;
     path basePath = current_path();
@@ -327,8 +337,9 @@ void AggComm(){
     }
     ofstream out("aggComm.dat");
     for (auto& estim:est){
-        estim.second /= estCount;
-        out << estim.first << " " << estim.second << endl;
+        estim.second.first /= estCount;
+        estim.second.second /= estCount;
+        out << estim.first << " " << estim.second.first << " " << estim.second.second << endl;
     }
     out.close();
 }

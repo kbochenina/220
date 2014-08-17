@@ -119,16 +119,7 @@ void GetMComm(int jobCount){
     mcomm.close();
 }
 
-int _tmain(int argc, _TCHAR* argv[])
-{
-    // number of workflows in the set (command line parameter)
-    int N = 1 ;
-    if (argc == 1){
-        N = 1;
-    }
-    else {
-        N = _wtoi(argv[1]);
-    }
+void CreateDAX(int N){
     ifstream dag("dag.xml"); 
     if (dag.fail()) {
         cout << "Error while opening file " << endl;
@@ -191,17 +182,22 @@ int _tmain(int argc, _TCHAR* argv[])
         filesSize[name] = size;
     }
 
-    ifstream out("fileOut.txt");
-    if (out.fail()) {
-        cout << "Error while opening file " << endl;
-       // system("pause");
-        exit(1);
-    }
+    //ifstream out("fileOut.txt");
+    //if (out.fail()) {
+    //    cout << "Error while opening file " << endl;
+    //   // system("pause");
+    //    exit(1);
+    //}
 
     string jobName;
     double res  = 0.0;
 
+    // jobName jobNumber1 jobNumber2 ... jobNumberN
+    vector <string> jobNumbers;
+    vector <int> numbers;
+
     int processedJobs = 0;
+
     while (processedJobs < jobCount){
         // find job name
         string name;
@@ -215,16 +211,27 @@ int _tmain(int argc, _TCHAR* argv[])
         posNameBegin += toFind.size()+1;
         size_t posNameEnd = s.find("\"", posNameBegin);
         name = s.substr(posNameBegin, posNameEnd - posNameBegin);
+       
         // if previous job didn't have the same type
         if (jobName != name){
              // find average execution time from profiler file
-             res = findAvgTime(out, name);
-             jobName = name;
+             //res = findAvgTime(out, name);
+             // if it is not first job
+             if (jobName != ""){
+                 string jobDesc = jobName + " ";
+                 for (auto&num : numbers){
+                     jobDesc += to_string(num) + " ";
+                 }
+                 jobNumbers.push_back(jobDesc);
+                 numbers.clear();
+             }
+            jobName = name;
         }
-       
+       numbers.push_back(processedJobs + 1);
         // find position for insertion of information
        size_t lastQuote = s.find_last_of("\"");
-       string add = " runtime=\"" + to_string(res) + "\" resTypes=\"\"";
+       //string add = " runtime=\"" + to_string(res) + "\" resTypes=\"\"";
+       string add = " runtime=\"\" resTypes=\"\"";
        s.insert(lastQuote + 1, add);
       
        while (s.find("<uses") == string::npos) {
@@ -273,28 +280,171 @@ int _tmain(int argc, _TCHAR* argv[])
            if (dag.eof())
                break;
        }
-       processedJobs ++;
+       processedJobs++;
+       if (processedJobs == jobCount){
+            string jobDesc = jobName + " ";
+            for (auto&num : numbers){
+                jobDesc += to_string(num) + " ";
+            }
+            jobNumbers.push_back(jobDesc);
+       }
        //cout << "processedJobs = " << processedJobs << " name = " << name << endl;
     }
+
+    ofstream file("jobDesc.dat");
+    for (auto& desc: jobNumbers){
+        file << desc << endl;
+    }
+
+
+    file.close();
     dagnew.close();
     dag.close();
-    create_directory("wfset");
-    current_path("wfset");
-    for (int i = 0; i < N; i++){
-        string fname = "dag_" + to_string(i+1) + ".dax";
-        ofstream file(fname);
-        ifstream dagread("..\\dag_new.xml");
-        string s;
-        while (getline(dagread,s)){
-            file << s << endl;
-        }
-        dagread.close();
-        file.close();
-    }
+    
 
     GetMComm(jobCount);
 
-    //system("pause");
+}
+
+void ModifyDAX(){
+    ifstream dag("dag_new.xml");
+    if (dag.fail()) {
+        cout << "Error while opening file dag_new.xml" << endl;
+        system("pause");
+        exit(1);
+    }
+    ofstream dax("dag_new.dax");
+     if (dax.fail()) {
+        cout << "Error while creating file dag_new.dax" << endl;
+        system("pause");
+        exit(1);
+    }
+    ifstream times("aggComm.dat");
+    if (times.fail()) {
+        cout << "Error while opening file aggComm.dat" << endl;
+        system("pause");
+        exit(1);
+    }
+    vector <double> t;
+    string s;
+    while (getline(times, s)){
+        istringstream iss(s);
+        double x;
+        // task id
+        iss >> x;
+        iss >> x;
+        if (iss.fail()){
+            cout << "Error while reading execution times from aggComm.dat" << endl;
+            system("pause");
+            exit(1);
+        }
+        t.push_back(x);
+    }
+    times.close();
+
+    // averaging the measurements
+    ifstream file("jobDesc.dat");
+     if (file.fail()) {
+        cout << "Error while opening file jobDesc.dat" << endl;
+        system("pause");
+        exit(1);
+    }
+    while (getline(file,s)){
+        istringstream iss(s);
+        string name;
+        iss >> name;
+        vector<int> nums;
+        while (1) {
+            int num;
+            iss >> num;
+            if (iss.fail())
+            break;
+            nums.push_back(num);
+        }
+        double acc = 0;
+        for (auto&num : nums){
+            acc += t[num-1];
+        }
+        acc /= nums.size();
+        for (auto&num : nums){
+            t[num-1] = acc;
+        }
+    }
+
+    int processedJobs = 0;
+
+    while (getline(dag,s)){
+      if (s.find("<job") == string::npos){
+          dax << s << endl;
+      }
+      else {
+          string toFind = "runtime=\"";
+          size_t pos = s.find(toFind);
+          if (pos == string::npos){
+                cout << "Wrong format in job description" << endl;
+                system("pause");
+                exit(1);
+          }
+          string begin = s.substr(0, pos + toFind.size()),
+              end = s.substr(pos + toFind.size() + 1, s.size() - begin.size());
+          string fin = begin + to_string(t[processedJobs++]) + end;
+          dax << fin << endl;
+      }
+
+    }
+
+    dax.close();
+    dag.close();
+
+}
+
+int _tmain(int argc, _TCHAR* argv[])
+{
+    // number of workflows in the set (command line parameter)
+    int N = 1;
+    // second command line parameter -exec in case of modifying *.dax with exec times after profiling
+    string par = "-exec";
+    bool isModify = false;
+    if (argc == 1){
+        N = 1;
+    }
+    else {
+        N = atoi(argv[1]);
+        if (N == 0){
+            cout << "Command format: DAXCreator workflowCount [-exec]" << endl;
+            exit(1);
+        }
+        string cmd = argv[2];
+        if (cmd == par)
+            isModify = true;
+        else{
+            cout << "Command format: DAXCreator workflowCount [-exec]" << endl;
+            exit(1);
+        }
+
+    }
+
+    if (!isModify)
+        CreateDAX(N);
+    else{
+        ModifyDAX();
+        create_directory("wfset");
+        current_path("wfset");
+        for (int i = 0; i < N; i++){
+            string fname = "dag_" + to_string(i+1) + ".dax";
+            ofstream file(fname);
+            ifstream dagread("..\\dag_new.dax");
+            string s;
+            while (getline(dagread,s)){
+                file << s << endl;
+            }
+            dagread.close();
+            file.close();
+        }
+    }
+
+    
+    system("pause");
 	 return 0;
 }
 
