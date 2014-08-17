@@ -17,11 +17,15 @@ DataInfo::~DataInfo(void)
 
 DataInfo::DataInfo( string fSettings, double mL )
 {
-   minL = mL;
+    minL = mL;
     Init(fSettings);
-   _mkdir("Output");
-   _chdir("Output");
-    //SetTransferValues();
+    if (_chdir("Output")){
+        cout << "Cannot change directory to output directory" << endl;
+        #ifdef _DEBUG 
+            std::system("pause");
+        #endif
+        exit(1);
+    }
   
 }
 
@@ -318,25 +322,38 @@ void DataInfo::Init(string settingsFile){
       bool isResourcesFileWasFound = false;
       for (directory_iterator it(dir), end; it != end; ++it) 
       {
-         std::cout << "File processed - ";
-         std::cout << *it << std::endl;
-         string filename = it->path().string();
-         if (filename.find("b") != string::npos) {
-             bandwidthFileName = filename;
-             continue;
-         }
-         if (filename.find("res")==string::npos && filename.find("n")==string::npos) continue;
-         if (filename.find("res")!=string::npos ){
-            resourcesFileName = filename;
-            if (isResourcesFileWasFound == true)
-                throw UserException("InputFiles folder contains more than 1 file with resource description");
-            isResourcesFileWasFound = true;
-         }
-         else 
-            WFFileNames.push_back(filename);
+          if (!is_directory(*it)){
+             std::cout << "File processed - ";
+             std::cout << *it << std::endl;
+             string filename = it->path().string();
+
+             if (filename.find("res")==string::npos && filename.find("n")==string::npos) continue;
+             if (filename.find("res")!=string::npos ){
+                resourcesFileName = filename;
+                if (isResourcesFileWasFound == true)
+                    throw UserException("InputFiles folder contains more than 1 file with resource description");
+                isResourcesFileWasFound = true;
+             }
+          }
       }
+      if (!isResourcesFileWasFound)
+          throw UserException("InputFiles folder does not contain file with resources description");
+
+
       InitResources(resourcesFileName, canExecuteOnDiffResources);
       InitBandwidth(bandwidthFileName);
+
+      s += "\\wfset";
+      for (directory_iterator it(dir), end; it != end; ++it) {
+          if (!is_directory(*it)){
+            std::cout << "File processed - ";
+            std::cout << *it << std::endl;
+            string filename = it->path().string();
+            if (filename.find(".dax") != string::npos)
+                WFFileNames.push_back(filename);
+          }
+      }
+
       for (vector<string>::iterator it = WFFileNames.begin(); it!= WFFileNames.end(); it++)
          InitWorkflowsFromDAX(*it);
 
@@ -919,7 +936,7 @@ void DataInfo::InitResources(string f, bool canExecuteOnDiffResources){
       getline(file,s);
       ++line;
       if (file.eof()) throw UserException(errEarlyEnd);
-      trim = "Resources count = ";
+      trim = "Processors count = ";
       size_t found = s.find(trim);
       if (found != 0) {
          sprintf_s(second, "%d", line);
@@ -929,7 +946,7 @@ void DataInfo::InitResources(string f, bool canExecuteOnDiffResources){
       s.erase(0,trim.size());
       int allResourcesCount = stoi(s);
 
-      trim = "Resources types count = ";
+      trim = "Types count = ";
       getline(file,s);
       ++line;
       if (file.eof()) throw UserException(errEarlyEnd);
@@ -968,81 +985,56 @@ void DataInfo::InitResources(string f, bool canExecuteOnDiffResources){
             errWrongFormatFull += second;
             throw UserException(errWrongFormatFull);
          }
-         found = s.find(",");
-         s.erase(0,found+2);
-         iss.str(s);
-         iss.clear();
-         iss >> coresCount;
-         if (iss.fail()) {
-            sprintf_s(second, "%d", line);
-            errWrongFormatFull += second;
-            throw UserException(errWrongFormatFull);
-         }
-         double perf = 0.0;
-         getline(file,s);
-         trim = "Performance (GFlops): ";
-         found = s.find(trim);
-         if (found != 0) {
-            sprintf_s(second, "%d", line);
-            errWrongFormatFull += second;
-            throw UserException(errWrongFormatFull);
-         }
-         s.erase(0,trim.size());
-         perf = atof(s.c_str());
 
          for (int j = 0; j < resourcesCount; j++){
+            busyIntervals.clear();
             getline(file,s);
             ++line;
             if (file.eof()) throw UserException(errEarlyEnd);
-            busyIntervals.clear();
-            for (int k = 0; k < coresCount; k++){
-               getline(file,s);
-               ++line;
-               if (file.eof()) throw UserException(errEarlyEnd);
-               sprintf_s(second, "%d", k+1);
-               first = "Core ";
-               trim = first + second;
-               found = s.find(trim);
-               if (found != 0) {
-                  sprintf_s(second, "%d", line);
-                  errWrongFormatFull += second;
-                  throw UserException(errWrongFormatFull);
-               }
-               s.erase(0,trim.size()+1);
-               int diapCount = stoi(s);
-               vector<pair<int,int>> oneResDiaps;
-               for (int l = 0; l < diapCount; l++){
-                  if (file.eof()) throw UserException(errEarlyEnd);
-                  getline(file,s);
-                  ++line;
-                  iss.str(s);
-                  iss.clear();
-                  int one,two;
-                  iss >> one;
-                  if (iss.fail()) {
-                     sprintf_s(second, "%d", line);
-                     errWrongFormatFull += second;
-                     throw UserException(errWrongFormatFull);
-                  }
-                  iss >> two;
-                  if (iss.fail()) {
-                     sprintf_s(second, "%d", line);
-                     errWrongFormatFull += second;
-                     throw UserException(errWrongFormatFull);
-                  }
-                  //oneResDiaps.push_back(make_pair(one,two));
-               }
-               busyIntervals.insert(make_pair(k+1, oneResDiaps));
+            sprintf_s(second, "%d", j+1);
+            first = "Processor ";
+            trim = first + second;
+            found = s.find(trim);
+            if (found != 0) {
+                sprintf_s(second, "%d", line);
+                errWrongFormatFull += second;
+                throw UserException(errWrongFormatFull);
+            }
+            s.erase(0,trim.size()+1);
+            int diapCount = stoi(s);
+            vector<pair<int,int>> oneResDiaps;
+            for (int l = 0; l < diapCount; l++){
+                if (file.eof()) throw UserException(errEarlyEnd);
+                getline(file,s);
+                ++line;
+                iss.str(s);
+                iss.clear();
+                int one,two;
+                iss >> one;
+                if (iss.fail()) {
+                    sprintf_s(second, "%d", line);
+                    errWrongFormatFull += second;
+                    throw UserException(errWrongFormatFull);
+                }
+                iss >> two;
+                if (iss.fail()) {
+                    sprintf_s(second, "%d", line);
+                    errWrongFormatFull += second;
+                    throw UserException(errWrongFormatFull);
+                }
+                oneResDiaps.push_back(make_pair(one,two));
+            }
+            busyIntervals.insert(make_pair(j+1, oneResDiaps));
 			   // !!!
 			  //busyIntervals.clear();
-            }
+          
             // add busyIntervals for current resource to a vector <BusyIntervals>
             typeBI.push_back(busyIntervals);
          }
 		
-         ResourceType r(i+1,resourcesCount, coresCount, perf, typeBI, canExecuteOnDiffResources, context);
+         ResourceType r(i+1,resourcesCount, coresCount, 0.0, typeBI, canExecuteOnDiffResources, context);
          resources.push_back(r);
-         processorsCount += coresCount * resourcesCount;
+         processorsCount += resourcesCount;
       }
 
         file.close();

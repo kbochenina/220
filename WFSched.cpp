@@ -17,78 +17,143 @@ enum SchedulingSchemes { STAGED = 1, EFF_ORDERED = 2, SIMPLE = 3, RESERVED_ORDER
 
 int _tmain(int argc, wchar_t**argv)
 {
-	// fileSettings is a file with program settings
-	// it is a first command line argument
-	// if program is started without arguments, filename is "settings.txt"
-	double minLInit = 20000;
-   int periodsCount = 1, experCount = 1;
-	wstring fileSettings;
-	if (argc == 2 ) {
-		fileSettings=L"settings.txt";
-	}
-	else {
-		minLInit = _wtof(argv[1]);
-      periodsCount = _wtoi(argv[2]);
-      experCount = _wtoi(argv[3]);
-		//cout << minLInit << endl;
-	}
-	fileSettings=L"settings.txt";
-	string s(fileSettings.begin(),fileSettings.end());
-	cout << "File settings name: " << s << endl;
-	srand(time(NULL));
-	
-	double koeff = 0.125;
+    // fileSettings is a file with program settings
+    // it is a first command line argument
+    // if program is started without arguments, filename is "settings.txt"
+    double deadline = 200;
+    int periodsCount = 1, experCount = 1;
+    wstring fileSettings;
+    if (argc != 2 ) {
+	     deadline = _wtof(argv[1]);
+        //periodsCount = _wtoi(argv[2]);
+        //experCount = _wtoi(argv[3]);
+	     //cout << minLInit << endl;
+    }
+
+    // creating/check output directory
+    DWORD dAttr = GetFileAttributes(L"Output");
+    if ((dAttr & FILE_ATTRIBUTE_DIRECTORY) && dAttr != 0xffffffff){
+        if (chdir("Output")){
+            cout << "Output directory cannot be used" << endl;
+            #ifdef _DEBUG 
+                system("pause");
+            #endif
+            exit(1);
+        }
+    }
+    else {
+        if (_mkdir("Output")){
+            cout << "Error while creating output directory" << endl;
+            #ifdef _DEBUG 
+                system("pause");
+            #endif
+            exit(1);
+        }
+    }
+
+    // creation of files with time and schedule quality metrics in output directory
+    string timeFileName = "time.txt";
+    ofstream timeFile(timeFileName);
+    if (timeFile.fail()){
+        cout << "Error while creating time metrics file" << endl;
+        #ifdef _DEBUG 
+            system("pause");
+        #endif
+        exit(1);
+    }
+    timeFile.close();
+
+    string metricsFileName = "fullmetrics.txt";
+    ofstream metricsFile(metricsFileName, ios::trunc);
+    if (metricsFile.fail()){
+        cout << "Error while creating schedule metrics file" << endl;
+        #ifdef _DEBUG 
+            system("pause");
+        #endif
+        exit(1);
+    }
+    metricsFile.close();
+
+    if (_chdir("..")){
+        cout << "Cannot change directory to working directory" << endl;
+        #ifdef _DEBUG 
+            system("pause");
+        #endif
+        exit(1);
+    }
+    
    
-	for (int i = 0; i < periodsCount; i++){
-		// set data
-		double minLength = minLInit + koeff*i * minLInit;
-		cout << "Minlength = " << minLength << endl;
-      _chdir("D:\\ITMO\\Degree\\Programs\\WFSched\\Output");
-      string timeFileName = "time.txt";
-      ofstream timeFile(timeFileName);
-      timeFile.close();
-     //system("pause");
-      for (int j = 0; j < experCount; j++){
-          _chdir("D:\\ITMO\\Degree\\Programs\\WFSched\\Output");
-          string metricsFileName = "fullmetrics";
-          metricsFileName.append(to_string(i+1));
-          metricsFileName.append("-");
-          metricsFileName.append(to_string(j+1));
-          metricsFileName.append(".txt");
-          ofstream m(metricsFileName, ios::trunc);
-		    m.close();
-          _chdir("D:\\ITMO\\Degree\\Programs\\WFSched");
-		    DataInfo data(s,minLength);
-		    Scheduler sched(data);
-		    ofstream f("fullmetrics.txt", ios::trunc);
-		    f.close();
-		    sched.SetSchedulingStrategy(ONLY_GREEDY);	
-		    sched.GetSchedule(SIMPLE);
-		    sched.GetMetrics("simple_metrics.txt", "SimpleSched",metricsFileName);
-		    sched.TestSchedule();
-		    cout << "***************************************************" << endl;
-		    sched.GetSchedule(RESERVED_ORDERED);
-		    sched.GetMetrics("reserved_metrics.txt", "StagedReservedTime",metricsFileName);
-		    sched.TestSchedule();
-		    cout << "***************************************************" << endl;
-		    /*sched.GetSchedule(EFF_ORDERED);
-		    sched.GetMetrics("eff_metrics.txt", "StagedEfficiency");
-		    sched.TestSchedule();
-		    cout << "***************************************************" << endl;*/
-		    sched.SetSchedulingStrategy(CLUST);
-		    sched.GetSchedule(CLUSTERED);
-		    sched.GetMetrics("clustered.txt", "Clustered", metricsFileName);
-		    sched.TestSchedule();
-		    cout << "***************************************************" << endl;
-     
-		    _chdir("D:\\ITMO\\Degree\\Programs\\WFSched");
-      }
-      
-	}
-	/*sched.GetSchedule(STAGED);
-	sched.GetMetrics("staged_metrics.txt");
-	sched.TestSchedule();*/
-	//system("pause");
-	return 0;
+    fileSettings=L"settings.txt";
+    string settings(fileSettings.begin(),fileSettings.end());
+	
+    ifstream settFile(fileSettings);
+    if (settFile.fail()){
+        cout << "File " << settings << " was not open" << endl;
+        #ifdef _DEBUG 
+            system("pause");
+        #endif
+        exit(1);
+    }
+
+    string s;
+    // reading name of scheduling method
+    while(1) {
+        getline(settFile,s);
+        if (s.find("SchedMethod") != string::npos)
+            break;
+        if (settFile.eof()) {
+            cout << "Description of scheduling method was not found" << endl;
+            #ifdef _DEBUG 
+                system("pause");
+            #endif
+            exit(1);
+        }
+    } 
+
+    size_t pos = s.find("=");
+    if (pos == string::npos){
+        cout << "Description of scheduling method has wrong format" << endl;
+        #ifdef _DEBUG 
+            system("pause");
+        #endif
+        exit(1);
+    }
+    string parName = "SchedMethod=";
+    string schedName = s.substr(pos+1, s.size()-parName.size());
+
+    // initializing data and scheduler
+    DataInfo data(settings,deadline);
+	 Scheduler sched(data);
+    sched.SetSchedulingStrategy(ONLY_GREEDY);	
+
+    if (schedName == "SIMPLE"){
+        sched.GetSchedule(SIMPLE);
+        sched.GetMetrics("simple_metrics.txt", "SimpleSched", metricsFileName);
+        sched.TestSchedule();
+    }
+    else if (schedName == "STAGED"){
+        sched.GetSchedule(RESERVED_ORDERED);
+        sched.GetMetrics("reserved_metrics.txt", "StagedReservedTime",metricsFileName);
+        sched.TestSchedule();
+    }
+    else if (schedName == "CLUSTERED"){
+        sched.SetSchedulingStrategy(CLUST);
+        sched.GetSchedule(CLUSTERED);
+        sched.GetMetrics("clustered.txt", "Clustered", metricsFileName);
+        sched.TestSchedule();
+    }
+    else {
+        cout << "Description of scheduling method has wrong format" << endl;
+        #ifdef _DEBUG 
+            system("pause");
+        #endif
+        exit(1);
+    }
+
+    #ifdef _DEBUG 
+        system("pause");
+    #endif
+
+    return 0;
 }
 
