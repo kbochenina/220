@@ -17,7 +17,7 @@ unique_ptr<CriteriaMethod> CriteriaFactory::GetMethod(DataInfo &d, int criteriaN
 			case RESERVED_TIME:
 			return unique_ptr<CriteriaMethod>(new ReservedTimeCriteria(d));
 		default:
-			throw UserException("CriteriaFactory::GetMethod() error. No valid algorithm found. Current criteria uid = " + to_string(criteriaNum));
+			throw UserException("CriteriaFactory::GetMethod() error. No valid algorithm found. Current criteria uid = " + to_string(static_cast<long long>(criteriaNum)));
 		}
 	}
 	catch (UserException& e){

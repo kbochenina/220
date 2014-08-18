@@ -17,6 +17,8 @@ enum SchedulingSchemes { STAGED = 1, EFF_ORDERED = 2, SIMPLE = 3, RESERVED_ORDER
 
 int _tmain(int argc, wchar_t**argv)
 {
+    ofstream log("WFSchedLog.txt");
+
     // fileSettings is a file with program settings
     // it is a first command line argument
     // if program is started without arguments, filename is "settings.txt"
@@ -34,7 +36,7 @@ int _tmain(int argc, wchar_t**argv)
     DWORD dAttr = GetFileAttributes(L"Output");
     if ((dAttr & FILE_ATTRIBUTE_DIRECTORY) && dAttr != 0xffffffff){
         if (chdir("Output")){
-            cout << "Output directory cannot be used" << endl;
+            log << "Output directory cannot be used" << endl;
             #ifdef _DEBUG 
                 system("pause");
             #endif
@@ -43,7 +45,7 @@ int _tmain(int argc, wchar_t**argv)
     }
     else {
         if (_mkdir("Output")){
-            cout << "Error while creating output directory" << endl;
+            log << "Error while creating output directory" << endl;
             #ifdef _DEBUG 
                 system("pause");
             #endif
@@ -56,7 +58,7 @@ int _tmain(int argc, wchar_t**argv)
     string timeFileName = "time.txt";
     ofstream timeFile(timeFileName);
     if (timeFile.fail()){
-        cout << "Error while creating time metrics file" << endl;
+        log << "Error while creating time metrics file" << endl;
         #ifdef _DEBUG 
             system("pause");
         #endif
@@ -67,7 +69,7 @@ int _tmain(int argc, wchar_t**argv)
     string metricsFileName = "fullmetrics.txt";
     ofstream metricsFile(metricsFileName, ios::trunc);
     if (metricsFile.fail()){
-        cout << "Error while creating schedule metrics file" << endl;
+        log << "Error while creating schedule metrics file" << endl;
         #ifdef _DEBUG 
             system("pause");
         #endif
@@ -76,7 +78,7 @@ int _tmain(int argc, wchar_t**argv)
     metricsFile.close();
 
     if (_chdir("..")){
-        cout << "Cannot change directory to working directory" << endl;
+        log << "Cannot change directory to working directory" << endl;
         #ifdef _DEBUG 
             system("pause");
         #endif
@@ -89,7 +91,7 @@ int _tmain(int argc, wchar_t**argv)
 	
     ifstream settFile(fileSettings);
     if (settFile.fail()){
-        cout << "File " << settings << " was not open" << endl;
+        log << "File " << settings << " was not open" << endl;
         #ifdef _DEBUG 
             system("pause");
         #endif
@@ -103,7 +105,7 @@ int _tmain(int argc, wchar_t**argv)
         if (s.find("SchedMethod") != string::npos)
             break;
         if (settFile.eof()) {
-            cout << "Description of scheduling method was not found" << endl;
+            log << "Description of scheduling method was not found" << endl;
             #ifdef _DEBUG 
                 system("pause");
             #endif
@@ -113,7 +115,7 @@ int _tmain(int argc, wchar_t**argv)
 
     size_t pos = s.find("=");
     if (pos == string::npos){
-        cout << "Description of scheduling method has wrong format" << endl;
+        log << "Description of scheduling method has wrong format" << endl;
         #ifdef _DEBUG 
             system("pause");
         #endif
@@ -156,7 +158,7 @@ int _tmain(int argc, wchar_t**argv)
         sched.TestSchedule();
     }
     else {
-        cout << "Description of scheduling method has wrong format" << endl;
+        log << "Description of scheduling method has wrong format" << endl;
         #ifdef _DEBUG 
             system("pause");
         #endif
@@ -166,6 +168,8 @@ int _tmain(int argc, wchar_t**argv)
     #ifdef _DEBUG 
         system("pause");
     #endif
+
+    log.close();
 
     return 0;
 }

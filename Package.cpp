@@ -7,8 +7,8 @@ double Package::GetExecTime(int type, int cores) const {
 		std::pair<int,int> typeCore = make_pair(type,cores);
 		auto it = execTimes.find(typeCore);
 		if (it==execTimes.end()) 
-			throw UserException("Package::GetExecTime() : combination of type " + to_string(type) + 
-			"  and cores " + to_string(cores) + " not found");
+			throw UserException("Package::GetExecTime() : combination of type " + to_string(static_cast<long long>(type)) + 
+			"  and cores " + to_string(static_cast<long long>(cores)) + " not found");
 		return it->second;
 	}
 	catch (UserException& e){

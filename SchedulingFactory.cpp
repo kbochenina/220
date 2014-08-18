@@ -21,7 +21,7 @@ unique_ptr<SchedulingMethod> SchedulingFactory::GetMethod(DataInfo &d, int uid, 
 		case CLUSTERED:
 			return unique_ptr<SchedulingMethod>(new Clustered(d,uid));
 		default:
-			throw UserException("SchedulingFactory::GetMethod() error. No valid algorithm found. Current algorithm uid = " + to_string(uid));
+			throw UserException("SchedulingFactory::GetMethod() error. No valid algorithm found. Current algorithm uid = " + to_string(static_cast<long long>(uid)));
 		}
 	}
 	catch (UserException& e){

@@ -40,14 +40,14 @@ double DataInfo::GetAvgTransferFrom(const int& globalNum) const{
 
 	double maxAvgTransfer = 0.0;
 
-	for (auto& linkedIt : linked){
-		 double transfer = Workflows(wfNum).GetTransfer(localNum, linkedIt);
-		 vector <int> linkedResTypes = Workflows(wfNum)[linkedIt].GetResTypes(); 
+	for (auto linkedIt = linked.begin(); linkedIt != linked.end(); linkedIt++){
+		 double transfer = Workflows(wfNum).GetTransfer(localNum, *linkedIt);
+		 vector <int> linkedResTypes = Workflows(wfNum)[*linkedIt].GetResTypes(); 
 		 double transferTime = 0.0;
 
-		 for (auto& currentIt : currentResTypes){
-			 for (auto& linkedIt : linkedResTypes){
-				 double band = GetBandwidth(currentIt - 1, linkedIt - 1); 
+		 for (auto currentIt = currentResTypes.begin(); currentIt != currentResTypes.end(); currentIt++){
+			 for (auto linkedIt = linkedResTypes.begin(); linkedIt != linkedResTypes.end(); linkedIt++){
+				 double band = GetBandwidth(*currentIt - 1, *linkedIt - 1); 
 				 if (band!= 0) transferTime += transfer / band;
 			}
 		 }
@@ -83,9 +83,9 @@ void  DataInfo::SetTransferValues(){
     }
     avgBandwidth /= processorsCount;
 
-    for (const auto& wf : workflows){
+    for (auto wf = workflows.begin(); wf != workflows.end(); wf++){
         vector <vector<double>> transfer;
-        int pCount = wf.GetPackageCount();
+        int pCount = wf->GetPackageCount();
         transfer.resize(pCount);
         
         for (int i = 0; i < pCount; i++){
@@ -97,11 +97,11 @@ void  DataInfo::SetTransferValues(){
             double avgResPerf = GetAvgPerf();
             double conseqAmount = 0.0;
             for (int i = 0; i < pCount; i++)
-                conseqAmount += wf.GetAmount(i);
+                conseqAmount += wf->GetAmount(i);
             double avgTime = conseqAmount / avgResPerf;
             double fullAmount = context.GetCCR() * avgTime / avgBandwidth;
             // in megabytes
-            double avgAmount = fullAmount / (pCount - wf.GetLastPackagesCount());
+            double avgAmount = fullAmount / (pCount - wf->GetLastPackagesCount());
             for (int i = 0; i < pCount; i++){
 				double h = context.GetH(), outPackageAmount = 0.0;
 				if (h == 0) 
@@ -110,7 +110,7 @@ void  DataInfo::SetTransferValues(){
 					outPackageAmount = rand()% static_cast<int>(2 * h * avgAmount) 
                     + avgAmount * (1 - h);
                 vector <int> out;
-                wf.GetOutput(i, out);
+                wf->GetOutput(i, out);
                 double avgPackageAmount = outPackageAmount / out.size();
                 for (size_t j = 0; j < out.size(); j++){
                     transfer[i][out[j]] = avgPackageAmount;
@@ -131,8 +131,8 @@ void  DataInfo::SetTransferValues(){
 
 double DataInfo::GetAvgPerf(){
     double perf = 0.0;
-    for (const auto& res: resources){
-        perf += res.GetPerf() * res.GetProcessorsCount();
+    for (auto res = resources.begin(); res != resources.end(); res++){
+        perf += res->GetPerf() * res->GetProcessorsCount();
     }
     return perf/processorsCount;
 }
@@ -462,10 +462,10 @@ void DataInfo::InitWorkflowsFromDAX(string fname){
         transfer.resize(jobsCount);
         connectMatrix.resize(jobsCount);
         jobNames.resize(jobsCount);
-        for (auto &row: transfer)
-	         row.resize(jobsCount);
-        for (auto &row: connectMatrix)
-	         row.resize(jobsCount);
+        for (auto row = transfer.begin(); row != transfer.end(); row++)
+	         row->resize(jobsCount);
+        for (auto row = connectMatrix.begin(); row != connectMatrix.end(); row++)
+	         row->resize(jobsCount);
         vector <Package> pacs;
         getline(file,s);
         getline(file,s);
@@ -577,12 +577,12 @@ void DataInfo::InitWorkflowsFromDAX(string fname){
 		// set dependencies
 		for (int i = 0; i < jobsCount; i++){
 			for (int j = 0; j < jobsCount; j++){
-				for (auto & output: outputFiles[i]){
-					string fileName = output.first;
-					for (auto& input: inputFiles[j]){
-						if (fileName == input.first){
+				for (auto output = outputFiles[i].begin(); output != outputFiles[i].end(); output++){
+					string fileName = output->first;
+					for (auto input = inputFiles[j].begin(); input != inputFiles[j].end(); input++ ){
+						if (fileName == input->first){
 							connectMatrix[i][j] = 1;
-							transfer[i][j] = output.second;
+							transfer[i][j] = output->second;
                      // else last Montage task will have cycle edge
                      if (i == j)
                          connectMatrix[i][j] = 0;
@@ -1211,8 +1211,8 @@ void DataInfo::InitFinishingTimes(){
       avgCalcPower += resources[i].GetPerf();
    avgCalcPower /= resources.size();
    // for each workflow
-   for (Workflow& wf: workflows){
-      wf.SetFinishingTimes(avgCalcPower);
+   for (auto wf = workflows.begin(); wf != workflows.end(); wf++){
+      wf->SetFinishingTimes(avgCalcPower);
    }
 }
 
@@ -1361,8 +1361,8 @@ double DataInfo::GetDeadline(){
 
 // remove some numbers from priorities
 void DataInfo::RemoveFromPriorities(const vector<int>& toRemove){
-   for (const auto& val : toRemove){
-      auto & it = find(priorities.begin(), priorities.end(), val);
+   for (auto val = toRemove.begin(); val != toRemove.end(); val++){
+      auto & it = find(priorities.begin(), priorities.end(), *val);
       if (it != priorities.end()) priorities.erase(it);
    }
 }

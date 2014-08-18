@@ -16,6 +16,7 @@
 #include <vector>
 #include "UserException.h"
 #include <boost/tuple/tuple.hpp>
+#include <iterator>
 
 using namespace boost;
 using namespace std;

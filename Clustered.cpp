@@ -152,8 +152,9 @@ void Clustered::ClusterizeConsequence(){
 void Clustered::SetClusterDep(){
 	vector <vector<int>> &matrix = dep[wfNum];
 	matrix.resize(clusters[wfNum].size());
-	for (auto &ind : matrix)
-		ind.resize(clusters[wfNum].size());
+	//for (auto &ind : matrix)
+   for (auto ind = matrix.begin(); ind != matrix.end(); ind++)
+		(*ind).resize(clusters[wfNum].size());
 	for (size_t i = 0; i < clusters[wfNum].size(); i++){
 		for (size_t j = 0; j < clusters[wfNum].size(); j++){
 			if (i == j) {
@@ -223,8 +224,8 @@ double Clustered::GetWFSchedule(Schedule &out){
   
 
 	int clustersCount = 0;
-	for (auto &wfDep : dep)
-		clustersCount += wfDep.size();
+	for (auto wfDep = dep.begin(); wfDep != dep.end(); wfDep++)
+		clustersCount += (*wfDep).size();
 	int schedClustersCount = 0;
 	int wfCount = data.GetWFCount();
 
@@ -282,8 +283,8 @@ double Clustered::GetWFSchedule(Schedule &out){
 		int clustersSetSize = 0;
 		
 		// fill the variants vector
-		for (auto& wf: wfToAddClusters){
-			vector<vector<int>>& wfDep = dep[wf];
+		for (auto wf = wfToAddClusters.begin(); wf!= wfToAddClusters.end(); wf++){
+			vector<vector<int>>& wfDep = dep[(*wf)];
 
 			for (size_t i = 0; i < wfDep.size(); i++){
 				bool isVariant = true;
@@ -294,9 +295,9 @@ double Clustered::GetWFSchedule(Schedule &out){
 					}
 				}
 				if (isVariant && 
-					find(unschedClusters[wf].begin(), unschedClusters[wf].end(), i) != unschedClusters[wf].end() &&
-					find(variants[wf].begin(), variants[wf].end(), i) == variants[wf].end()){
-					variants[wf].push_back(i);
+					find(unschedClusters[*wf].begin(), unschedClusters[*wf].end(), i) != unschedClusters[*wf].end() &&
+					find(variants[*wf].begin(), variants[*wf].end(), i) == variants[*wf].end()){
+					variants[*wf].push_back(i);
 					//cout << "Cluster " << i << " was added to " << wf << "WF." << endl;
 					//if (minDeadline > clusters[wf][i].GetDeadline())
 					//	minDeadline = clusters[wf][i].GetDeadline();
@@ -698,8 +699,8 @@ void Clustered::Merge(int second, bool isPrev){
    // rearrange dependecies
    // delete row
    dep[wfNum].erase(dep[wfNum].begin()+toDelete);
-   for (auto& row: dep[wfNum])
-       row.erase(row.begin()+toDelete);
+   for (auto row = dep[wfNum].begin(); row != dep[wfNum].end(); row++)
+       (*row).erase((*row).begin()+toDelete);
 
 	if (clusters[wfNum][currentCluster].GetStart() == clusters[wfNum][currentCluster].GetDeadline()){
 		cout << "GetStart()==Deadline()" << endl; system("pause");

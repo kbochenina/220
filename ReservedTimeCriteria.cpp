@@ -11,8 +11,8 @@ double ReservedTimeCriteria::GetCriteria(const Schedule &in){
 	double deadline = data.GetT();
 	// max ending time
 	double maxEndTime = 0;
-	for (auto &sched: in){
-		double currentEndTime = sched.get<1>() + sched.get<3>();
+	for (auto sched = in.begin(); sched != in.end(); sched++){
+		double currentEndTime = sched->get<1>() + sched->get<3>();
 		if (maxEndTime < currentEndTime)
 			maxEndTime = currentEndTime;
 	}
@@ -26,8 +26,8 @@ double ReservedTimeCriteria::GetCriteria (const Schedule &in, const int &wfNum){
 	double requiredDeadline = data.GetDeadline(wfNum);
 	// max ending time
 	double maxEndTime = 0;
-	for (auto &sched: in){
-		double currentEndTime = sched.get<1>() + sched.get<3>();
+	for (auto sched = in.begin(); sched != in.end(); sched++){
+		double currentEndTime = sched->get<1>() + sched->get<3>();
 		if (maxEndTime < currentEndTime)
 			maxEndTime = currentEndTime;
 	}
@@ -38,8 +38,8 @@ double ReservedTimeCriteria::GetCriteria (const Schedule &in, const int &wfNum){
 	int pCount = data.Workflows(wfNum).GetPackageCount();
 	if (in.size() != pCount){
 		vector <int> scheduled;
-		for (const auto &sched : in){
-			scheduled.push_back(sched.get_head());
+		for (auto sched = in.begin(); sched != in.end(); sched++){
+			scheduled.push_back(sched->get_head());
 		}
 		for (int pNum = 0; pNum < pCount; pNum++){
 			// if package is unscheduled, add it avg exec time to deadline

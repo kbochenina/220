@@ -116,13 +116,13 @@ void Greedy::FindSchedule(Schedule& out, double &efficiency, int pNum, bool forO
     //}
     // II version
     for (size_t i = 0; i < dependsOn.size(); i++){
-        for (auto& j : out){
+        for (auto j = out.begin(); j != out.end(); j++){
             int add = 0;
             if (!forOneWf) add += pNum - localNum;
             // when package is found in schedule
-            if (boost::get<0>(j) == dependsOn[i] + add){
-                int resType = data.GetResourceTypeIndex(boost::get<2>(j)[0]);
-                double tEnd = boost::get<1>(j) + boost::get<3>(j) + 1;
+            if (boost::get<0>(*j) == dependsOn[i] + add){
+                int resType = data.GetResourceTypeIndex(boost::get<2>(*j)[0]);
+                double tEnd = boost::get<1>(*j) + boost::get<3>(*j) + 1;
                 double commTime = data.Workflows(wfNum).GetCommTime(localNum);
                 commInfo.push_back(make_tuple(resType, tEnd, commTime));
             }
@@ -144,13 +144,13 @@ void Greedy::FindSchedule(Schedule& out, double &efficiency, int pNum, bool forO
     double bestTimeEnd = std::numeric_limits<double>::infinity();
     bool planWasFound = false;
     int resIndex = 0;
-    for (auto &res : resTypes){
+    for (auto res = resTypes.begin(); res != resTypes.end(); res++){
             // resources indexed from 1
-            res -=1;
+            *res -=1;
             //int tbegin = 0;
 			   int tbegin = tstart;
             // get the expected begin time for current resource type
-            for (const auto& in : commInfo){
+            for (auto in = commInfo.begin(); in != commInfo.end(); in++){
                 // I version
                 //double bandwidth = data.GetBandwidth(in.get_head(), res);
                 //double currResBegin = 0.0;
@@ -163,19 +163,19 @@ void Greedy::FindSchedule(Schedule& out, double &efficiency, int pNum, bool forO
                 //    currResBegin += 0.5;
                 //    tbegin = static_cast<int>(currResBegin);
                 //}
-                double currResBegin = in.get<1>() + in.get<2>();
+                double currResBegin = in->get<1>() + in->get<2>();
                 if (currResBegin > tbegin){
                     currResBegin += 0.5;
                     tbegin = static_cast<int>(currResBegin);
                 }
             }
 			if (tbegin > deadline) continue;
-            if (data.Resources(res).FindPlacement(execTime[resIndex], tbegin, processor, deadline)){
+            if (data.Resources(*res).FindPlacement(execTime[resIndex], tbegin, processor, deadline)){
                 if (tbegin + execTime[resIndex] < bestTimeEnd){
                     savedPlan.get<0>() = processor; 
                     savedPlan.get<1>() = tbegin;
                     savedPlan.get<2>() = tbegin + execTime[resIndex]; 
-                    savedPlan.get<3>() = res;
+                    savedPlan.get<3>() = *res;
                     bestTimeEnd = tbegin + execTime[resIndex];
                 }
                 planWasFound = true;
@@ -207,14 +207,14 @@ void Greedy::FindSchedule(Schedule& out, double &efficiency, int pNum, bool forO
             data.Workflows(wfNum).GetSuccessors(pNum - initPackageNum, successors);
         else data.Workflows(wfNum).GetSuccessors(pNum, successors);
             
-        for (auto & i : successors){
+        for (auto i = successors.begin(); i!= successors.end(); i++){
             // transform local to global
-            if (!forOneWf) i += initPackageNum;
-            if (find(finished.begin(), finished.end(),i) == finished.end())
-                finished.push_back(i);
+            if (!forOneWf) *i += initPackageNum;
+            if (find(finished.begin(), finished.end(),*i) == finished.end())
+                finished.push_back(*i);
             if (forOneWf){
-                 if (find(unscheduled.begin(),unscheduled.end(), i) == unscheduled.end()) 
-                    unscheduled.push_back(i);
+                 if (find(unscheduled.begin(),unscheduled.end(), *i) == unscheduled.end()) 
+                    unscheduled.push_back(*i);
 
             }
                                

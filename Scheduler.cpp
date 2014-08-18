@@ -288,20 +288,20 @@ void Scheduler::PrintSchedule(Schedule &s){
     // get vectors for all processors (wfNum, localPNum, tstart)
     vector<vector<boost::tuple<int, int, double>>> queues;
     queues.resize(data.GetProcessorsCount());
-    for (auto&packageSched: fullSchedule){
-        int globalNum = packageSched.get_head();
+    for (auto packageSched = fullSchedule.begin(); packageSched != fullSchedule.end(); packageSched++){
+        int globalNum = packageSched->get_head();
         int wfNum, localNum;
         data.GetLocalNumbers(globalNum, wfNum, localNum);
-        int tstart = packageSched.get<1>();
-        int processor = packageSched.get<2>().front();
+        int tstart = packageSched->get<1>();
+        int processor = packageSched->get<2>().front();
         queues[processor].push_back(make_tuple(wfNum, localNum, tstart));
     }
     int processor = 0;
-    for (auto & queue: queues){
-        sort(queue.begin(), queue.end(), my_compare_op());
+    for (auto queue = queues.begin(); queue != queues.end(); queue++){
+        sort(queue->begin(), queue->end(), my_compare_op());
         f << "Processor " << processor++ << endl;
-        for (auto &package : queue){
-            f << "Wf " << package.get_head() << " task " << package.get<1>() << " tstart " << package.get<2>() << endl;
+        for (auto package = queue->begin(); package != queue->end(); package++){
+            f << "Wf " << package->get_head() << " task " << package->get<1>() << " tstart " << package->get<2>() << endl;
         }
     }
         
@@ -343,16 +343,16 @@ void Scheduler::EfficiencyOrdered(){
          // busy intervals for best schedule
          vector<vector <BusyIntervals>> storedIntervals;
          // for each unscheduled WF
-         for (auto &wfNum : unscheduled){
+         for (auto wfNum = unscheduled.begin(); wfNum != unscheduled.end(); wfNum++){
             Schedule current;
             unique_ptr <SchedulingMethod> method = 
-               SchedulingFactory::GetMethod(data, methodsSet[wfNum], wfNum);
+               SchedulingFactory::GetMethod(data, methodsSet[*wfNum], *wfNum);
             // get current schedule in current variable
             double currentEff = method->GetWFSchedule(current);
          //	file << "wfnum = " << wfNum << " current eff = " << currentEff << endl;
             if (currentEff < currentBestEff){
                best = current;
-               bestWFNum = wfNum;
+               bestWFNum = *wfNum;
                currentBestEff = currentEff;
                storedIntervals.clear();
                data.GetCurrentIntervals(storedIntervals);
@@ -429,17 +429,17 @@ void Scheduler::OrderedScheme(int criteriaNumber){
 
          vector<vector <BusyIntervals>> storedIntervals;
          // for each unscheduled WF
-         for (auto &wfNum : unscheduled){
+         for (auto wfNum = unscheduled.begin(); wfNum != unscheduled.end(); wfNum++){
             Schedule current;
             unique_ptr <SchedulingMethod> method = 
-               SchedulingFactory::GetMethod(data, methodsSet[wfNum], wfNum);
+               SchedulingFactory::GetMethod(data, methodsSet[*wfNum], *wfNum);
             // get current schedule in current variable
             double currentEff = method->GetWFSchedule(current);
             // get current criteria
-            double currentCriteria = criteria->GetCriteria(current, wfNum);
+            double currentCriteria = criteria->GetCriteria(current, *wfNum);
             if (criteria->IsBetter(currentCriteria, bestCriteria)){
                best = current;
-               bestWFNum = wfNum;
+               bestWFNum = *wfNum;
                currentBestEff = currentEff;
                bestCriteria = currentCriteria;
                storedIntervals.clear();

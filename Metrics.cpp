@@ -187,8 +187,8 @@ void Metrics::AvgUnfinischedTime(){
 	  }
    
    int count = 0;
-   for (auto& i: fines) {
-	   avgFine += i / fineMaxWFs[count++];
+   for (auto i = fines.begin(); i!= fines.end(); i++) {
+	   avgFine += *i / fineMaxWFs[count++];
    }
    avgFine /= data.GetWFCount();
 

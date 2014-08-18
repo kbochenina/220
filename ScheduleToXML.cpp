@@ -14,8 +14,8 @@ struct my_compare_op
 
 void ScheduleToXML::CreateXML(Schedule currentSchedule){
 	//std::cout << "ScheduleToXML::CreateXML() was called\n";
-	resFileName = xmlBaseName + to_string(xmlCount) + ".jed";
-   schedFileName = xmlBaseName + to_string(xmlCount) + ".txt";
+	resFileName = xmlBaseName + to_string(static_cast<long long>(xmlCount)) + ".jed";
+   schedFileName = xmlBaseName + to_string(static_cast<long long>(xmlCount)) + ".txt";
    ++xmlCount;
 	ofstream f(resFileName);
 	MetaXMLInfo(f);

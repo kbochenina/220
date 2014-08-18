@@ -79,9 +79,9 @@ bool Intervals::FindPlacement(const double &execTime, int &tbegin, int& processo
       }
    }
 
-   for (auto& elem : tb){
-	   if (elem < tbegin)
-		   elem = tbegin;
+   for (auto elem = tb.begin(); elem != tb.end(); elem++){
+	   if (*elem < tbegin)
+		   *elem = tbegin;
    }
 
    double trealbegin = deadline;
@@ -148,11 +148,11 @@ bool Intervals::CanPlace(const int& resNum, const int &procNum, const int& tBegi
    
    const auto& intervals = current[resNum][procNum];
    
-   for (const auto& interval : intervals){
-      if (tBegin >= interval.first && tBegin < interval.second)
+   for (auto interval = intervals.begin(); interval != intervals.end(); interval++){
+      if (tBegin >= interval->first && tBegin < interval->second)
          return false;
       const double tEnd = tBegin + execTime;
-      if (tEnd > interval.first && tEnd <= interval.second)
+      if (tEnd > interval->first && tEnd <= interval->second)
          return false;
    }
    return true;

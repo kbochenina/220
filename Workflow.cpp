@@ -33,8 +33,8 @@ void Workflow::SetTransfer(vector<vector<double>> t) {
     try{
         if (t.size() != transfer.size())
             throw UserException("Workflow::SetTransfer() error. Wrong rows count");
-        for (const auto&row: t){
-            if (row.size() != transfer.size())
+        for (auto row = t.begin(); row != t.end(); row++){
+            if (row->size() != transfer.size())
                  throw UserException("Workflow::SetTransfer() error. Wrong columns count");
         }
         for (size_t i = 0; i < transfer.size(); i++)
@@ -58,7 +58,7 @@ int Workflow::GetLastPackagesCount() const{
 double Workflow::GetExecTime ( unsigned int pNum, int type, int cores) const {
    try{
       if (pNum < 0 || pNum > packages.size()-1) 
-         throw UserException("Workflow::GetExecTime() error. Wrong packageNum" + to_string(pNum));
+         throw UserException("Workflow::GetExecTime() error. Wrong packageNum" + to_string(static_cast<long long>(pNum)));
       return packages[pNum].GetExecTime(type, cores);
    }
    catch (UserException& e){
@@ -70,17 +70,17 @@ double Workflow::GetExecTime ( unsigned int pNum, int type, int cores) const {
 
 // return true if package pNum is init
 bool Workflow::IsPackageInit(int pNum) const {
-   for (const auto &i : matrix)
-      if (i[pNum]!=0) return false;
+   for (auto i = matrix.begin(); i != matrix.end(); i++)
+      if ((*i)[pNum]!=0) return false;
    return true;
 }
 
 // return true if second depends on first
 bool Workflow::IsDepends(unsigned one, unsigned two) const {
    try {
-      string errorMsg = "Workflow::IsDepends() error. Workflow " + to_string(uid) + ", incorrect package num - ";
-      if (one > packages.size()-1) throw errorMsg +  to_string(one);
-      if (two > packages.size()-1) throw errorMsg +  to_string(two);
+      string errorMsg = "Workflow::IsDepends() error. Workflow " + to_string(static_cast<long long>(uid)) + ", incorrect package num - ";
+      if (one > packages.size()-1) throw errorMsg +  to_string(static_cast<long long>(one));
+      if (two > packages.size()-1) throw errorMsg +  to_string(static_cast<long long>(two));
       if (matrix[one][two]==1) return true;
       // if dependency is indirect
       else {
@@ -167,16 +167,16 @@ void Workflow::GetSuccessors(const unsigned int &pNum, vector<int>&out) const {
       out = successors;
       while (successors.size() != 0){
          vector<int>tmp = successors;
-         for (auto &current: tmp){
+         for (auto current = tmp.begin(); current != tmp.end(); current++){
             vector<int> currentSuccessors;
-            GetOutput(current, currentSuccessors);
-            for (const auto& i : currentSuccessors){
-               if (find(out.begin(), out.end(), i) == out.end()){
-                  out.push_back(i);
-                  successors.push_back(i);
+            GetOutput(*current, currentSuccessors);
+            for (auto  i = currentSuccessors.begin(); i != currentSuccessors.end(); i++){
+               if (find(out.begin(), out.end(), *i) == out.end()){
+                  out.push_back(*i);
+                  successors.push_back(*i);
                }
             }
-            successors.erase(find(successors.begin(), successors.end(), current));
+            successors.erase(find(successors.begin(), successors.end(), *current));
          }
       }
    }
@@ -220,8 +220,8 @@ void Workflow::GetSuccessors(const unsigned int &pNum, vector<int>&out) const {
                vector <int> parents;
                GetInput(out[i], parents);
                bool allCalculated = true;
-               for (auto & parent : parents){
-                   if (find(usedNums.begin(), usedNums.end(), parent) == usedNums.end()){
+               for (auto parent = parents.begin(); parent != parents.end(); parent++){
+                   if (find(usedNums.begin(), usedNums.end(), *parent) == usedNums.end()){
                        allCalculated = false;
                        break;
                    }
@@ -405,8 +405,8 @@ void Workflow::GetDep(vector<vector<int>>&m) const{
         cout << "Workflow::GetDep(vector<vector<int>>&) error. Parameter vector should be empty!";
         exit(1);
     }
-    for (auto& row: matrix){
-        m.push_back(row);
+    for (auto row = matrix.begin(); row != matrix.end(); row++){
+        m.push_back(*row);
     }
 }
 
