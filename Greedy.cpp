@@ -128,7 +128,9 @@ void Greedy::FindSchedule(Schedule& out, double &efficiency, int pNum, bool forO
             }
         }
     }
-
+    // if package has no parents
+    if (dependsOn.size() == 0)
+        commInfo.push_back(make_tuple(1, 0, data.Workflows(wfNum).GetCommTime(localNum)));
 
     // getting possible types of resources
     vector <int> resTypes = data.Workflows(wfNum)[localNum].GetResTypes();

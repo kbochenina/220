@@ -20,7 +20,7 @@ int _tmain(int argc, wchar_t**argv)
     // fileSettings is a file with program settings
     // it is a first command line argument
     // if program is started without arguments, filename is "settings.txt"
-    double deadline = 200;
+    double deadline = 350;
     int periodsCount = 1, experCount = 1;
     wstring fileSettings;
     if (argc != 2 ) {
@@ -137,6 +137,18 @@ int _tmain(int argc, wchar_t**argv)
         sched.TestSchedule();
     }
     else if (schedName == "CLUSTERED"){
+        sched.SetSchedulingStrategy(CLUST);
+        sched.GetSchedule(CLUSTERED);
+        sched.GetMetrics("clustered.txt", "Clustered", metricsFileName);
+        sched.TestSchedule();
+    }
+    else if (schedName == "ALL"){
+        sched.GetSchedule(SIMPLE);
+        sched.GetMetrics("simple_metrics.txt", "SimpleSched", metricsFileName);
+        sched.TestSchedule();
+        sched.GetSchedule(RESERVED_ORDERED);
+        sched.GetMetrics("reserved_metrics.txt", "StagedReservedTime",metricsFileName);
+        sched.TestSchedule();
         sched.SetSchedulingStrategy(CLUST);
         sched.GetSchedule(CLUSTERED);
         sched.GetMetrics("clustered.txt", "Clustered", metricsFileName);

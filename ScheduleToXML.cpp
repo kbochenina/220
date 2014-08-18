@@ -78,14 +78,15 @@ void ScheduleToXML::BusyToXML(ofstream &f){
 		data.resources[i].GetCurrentWindows(windows);
 		// get fixed intervals 
 		vector <BusyIntervals> fixed = windows.GetFixedIntervals();
+      int coreNum = 0;
 		// for each resource
 		for (unsigned j = 0; j < fixed.size(); j++){
 			// get pointer to resource's intervals
 			BusyIntervals::iterator bIt = fixed[j].begin();
 			// loop on different cores
 			for (;bIt != fixed[j].end(); bIt++){
-				int coreNum = bIt->first-1;
-				coreNum += inc;
+				//int coreNum = bIt->first-1;
+				//coreNum += inc;
 				// loop on different intervals
 				for (vector<pair<int,int>>::size_type k = 0; k < bIt->second.size(); k++){
 					int tBegin = bIt->second[k].first;
@@ -105,7 +106,8 @@ void ScheduleToXML::BusyToXML(ofstream &f){
 					f << "\t\t</node_statistics>" << endl;
 				}
 			}
-			inc += fixed[j].size();
+         coreNum++;
+			//inc += fixed[j].size();
 			
 		}
 	}
