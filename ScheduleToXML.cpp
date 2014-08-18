@@ -63,7 +63,7 @@ void ScheduleToXML::MetaXMLInfo(ofstream &f){
 	f << "\t<grid_info>\n";
 	f << "\t\t<info name=\"nb_clusters\" value=\"1\"/>\n";
 	f << "\t\t<clusters>\n";
-	f << "\t\t  <cluster id=\"0\" hosts=\"" << data.GetprocessorsCount() << "\" first_host=\"0\"/>\n";
+	f << "\t\t  <cluster id=\"0\" hosts=\"" << data.GetProcessorsCount() << "\" first_host=\"0\"/>\n";
 	f << "\t\t</clusters>\n";
 	f << "\t</grid_info>\n";
 }

@@ -42,6 +42,8 @@ class Scheduler
 	void PrintOneWFSched(ofstream & out, Schedule & sched, int wfNum);
 	// add to res file additional schedule information
 	void PrintFooter(ofstream & out, vector<double>&eff);
+   // print schedule to file
+   void PrintSchedule(Schedule &s);
 public:
 	Scheduler(DataInfo& d);
 	// fulfill the variable methodsSet according to nonexistent algorithm

@@ -221,10 +221,10 @@ void DataInfo::Init(string settingsFile){
          throw UserException(errWrongFormatFull);
       }
       s.erase(found,1);
-      string openErr = " DebugInfoFile cannot be open";
+      /*string openErr = " DebugInfoFile cannot be open";
       ofstream ex;
       ex.open(s, ios::app);
-      if (ex.fail()) throw UserException(openErr);
+      if (ex.fail()) throw UserException(openErr);*/
       // ResultFile="result.txt"
       getline(file,s);
       ++line;
@@ -405,13 +405,13 @@ void DataInfo::Init(string settingsFile){
       cout << "Start of assigning of sub-deadlines..." << endl;
       double t = clock();
       InitFinishingTimes();
-      for (size_t i = 0; i < workflows.size(); i++)
-          workflows[i].PrintStartFinishingTimes();
+     /* for (size_t i = 0; i < workflows.size(); i++)
+          workflows[i].PrintStartFinishingTimes();*/
       double end = (clock()-t)/1000.0 ;
       //cout << "Time of of assigning of sub-deadlines..." << end << endl;
       resTime << "Time of of assigning of sub-deadlines..." << end << endl;
       resTime.close();
-      ex.close();
+//      ex.close();
    }
    catch (UserException& e){
       cout<<"error : " << e.what() <<endl;

@@ -4,6 +4,7 @@
 #include "SchedulingFactory.h"
 #include "CriteriaFactory.h"
 #include "direct.h"
+#include "boost/tuple/tuple_comparison.hpp"
 
 using namespace std;
 
@@ -14,7 +15,7 @@ Scheduler::Scheduler( DataInfo& d ): data(d)
    maxEff = 0.0;
    xmlWriter = unique_ptr<ScheduleToXML>(new ScheduleToXML(data));
    data.SetWfPriorities();
-   eff = unique_ptr<Efficiency>(new Efficiency(2.00 / data.GetprocessorsCount(), data.GetT()));
+   eff = unique_ptr<Efficiency>(new Efficiency(2.00 / data.GetProcessorsCount(), data.GetT()));
    maxPossible = 0.0;
    for (int i = 0; i < data.GetResourceCount(); i++){
       Intervals initIntervals;
@@ -217,7 +218,7 @@ void Scheduler::GetSchedule(int scheduleVariant){
          cout << "Average time of stage " << end/data.GetWFCount() << endl;
          resTime << "Average time of stage " << end/data.GetWFCount() << endl;
          fullSchedule = storedSched;
-         xmlWriter->CreateXML(fullSchedule);
+        // xmlWriter->CreateXML(fullSchedule);
          cout << "Best stage: " << bestStage << endl;
          break;
       case 2:
@@ -265,8 +266,46 @@ void Scheduler::GetSchedule(int scheduleVariant){
       default:
          break;
       }
+   PrintSchedule(fullSchedule);
    resTime.close();
    full.close();
+}
+
+ struct my_compare_op
+     {
+         bool operator()(const boost::tuple<int,int,double>& a, const boost::tuple<int,int,double>& b) const
+         {
+             return boost::get<2>(a) < boost::get<2>(b);
+         }
+     };
+
+
+void Scheduler::PrintSchedule(Schedule &s){
+    ofstream f("schedule.txt");
+    if (f.fail()){
+        throw UserException("Scheduler::PrintSchedule() error. File schedule.txt was not opened");
+    }
+    // get vectors for all processors (wfNum, localPNum, tstart)
+    vector<vector<boost::tuple<int, int, double>>> queues;
+    queues.resize(data.GetProcessorsCount());
+    for (auto&packageSched: fullSchedule){
+        int globalNum = packageSched.get_head();
+        int wfNum, localNum;
+        data.GetLocalNumbers(globalNum, wfNum, localNum);
+        int tstart = packageSched.get<1>();
+        int processor = packageSched.get<2>().front();
+        queues[processor].push_back(make_tuple(wfNum, localNum, tstart));
+    }
+    int processor = 0;
+    for (auto & queue: queues){
+        sort(queue.begin(), queue.end(), my_compare_op());
+        f << "Processor " << processor++ << endl;
+        for (auto &package : queue){
+            f << "Wf " << package.get_head() << " task " << package.get<1>() << " tstart " << package.get<2>() << endl;
+        }
+    }
+        
+    f.close();
 }
 
 void Scheduler::Clustered()
@@ -277,9 +316,9 @@ void Scheduler::Clustered()
 	 maxEff = maxEff/maxPossible;
 	 cout << "Efficiency: " << maxEff << endl;
      //data.FixBusyIntervals();
-     xmlWriter->SetXMLBaseName("Clustered_");
+    // xmlWriter->SetXMLBaseName("Clustered_");
      // write result to XML
-     xmlWriter->CreateXML(fullSchedule);
+    // xmlWriter->CreateXML(fullSchedule);
      data.SetInitBusyIntervals();
 }
 
@@ -350,9 +389,9 @@ void Scheduler::EfficiencyOrdered(){
       maxEff /= maxPossible;
       cout << "Efficiency ordered scheme eff: " << maxEff << endl;
       
-      xmlWriter->SetXMLBaseName("Efficiency_");
+    //  xmlWriter->SetXMLBaseName("Efficiency_");
       // write result to XML
-      xmlWriter->CreateXML(fullSchedule);
+    //  xmlWriter->CreateXML(fullSchedule);
    }
    catch (UserException& e){
       cout<<"error : " << e.what() <<endl;
@@ -434,9 +473,9 @@ void Scheduler::OrderedScheme(int criteriaNumber){
       data.SetInitBusyIntervals();
       maxEff /= maxPossible;
       cout << "Ordered scheme eff: " << maxEff << endl;
-      xmlWriter->SetXMLBaseName("Ordered_");
+    //  xmlWriter->SetXMLBaseName("Ordered_");
       // write result to XML
-      xmlWriter->CreateXML(fullSchedule);
+   //   xmlWriter->CreateXML(fullSchedule);
  
    }
    catch (UserException& e){
@@ -454,9 +493,9 @@ void Scheduler::SimpleSched(){
    maxEff = maxEff/maxPossible;
    cout << "Efficiency: " << maxEff << endl;
    //data.FixBusyIntervals();
-   xmlWriter->SetXMLBaseName("Simple_");
+ //  xmlWriter->SetXMLBaseName("Simple_");
    // write result to XML
-   xmlWriter->CreateXML(fullSchedule);
+ //  xmlWriter->CreateXML(fullSchedule);
    data.SetInitBusyIntervals();
  }
 

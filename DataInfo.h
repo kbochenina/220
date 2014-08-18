@@ -57,7 +57,7 @@ public:
 	inline int GetWFCount() {return workflows.size();}
 	inline int GetResourceCount() {return resources.size(); }
 	// get full cores count
-	inline int GetprocessorsCount() {return processorsCount;}
+	inline int GetProcessorsCount() {return processorsCount;}
 	int GetResourceType (int coreNumber);
 	void FixBusyIntervals();
 	void ResetBusyIntervals();

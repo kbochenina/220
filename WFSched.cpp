@@ -23,7 +23,7 @@ int _tmain(int argc, wchar_t**argv)
     double deadline = 350;
     int periodsCount = 1, experCount = 1;
     wstring fileSettings;
-    if (argc != 2 ) {
+    if (argc != 1 ) {
 	     deadline = _wtof(argv[1]);
         //periodsCount = _wtoi(argv[2]);
         //experCount = _wtoi(argv[3]);
@@ -49,6 +49,7 @@ int _tmain(int argc, wchar_t**argv)
             #endif
             exit(1);
         }
+        _chdir("Output");
     }
 
     // creation of files with time and schedule quality metrics in output directory

@@ -18,10 +18,10 @@ protected:
 public:
 	SchedulingMethod();
 	SchedulingMethod(DataInfo &d, int u, int w) : data(d), uid(u), wfNum(w) {
-		eff = unique_ptr<Efficiency> ( new Efficiency(2.00 / data.GetprocessorsCount(), data.GetT()) );
+		eff = unique_ptr<Efficiency> ( new Efficiency(2.00 / data.GetProcessorsCount(), data.GetT()) );
 	}
 	SchedulingMethod(DataInfo &d, int u) : data(d), uid(u), wfNum(0){
-		eff = unique_ptr<Efficiency> ( new Efficiency(2.00 / data.GetprocessorsCount(), data.GetT()) );
+		eff = unique_ptr<Efficiency> ( new Efficiency(2.00 / data.GetProcessorsCount(), data.GetT()) );
 	}
 	// get schedule for current method and WF
 	// return value is efficiency
