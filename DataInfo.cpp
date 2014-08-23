@@ -17,6 +17,7 @@ DataInfo::~DataInfo(void)
 
 DataInfo::DataInfo( string fSettings, double mL )
 {
+    cout << "mL in constructor = " << mL << endl;
     minL = mL;
     Init(fSettings);
     if (_chdir("Output")){
@@ -270,7 +271,7 @@ void DataInfo::Init(string settingsFile){
       }
       s.erase(0,trim.size());
       mL = stof(s);
-      
+
 	  double koeff = 0.0;
 	  // minLength=minLengthValue
 	  getline(file,s);
@@ -347,7 +348,7 @@ void DataInfo::Init(string settingsFile){
         for (directory_iterator it(dir), end; it != end; ++it) {
             if (!is_directory(*it)){
                 string filename = it->path().string();
-                if (filename.find(".dax") != string::npos){
+                if (filename.find(".dat") != string::npos){
                     WFFileNames.push_back(filename);
                     std::cout << "File processed - ";
                     std::cout << *it << std::endl;
@@ -356,13 +357,14 @@ void DataInfo::Init(string settingsFile){
         }
 
       for (vector<string>::iterator it = WFFileNames.begin(); it!= WFFileNames.end(); it++)
-         InitWorkflowsFromDAX(*it);
+         InitWorkflowFromDat(*it);
 
 	  mL = this->minL;
 
 	  //T = mL + workflows.size() * koeff * mL;
      T = mL;
 	  context.SetContext(T, CCR, h, mL);	
+     cout << "mL = " << mL << endl;
 
 	  for (int i = 0; i < workflows.size(); i++){
 		//double deadline = rand() / static_cast<double>(RAND_MAX) * (T - mL) + mL;
@@ -423,6 +425,158 @@ void DataInfo::Init(string settingsFile){
       std::system("pause");
       exit(EXIT_FAILURE);
    }
+}
+
+void DataInfo::InitWorkflowFromDat(string fname){
+    try{
+        ifstream file(fname, ifstream::in);
+        string errOpen = "File " + fname + " was not open";
+        string errEarlyEnd = "Unexpected end of file " + fname;
+        string errWrongFormat = "Wrong format in file " + fname + " at line ";
+        string errConnMatrix = "Wrong value in connectivity matrix";
+        string errJobsCount = "Can not find jobs count value in file " + fname;
+        string errWrongFormatFull = errWrongFormat;
+        if (file.fail()) 
+            throw UserException(errOpen);
+        double maxPerf = GetMaxPerf();
+        bool jobsCountFound = false;
+        int jobsCount = 0;
+        string s;
+        while (!jobsCountFound){
+	         getline(file,s);
+            string toFind = "Job count = ";
+	         size_t found = s.find("Job count = ");
+	         if (found != std::string::npos){
+	         s.erase(0, toFind.size());
+	         istringstream iss(s);
+	         iss >> jobsCount;
+	         jobsCountFound = true;
+	         }
+	         if (file.eof()) throw UserException(errJobsCount);
+        }
+       
+        vector <vector <int>> connectMatrix;
+        connectMatrix.resize(jobsCount);
+
+        bool isMatrixLine = false;
+        int number;
+
+        while (!isMatrixLine){
+            getline(file, s);
+            istringstream iss(s);
+            iss >> number;
+            if (!iss.fail())
+                isMatrixLine = true;
+        }
+
+        for (int i = 0; i < jobsCount; i++){
+                connectMatrix[i].resize(jobsCount);
+                istringstream iss(s);
+                int j = 0;
+                while ( j < jobsCount) {
+                    iss >> number;
+                    if (iss.fail())
+                    throw UserException("DataInfo::InitWorkflowFromDat error. Wrong dependency matrix format");
+                    connectMatrix[i][j] = number;
+                    j++;
+                }
+                getline(file, s);
+        }
+      
+        vector <Package> pacs;
+
+        vector <int> types;
+        for (int i = 0; i < resources.size(); i++)
+            types.push_back(i + 1);
+        
+        bool isExecTime = false;
+
+        while (!isExecTime){
+            getline(file, s);
+            istringstream iss(s);
+            iss >> number;
+            if (!iss.fail())
+                isExecTime = true;
+        }
+
+        // cores count = 1;
+        vector<int> cCount;
+        cCount.push_back(1);
+
+        for (int i = 0; i < jobsCount; i++){
+            istringstream iss(s);
+            iss >> number;
+            if (iss.fail())
+                    throw UserException("DataInfo::InitWorkflowFromDat error. Wrong task ID format");
+            double runTime = 0.0;
+            iss >> runTime;
+            if (iss.fail())
+                    throw UserException("DataInfo::InitWorkflowFromDat error. Wrong runtime format");
+
+            runTime *= maxPerf;
+
+            double avgTime = 0.0;
+            map <pair <int,int>, double> execTime;
+
+            for (int j = 0; j < resources.size(); j++){
+	             double currentTime = runTime / (resources[j].GetPerf() / maxPerf);
+	         if (find(types.begin(), types.end(), j+1) != types.end()) 
+                execTime.insert(make_pair(make_pair(j+1, 1), currentTime));
+                avgTime += currentTime;
+            }
+
+            avgTime /= execTime.size();
+            
+            Package p(i ,types, cCount, execTime, avgTime, 0);
+            pacs.push_back(p);
+        }
+        
+        // reading information about communication time from file
+        ifstream commTimeFile("InputFiles\\aggComm.dat");
+        if (commTimeFile.fail())
+            throw UserException("Error while opening aggComm.dat");
+        vector <double> commTime;
+
+        while (getline(commTimeFile, s)){
+            istringstream iss(s);
+            double val;
+            iss >> val;
+            iss >> val;
+            iss >> val;
+            if (iss.fail())
+                throw UserException("Error while reading communication time from aggComm.dat");
+            commTime.push_back(val);
+        }
+
+        
+
+        /*	for (int i = 0; i < jobsCount; i++){
+	         for (int j = 0; j < jobsCount; j++){
+	         cout << connectMatrix[i][j] << " ";
+	         }
+	         cout << endl;
+        }
+
+        }*/
+		
+        double tstart = 0.0;
+        double deadline = 0.0;
+		
+        Workflow w(workflows.size() + 1, pacs,connectMatrix, deadline, tstart, commTime);
+        //cout << "Tstart:" << tstart << " Deadline " << deadline << endl;
+        workflows.push_back(w);
+        //std::system("pause");
+    }
+    catch (UserException& e){
+        cout<<"error : " << e.what() <<endl;
+        std::system("pause");
+        exit(EXIT_FAILURE);
+    }
+    catch (std::exception& e){
+        cout<<"error : " << e.what() <<endl;
+        std::system("pause");
+        exit(EXIT_FAILURE);
+    }
 }
 
 void DataInfo::InitWorkflowsFromDAX(string fname){

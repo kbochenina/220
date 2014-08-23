@@ -15,6 +15,17 @@ Workflow::Workflow(int u, vector <Package> p, vector<vector<int>> m, double d, v
     this->commTime = commTime;
 }
 
+Workflow::Workflow(int u, vector <Package> p, vector<vector<int>> m, double d, double tstart, vector<double> commTime) {
+    uid = u; 
+    packages = p; 
+    if (packages.size() == 0)
+        throw UserException("Worklow::Workflow() error. Empty list of packages");
+    matrix = m; 
+    deadline = d; 
+    this->tstart = tstart;
+    this->commTime = commTime;
+}
+
 void Workflow::SetDeep(){
     double t = clock();
     int pCount = packages.size();

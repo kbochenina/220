@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include "direct.h"
 #include "windows.h"
+#include "errno.h"
 
 
 using namespace std;
@@ -30,26 +31,35 @@ int _tmain(int argc, wchar_t**argv)
 	     //cout << minLInit << endl;
     }
 
+    wstring wpath(argv[0]);
+    string path(wpath.begin(), wpath.end());
+    size_t pathpos = path.find_last_of("\\");
+    path.erase(pathpos + 1, path.size() - pathpos);
+    path += "Output";
+
+    wstring outputPath(path.begin(), path.end());
+
     // creating/check output directory
-    DWORD dAttr = GetFileAttributes(L"Output");
+    DWORD dAttr = GetFileAttributes(outputPath.c_str());
     if ((dAttr & FILE_ATTRIBUTE_DIRECTORY) && dAttr != 0xffffffff){
-        if (chdir("Output")){
+        if (chdir(path.c_str())){
             cout << "Output directory cannot be used" << endl;
             #ifdef _DEBUG 
                 system("pause");
             #endif
-            exit(1);
+            exit(2);
         }
     }
     else {
-        if (_mkdir("Output")){
-            cout << "Error while creating output directory" << endl;
+        if (_mkdir(path.c_str())){
+            cout << "Error while creating output directory, ";
+            cout << std::strerror(errno) << endl;
             #ifdef _DEBUG 
                 system("pause");
             #endif
-            exit(1);
+            exit(3);
         }
-        _chdir("Output");
+        _chdir(path.c_str());
     }
 
     // creation of files with time and schedule quality metrics in output directory
@@ -60,7 +70,7 @@ int _tmain(int argc, wchar_t**argv)
         #ifdef _DEBUG 
             system("pause");
         #endif
-        exit(1);
+        exit(4);
     }
     timeFile.close();
 
@@ -71,7 +81,7 @@ int _tmain(int argc, wchar_t**argv)
         #ifdef _DEBUG 
             system("pause");
         #endif
-        exit(1);
+        exit(5);
     }
     metricsFile.close();
 
@@ -80,7 +90,7 @@ int _tmain(int argc, wchar_t**argv)
         #ifdef _DEBUG 
             system("pause");
         #endif
-        exit(1);
+        exit(6);
     }
     
    
@@ -93,7 +103,7 @@ int _tmain(int argc, wchar_t**argv)
         #ifdef _DEBUG 
             system("pause");
         #endif
-        exit(1);
+        exit(7);
     }
 
     string s;
@@ -107,7 +117,7 @@ int _tmain(int argc, wchar_t**argv)
             #ifdef _DEBUG 
                 system("pause");
             #endif
-            exit(1);
+            exit(8);
         }
     } 
 
@@ -117,10 +127,12 @@ int _tmain(int argc, wchar_t**argv)
         #ifdef _DEBUG 
             system("pause");
         #endif
-        exit(1);
+        exit(9);
     }
     string parName = "SchedMethod=";
     string schedName = s.substr(pos+1, s.size()-parName.size());
+    deadline = 350;
+    cout << "Deadline = " << deadline << endl;
 
     // initializing data and scheduler
     DataInfo data(settings,deadline);
@@ -160,7 +172,7 @@ int _tmain(int argc, wchar_t**argv)
         #ifdef _DEBUG 
             system("pause");
         #endif
-        exit(1);
+        exit(10);
     }
 
     #ifdef _DEBUG 

@@ -41,6 +41,8 @@ class DataInfo
 	void InitWorkflows(string fName);
 	// init workflows from DAX
 	void InitWorkflowsFromDAX(string fName);
+   // init workflow from dat file
+   void InitWorkflowFromDat(string fName);
 	// init finishing times
 	void InitFinishingTimes();
 	// setting data transfer size according to CCR, h and average resources' power

@@ -59,6 +59,8 @@ public:
 	// return all successors of package pNum
 	void GetSuccessors(const unsigned int &pNum, vector<int>&out) const;
 	Workflow(int u, vector <Package> p, vector<vector<int>> m, double d, vector<vector<double>> t, double start, vector<double> commTime);
+   // variant of constructor without transfer times
+   Workflow(int u, vector <Package> p, vector<vector<int>> m, double d, double start, vector<double> commTime);
    // setting sub-deadlines for the workflow
    void SetFinishingTimes(double avgCalcPower);
    size_t GetFinishingTimesSize() {return finishingTimes.size();}
