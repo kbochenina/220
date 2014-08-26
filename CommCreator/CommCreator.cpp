@@ -8,6 +8,7 @@
 #include <map>
 #include <vector>
 #include <sstream>
+#include "Winsock2.h"
 
 using namespace std;
 using namespace boost::filesystem;
@@ -42,15 +43,12 @@ double ParseData(string s){
     return res;
 }
 
-// get estimations from directory
-void GetEstimations(map<int,pair<double, double>>&estimations, map<int,int>&taskId, vector<vector<int>>& matrix){
+void ReadData(map<int,pair<int,int>>&taskId, map<int,int>& taskWF,  map <int, tuple<double,double,double,double>>& times){
     path basePath = current_path();
-    ofstream add("addInfo.dat");
     current_path(basePath);
     // taskID, (inCommTime, outCommTime)
     //map <int, pair<double, double>> inOut;
     // taskID, (scriptBegin, taskBegin, scriptEnd, taskEnd)
-    map <int, tuple<double,double,double,double>> times;
     directory_iterator dirIt(current_path()), dirEnd;
     while (dirIt != dirEnd){
         path current = *dirIt++;
@@ -100,7 +98,8 @@ void GetEstimations(map<int,pair<double, double>>&estimations, map<int,int>&task
         taskEnd = ParseData(s);
         file.close();
         
-        int task = taskId[clavireId];
+        int task = taskId[clavireId].second;
+        taskWF[task] = taskId[clavireId].first;
         times[task] = make_tuple(scriptBegin, taskBegin, taskEnd, scriptEnd);
        /* double inCommTime = taskBegin - scriptBegin,
             outCommTime = scriptEnd - taskEnd;
@@ -109,7 +108,19 @@ void GetEstimations(map<int,pair<double, double>>&estimations, map<int,int>&task
         current_path(basePath);
     }
 
-    // find minimum starting time
+}
+
+// get estimations from directory
+void GetEstimations(map<int,pair<double, double>>&estimations, map<int,pair<int,int>>&taskId, vector<vector<int>>& matrix){
+    path basePath = current_path();
+    ofstream add("addInfo.dat");
+    map <int, tuple<double,double,double,double>> times;
+    // (taskID, wfID)
+    map<int,int> taskWF;
+
+    ReadData(taskId, taskWF, times);
+
+    //// find minimum starting time
     double startTime = std::numeric_limits<double>::infinity();
     for (auto task = times.begin(); task != times.end(); task++){
         if (get<0>(task->second) < startTime)
@@ -117,8 +128,8 @@ void GetEstimations(map<int,pair<double, double>>&estimations, map<int,int>&task
     }
 
     for (auto task = times.begin(); task != times.end(); task++){
-        add << get<0>(*task) << " "  << get<0>(task->second) - startTime << " " << get<1>(task->second) - startTime << " " 
-            << get<2>(task->second) - startTime << " " << get<3>(task->second) - startTime << endl;
+        add << get<0>(*task) << " "  << get<0>(task->second) - startTime  << " " << get<1>(task->second) - startTime  << " " 
+            << get<2>(task->second) - startTime  << " " << get<3>(task->second) - startTime  << endl;
     }
 
     for (auto task = times.begin(); task != times.end(); task++){
@@ -185,30 +196,33 @@ void ReadMatrix(vector<vector<int>>& matrix){
     data.close();
 }
 
-void InitComm(){
-     // reading the communication matrix
-    vector<vector<int>> matrix;
-    ReadMatrix(matrix);
-    
+// (globalID, (wfId, localId))
+void ReadLog(map<int,pair<int, int>>& taskId){
     ifstream log("log.txt");
     if (log.fail()){
          cout << "Error while opening log file " << endl;
          exit(1);
     }
-    // (CLAVIRE task id, workflow task id)
-    map<int,int> taskId;
+   
     string s;
     do {
         getline(log,s);
+        if (log.eof()){
+            cout << "Log file does not contain workflow information";
+            exit (1);
+        }
     } while (s.find("Workflows information")==string::npos);
+    int workflowId = 0;
     while (1){
         string toFind = "Task ID: ";
         int pos = 0;
-        int clavireId = 0, workflowId = 0;
+        int clavireId = 0, localId = 0;
         bool isEnd = false;
         do {
             getline(log,s);
             pos = s.find(toFind);
+            if (s.find("WF ID:") != string::npos)
+                workflowId++;
             if (s.find("End of workflows information") != string::npos){
                 isEnd = true;
                 break;
@@ -229,16 +243,25 @@ void InitComm(){
         s.erase(0, pos + toFind.length());
         iss.clear();
         iss.str(s);
-        iss >> workflowId;
+        iss >> localId;
         if (iss.fail()){
              cout << "Error while reading workflow id " << endl;
              exit(1);
         }
-        taskId[clavireId] = workflowId;
+        taskId[clavireId] = make_pair(workflowId, localId);
     }
     log.close();
 
     cout << "Log has been successfully read " << endl;
+}
+
+void InitComm(){
+     // reading the communication matrix
+    vector<vector<int>> matrix;
+    ReadMatrix(matrix);
+    map <int, pair<int,int>> taskId;
+    ReadLog(taskId);
+    
     // vector of [task id, (execTime, delayTime)]
     vector <map<int,pair<double, double>>> estimations;
 
@@ -248,7 +271,7 @@ void InitComm(){
         path current = *dirIt++;
         if (is_directory(current)){
             string pathStr = current.string();
-            if (pathStr.find("Temp_") != string::npos){
+            if (pathStr.find("Temp") != string::npos){
                 current_path(current);
                 map <int,pair<double, double>> est;
                 GetEstimations(est, taskId, matrix);
@@ -345,15 +368,196 @@ void AggComm(){
     out.close();
 }
 
+string GetIPAddress(){
+    string res;
+    char szPath[128] = "";
+    WSADATA wsaData;
+    WSAStartup(MAKEWORD(2, 2), &wsaData);
+    gethostname(szPath, sizeof(szPath));
+    printf("%s\n", szPath);
+
+    struct hostent *phe = gethostbyname(szPath);
+    if (phe == 0) {
+        cerr << "Yow! Bad host lookup." << endl;
+    }
+
+    
+    for (int i = 0; phe->h_addr_list[i] != 0; ++i) {
+        struct in_addr addr;
+        memcpy(&addr, phe->h_addr_list[i], sizeof(struct in_addr));
+        cout << "Address " << i << ": " << inet_ntoa(addr) << endl;
+        if (i == 0) {
+            string s(inet_ntoa(addr));
+            res = s;
+        }
+    }
+
+    WSACleanup(); 
+    return res;
+}
+
+void GetEstimations(path& outputPath){
+    // ORLY??
+    vector<vector<int>> matrix;
+    ReadMatrix(matrix);
+    map <int, pair<int,int>> taskId;
+    ReadLog(taskId);
+    map <int, tuple<double,double,double,double>> times;
+    // (taskID, wfID)
+    map<int,int> taskWF;
+    if (exists("Temp"))
+        current_path("Temp");
+    else {
+        cout << "No temp folder was found" << endl;
+        exit(1);
+    }
+    ReadData(taskId, taskWF, times);
+    string ipAddress = GetIPAddress();
+    string filename = outputPath.string() + "\\" + ipAddress;
+    ofstream res(filename);
+    if (res.fail()){
+        cout << "Output file cannot be created" << endl;
+        exit(1);
+    }
+     for (auto task = times.begin(); task != times.end(); task++){
+        res << taskWF[get<0>(*task)] << " " << get<0>(*task) << " "  << get<0>(task->second) << " " << get<1>(task->second) << " " 
+            << get<2>(task->second) << " " << get<3>(task->second) << endl;
+    }
+     res.close();
+}
+void ReadPath(path& outputPath){
+    ifstream cfg("config.txt");
+    if (cfg.fail()){
+        cout << "Cannot open configuration file\n";
+        exit(1);
+    }
+    string s;
+    getline(cfg, s);
+    if (s.find("Output path = ") == string::npos){
+        cout << "Cannot find ouput path in configuration file\n";
+        exit(1);
+    }
+    size_t pos = s.find_last_of(" ");
+    if (pos == string::npos){
+        cout << "Wrong format in output path line in configuration file\n";
+        exit(1);
+    }
+    s.erase(0, pos + 1);
+    outputPath.assign(s.begin(), s.end());
+    if (exists(outputPath)){
+        try {
+            for (directory_iterator endDir, dir(outputPath); dir != endDir; dir++)
+                remove_all(dir->path());
+        }
+        catch (filesystem_error const & e){
+            cout << "Error while removing files from output directory\n";
+            cout << e.what() << endl;
+        }
+    }
+    else {
+        try{
+            if (!create_directory(outputPath)){
+                cout << "Cannot create output directory\n";
+                exit(1);
+            }
+        }
+         catch (filesystem_error const & e){
+            cout << "Error while removing files from output directory\n";
+            cout << e.what() << endl;
+        }
+    }
+    cfg.close();
+}
+void StatRes(){
+    path outputPath;
+    ReadPath(outputPath);
+    GetEstimations(outputPath);
+}
+
+void ReadResourceInfo(map<string, int>& resInfo){
+    ifstream cfg("config.txt");
+    if (cfg.fail()){
+        cout << "Cannot open configuration file\n";
+        exit(1);
+    }
+    string s, toFind = "Path to resource description file = ";
+    bool wasFound = false;
+    size_t pos = string::npos;
+    while (!wasFound) {
+        getline(cfg, s);
+        if ((pos = s.find(toFind)) != string::npos){
+            wasFound = true;
+        }
+        if (cfg.eof() && !wasFound){
+            cout << "Cannot find resource description file path in configuration file\n";
+            exit(1);
+        }
+       
+    }
+    s.erase(0, toFind.size());
+    path resFile(s);
+    if (!exists(s)){
+        cout << "Cannot find resource description file, path " << resFile.string() << endl;
+        exit(1);
+    }
+    ifstream res(resFile.string());
+    if (res.fail()){
+        cout << "Cannot open resource description file, path " << resFile.string() << endl;
+        exit(1);
+    }
+    do {
+        getline(res, s);
+    } while (s.find("NodeName") == string::npos);
+
+    int resIndex = 1;
+
+    while (!res.eof()){
+        toFind = "\"NodeAddress\": ";
+        pos = s.find(toFind);
+        if (pos != string::npos){
+            string address = s.substr(pos + 1, s.size() - pos);
+            address.erase(0, toFind.size()-1);
+            size_t firstQuote = address.find_first_of("\""),
+                secondQuote = address.find_last_of("\"");
+            address = address.substr(firstQuote + 1, secondQuote - firstQuote - 1);
+            resInfo[address] = resIndex++;
+        }
+        getline(res, s);
+    }
+
+    cfg.close();
+}
+
+void StatAgg(){
+    map<string, int> resInfo;
+    ReadResourceInfo(resInfo);
+    for (auto it = resInfo.begin(); it != resInfo.end(); it++)
+        cout << it->first << " " << it-> second << endl;       
+}
+
+
+
 int _tmain(int argc, _TCHAR* argv[])
 {
+        
     if (argc == 1){
         InitComm();
     }
-    else {
-        AggComm();
+    else{
+        string arg(argv[1]);
+        if (arg == "-agg")
+            AggComm();
+        else if (arg == "-statres")
+            StatRes();
+        else if (arg == "-statagg")
+            StatAgg();
+        else {
+            cout << "CommCreator [-agg] [-statres] [-statagg]" << endl;
+            exit(1);
+        }
+            
     }
-   
+    system("pause");
     return 0;
 }
 
