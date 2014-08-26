@@ -4,13 +4,14 @@
 #include "stdafx.h"
 #include <iostream>
 #include <boost/filesystem.hpp>
+#include <boost/tuple/tuple.hpp>
 #include <map>
 #include <vector>
 #include <sstream>
 
 using namespace std;
 using namespace boost::filesystem;
-
+using namespace boost::tuples;
 // inputs: file log.txt
 // folders Temp_1, Temp_2, ... with output information
 
@@ -110,19 +111,19 @@ void GetEstimations(map<int,pair<double, double>>&estimations, map<int,int>&task
 
     // find minimum starting time
     double startTime = std::numeric_limits<double>::infinity();
-    for (auto &task : times){
-        if (get<0>(task.second) < startTime)
-            startTime = get<0>(task.second);
+    for (auto task = times.begin(); task != times.end(); task++){
+        if (get<0>(task->second) < startTime)
+            startTime = get<0>(task->second);
     }
 
-    for (auto &task : times){
-        add << get<0>(task) << " "  << get<0>(task.second) - startTime << " " << get<1>(task.second) - startTime << " " 
-            << get<2>(task.second) - startTime << " " << get<3>(task.second) - startTime << endl;
+    for (auto task = times.begin(); task != times.end(); task++){
+        add << get<0>(*task) << " "  << get<0>(task->second) - startTime << " " << get<1>(task->second) - startTime << " " 
+            << get<2>(task->second) - startTime << " " << get<3>(task->second) - startTime << endl;
     }
 
-    for (auto &task : times){
-        double estComm = 0.0, estTime = get<2>(task.second) - get<1>(task.second);
-        int taskId = task.first;
+    for (auto task = times.begin(); task != times.end(); task++){
+        double estComm = 0.0, estTime = get<2>(task->second) - get<1>(task->second);
+        int taskId = task->first;
         double maxParentsFin = 0.0;
         bool isInitTask = true;
         // find finishing times for all parents of current task
@@ -137,10 +138,10 @@ void GetEstimations(map<int,pair<double, double>>&estimations, map<int,int>&task
         }
         // time before start of initial task is time between start of the script and start of task execution
         if (isInitTask)
-            estComm = get<0>(task.second) - startTime;
+            estComm = get<0>(task->second) - startTime;
         // otherwise it is the length of period between finish of all parent tasks and start of current task
         else { 
-            estComm = get<1>(task.second) - maxParentsFin;
+            estComm = get<1>(task->second) - maxParentsFin;
         }
         estimations[taskId] = make_pair(estTime, estComm);
     }
@@ -265,21 +266,21 @@ void InitComm(){
         cout << "Estimations vector cannot have zero size " << endl;
         exit(1);
     }
-    for (auto &estVector: estimations){
-        for (auto& est: estVector){
+    for (auto estVector = estimations.begin(); estVector != estimations.end(); estVector++){
+        for (auto est = estVector->begin(); est != estVector->end(); est++){
             //resFile << est.first << " " << est.second << endl;
-            resultEstimations[est.first].first += est.second.first;
-            resultEstimations[est.first].second += est.second.second;
+            resultEstimations[est->first].first += est->second.first;
+            resultEstimations[est->first].second += est->second.second;
         }
         //resFile << endl;
     }
        
     int estCount = estimations.size();
 
-    for (auto& resEst: resultEstimations){
-        resEst.second.first /= estCount;
-        resEst.second.second /= estCount;
-        resFile << resEst.first << " " << resEst.second.first << " " << resEst.second.second << endl;
+    for (auto resEst = resultEstimations.begin(); resEst != resultEstimations.end(); resEst++){
+        resEst->second.first /= estCount;
+        resEst->second.second /= estCount;
+        resFile << resEst->first << " " << resEst->second.first << " " << resEst->second.second << endl;
 
     }
      resFile.close();
@@ -336,10 +337,10 @@ void AggComm(){
         current_path(basePath);
     }
     ofstream out("aggComm.dat");
-    for (auto& estim:est){
-        estim.second.first /= estCount;
-        estim.second.second /= estCount;
-        out << estim.first << " " << estim.second.first << " " << estim.second.second << endl;
+    for (auto estim = est.begin(); estim != est.end(); estim++ ){
+        estim->second.first /= estCount;
+        estim->second.second /= estCount;
+        out << estim->first << " " << estim->second.first << " " << estim->second.second << endl;
     }
     out.close();
 }
