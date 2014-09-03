@@ -43,7 +43,7 @@ double ParseData(string s){
     return res;
 }
 
-void ReadData(map<int,pair<int,int>>&taskId, map<int,int>& taskWF,  map <int, tuple<double,double,double,double>>& times){
+void ReadData(map<int,pair<int,int>>&taskId, map<int,int>& taskWF,  map <int, boost::tuple<double,double,double,double>>& times){
     path basePath = current_path();
     current_path(basePath);
     // taskID, (inCommTime, outCommTime)
@@ -58,6 +58,7 @@ void ReadData(map<int,pair<int,int>>&taskId, map<int,int>& taskWF,  map <int, tu
         string dirName = current.string();
         size_t pos = dirName.find_last_of("\\");
         dirName = dirName.substr(pos + 1, dirName.size() - pos - 1);
+        //cout << dirName << " ";
         int clavireId = atoi(dirName.c_str());
         if (clavireId == 0){
             cout << "Error while getting clavireID value " << endl;
@@ -99,22 +100,23 @@ void ReadData(map<int,pair<int,int>>&taskId, map<int,int>& taskWF,  map <int, tu
         file.close();
         
         int task = taskId[clavireId].second;
+        //cout << "Task: " << task << endl;
         taskWF[task] = taskId[clavireId].first;
-        times[task] = make_tuple(scriptBegin, taskBegin, taskEnd, scriptEnd);
+        times[clavireId] = boost::make_tuple(scriptBegin, taskBegin, taskEnd, scriptEnd);
        /* double inCommTime = taskBegin - scriptBegin,
             outCommTime = scriptEnd - taskEnd;
         inOut[task] = make_pair(inCommTime, outCommTime);*/
 
         current_path(basePath);
     }
-
+    cout << times.size() << endl;
 }
 
 // get estimations from directory
 void GetEstimations(map<int,pair<double, double>>&estimations, map<int,pair<int,int>>&taskId, vector<vector<int>>& matrix){
     path basePath = current_path();
     ofstream add("addInfo.dat");
-    map <int, tuple<double,double,double,double>> times;
+    map <int, boost::tuple<double,double,double,double>> times;
     // (taskID, wfID)
     map<int,int> taskWF;
 
@@ -128,19 +130,24 @@ void GetEstimations(map<int,pair<double, double>>&estimations, map<int,pair<int,
     }
 
     for (auto task = times.begin(); task != times.end(); task++){
-        add << get<0>(*task) << " "  << get<0>(task->second) - startTime  << " " << get<1>(task->second) - startTime  << " " 
+        add << taskId[get<0>(*task)].second << " "  << get<0>(task->second) - startTime  << " " << get<1>(task->second) - startTime  << " " 
             << get<2>(task->second) - startTime  << " " << get<3>(task->second) - startTime  << endl;
     }
 
     for (auto task = times.begin(); task != times.end(); task++){
         double estComm = 0.0, estTime = get<2>(task->second) - get<1>(task->second);
-        int taskId = task->first;
+        int currentTaskId = taskId[task->first].first - 1;
         double maxParentsFin = 0.0;
         bool isInitTask = true;
         // find finishing times for all parents of current task
         for (int i = 0; i < matrix.size(); i++){
+            if (currentTaskId >= matrix.size() - 1){
+                cout << "GetEstimations() error. Current task id " << currentTaskId << " > size of dependency matrix " << matrix.size() << endl;
+                exit(1);
+            }
+
             // if task has parents
-            if (matrix[i][taskId - 1] != 0){
+            if (matrix[i][currentTaskId] != 0){
                 double fin = get<2>(times[i+1]);
                 if (fin > maxParentsFin)
                     maxParentsFin = fin;
@@ -154,7 +161,7 @@ void GetEstimations(map<int,pair<double, double>>&estimations, map<int,pair<int,
         else { 
             estComm = get<1>(task->second) - maxParentsFin;
         }
-        estimations[taskId] = make_pair(estTime, estComm);
+        estimations[currentTaskId] = make_pair(estTime, estComm);
     }
     current_path(basePath);
     add << endl;
@@ -211,7 +218,16 @@ void ReadLog(map<int,pair<int, int>>& taskId){
             cout << "Log file does not contain workflow information";
             exit (1);
         }
-    } while (s.find("Workflows information")==string::npos);
+    } while (s.find("=Workflows information=")==string::npos);
+    // dirty trick (current log file contains two sections with wf information)
+    do {
+        getline(log,s);
+        if (log.eof()){
+            cout << "Log file does not contain workflow information";
+            exit (1);
+        }
+    } while (s.find("=Workflows information=")==string::npos);
+
     int workflowId = 0;
     while (1){
         string toFind = "Task ID: ";
@@ -249,6 +265,8 @@ void ReadLog(map<int,pair<int, int>>& taskId){
              exit(1);
         }
         taskId[clavireId] = make_pair(workflowId, localId);
+        // to pass the line in new version of log file
+        getline(log, s);
     }
     log.close();
 
@@ -396,19 +414,20 @@ string GetIPAddress(){
     return res;
 }
 
-void GetEstimations(path& outputPath){
+void GetEstimations(path& inputPath, path& outputPath){
     // ORLY??
     vector<vector<int>> matrix;
     ReadMatrix(matrix);
     map <int, pair<int,int>> taskId;
     ReadLog(taskId);
-    map <int, tuple<double,double,double,double>> times;
+    map <int, boost::tuple<double,double,double,double>> times;
     // (taskID, wfID)
     map<int,int> taskWF;
-    if (exists("Temp"))
-        current_path("Temp");
+    
+    if (exists(inputPath))
+        current_path(inputPath);
     else {
-        cout << "No temp folder was found" << endl;
+        cout << "No input folder " << inputPath << " was found" << endl;
         exit(1);
     }
     ReadData(taskId, taskWF, times);
@@ -420,44 +439,68 @@ void GetEstimations(path& outputPath){
         exit(1);
     }
      for (auto task = times.begin(); task != times.end(); task++){
-        res << taskWF[get<0>(*task)] << " " << get<0>(*task) << " "  << get<0>(task->second) << " " << get<1>(task->second) << " " 
+        res << taskId[get<0>(*task)].first << " " << taskId[get<0>(*task)].second << " "  << get<0>(task->second) << " " << get<1>(task->second) << " " 
             << get<2>(task->second) << " " << get<3>(task->second) << endl;
     }
      res.close();
 }
-void ReadPath(path& outputPath){
+void ReadPath(path& outputPath, bool isNewOutputPath, string whichPath){
+    //cout << current_path() << endl;
     ifstream cfg("config.txt");
     if (cfg.fail()){
         cout << "Cannot open configuration file\n";
         exit(1);
     }
-    string s;
-    getline(cfg, s);
-    if (s.find("Output path = ") == string::npos){
-        cout << "Cannot find ouput path in configuration file\n";
+    string s, toFind;
+    if (whichPath == "output")
+        toFind = "Output path = ";
+    else if (whichPath == "statagg"){
+        toFind = "Path to stat agg file = ";
+        isNewOutputPath = false;
+    }
+    else if (whichPath == "input"){
+        toFind = "Path to input files = ";
+        isNewOutputPath = false;
+    }
+    else if (whichPath == "working"){
+        toFind = "Path to working directory = ";
+        isNewOutputPath = false;
+    }
+    else {
+        cout << "ReadPath() wrong parameter. Third parameter can be \"output\" or \"statagg\" or \"input\" or \"working\"";
+        exit(1);
+    }
+
+    bool wasFound = false;
+
+    while (getline(cfg, s)){
+        if (s.find(toFind) != string::npos){
+           wasFound = true; 
+           break;
+        }
+    }
+
+    if (!wasFound){
+        cout << "Cannot find " << whichPath << " path in configuration file\n";
         exit(1);
     }
     size_t pos = s.find_last_of(" ");
     if (pos == string::npos){
-        cout << "Wrong format in output path line in configuration file\n";
+        cout << "Wrong format in " << whichPath << " path line in configuration file\n";
         exit(1);
     }
     s.erase(0, pos + 1);
     outputPath.assign(s.begin(), s.end());
-    if (exists(outputPath)){
-        try {
-            for (directory_iterator endDir, dir(outputPath); dir != endDir; dir++)
-                remove_all(dir->path());
-        }
-        catch (filesystem_error const & e){
-            cout << "Error while removing files from output directory\n";
-            cout << e.what() << endl;
-        }
-    }
-    else {
+    if (!exists(outputPath)){
         try{
-            if (!create_directory(outputPath)){
-                cout << "Cannot create output directory\n";
+            if (isNewOutputPath){
+                if (!create_directory(outputPath)){
+                    cout << "Cannot create output directory\n";
+                    exit(1);
+                }
+            }
+            else {
+                cout << whichPath << " path does not exist\n";
                 exit(1);
             }
         }
@@ -469,9 +512,12 @@ void ReadPath(path& outputPath){
     cfg.close();
 }
 void StatRes(){
-    path outputPath;
-    ReadPath(outputPath);
-    GetEstimations(outputPath);
+    path inputPath, outputPath;
+    ReadPath(inputPath, false, "input");
+    ReadPath(outputPath, true, "output");
+    cout << inputPath << endl;
+
+    GetEstimations(inputPath, outputPath);
 }
 
 void ReadResourceInfo(map<string, int>& resInfo){
@@ -528,18 +574,124 @@ void ReadResourceInfo(map<string, int>& resInfo){
     cfg.close();
 }
 
+typedef boost::tuple<int, int, double, double, double, double> esttuple;
+
+bool compare(const esttuple& first, const esttuple& second ){
+    return get<2>(first) <  get<2>(second);
+}
+
+void PrintTupleVec(const vector<esttuple>& estim){
+    for (auto tupleIt = estim.begin(); tupleIt != estim.end(); tupleIt++ ){
+        cout << tupleIt->get<0>() << " " << tupleIt->get<1>() << " " << tupleIt->get<2>() << " " <<
+                tupleIt->get<3>() << " " << tupleIt->get<4>() << " " << tupleIt->get<5>() << endl;
+    }
+}
+
 void StatAgg(){
     map<string, int> resInfo;
     ReadResourceInfo(resInfo);
-    for (auto it = resInfo.begin(); it != resInfo.end(); it++)
-        cout << it->first << " " << it-> second << endl;       
+    /*for (auto it = resInfo.begin(); it != resInfo.end(); it++)
+        cout << it->first << " " << it-> second << endl;       */
+    path outputPath;
+    ReadPath(outputPath, false, "output");
+    path statAggPath;
+    ReadPath(statAggPath, false, "statagg");
+    ofstream statagg(statAggPath.string() + "\\stat.dat");
+    if (statagg.fail()){
+        cout << "Cannot create stat.dat in " << statAggPath.string() << endl;
+        exit(1);
+    }
+
+    // resIndex, wfId, taskId, script_start, task_start, task_finished, script_finished
+    map <int, vector<boost::tuple<int, int, double, double, double, double>>> estimations;
+
+    double min = numeric_limits<double>::infinity();
+
+    for (directory_iterator end, begin(outputPath); begin != end; begin++){
+        if (!is_directory(*begin)){
+            string fileName = begin->path().string();
+            size_t pos = fileName.find_last_of("\\");
+            fileName.erase(0, pos + 1);
+            if (resInfo.find(fileName) == resInfo.end()){
+                cout << "Resource description file does not contain information about resource " << fileName << endl;
+                exit(1);
+            }
+            int resIndex = resInfo[fileName];
+            ifstream file(begin->path().string());
+            if (file.fail()){
+                cout << "Cannot open file " << begin->path().string() << endl;
+                exit(1);
+            }
+            string s;
+            vector<boost::tuple<int, int, double, double, double, double>> resEstimations;
+            while (getline(file, s)){
+                istringstream iss(s);
+                int wfID, taskID;
+                double scriptStart, taskStart, taskEnd, scriptEnd;
+                bool error = false;
+                iss >> wfID;
+                if (iss.fail()) error = true;
+                iss >> taskID;
+                if (iss.fail()) error = true;
+                 iss >> scriptStart;
+                if (iss.fail()) error = true;
+                iss >> taskStart;
+                if (iss.fail()) error = true;
+                 iss >> taskEnd;
+                if (iss.fail()) error = true;
+                iss >> scriptEnd;
+                if (iss.fail()) error = true;
+                if (error){
+                    cout << "Error while reading data from stat file " << endl;
+                    exit(1);
+                }
+                if (scriptStart < min) min = scriptStart;
+                resEstimations.push_back(make_tuple(wfID, taskID, scriptStart, taskStart, taskEnd, scriptEnd));
+            }
+            estimations[resIndex] = resEstimations;
+            file.close();
+        }
+    }
+
+    // subtracting min from all times
+    for (auto it = estimations.begin(); it != estimations.end(); it++ ){
+        for (auto tupleIt = it->second.begin(); tupleIt != it->second.end(); tupleIt++ ){
+            tupleIt->get<2>() -= min;
+            tupleIt->get<3>() -= min;
+            tupleIt->get<4>() -= min;
+            tupleIt->get<5>() -= min;
+        }
+    }
+
+
+
+    // writing information to a file
+    for (auto it = estimations.begin(); it != estimations.end(); it++ ){
+        statagg << "Node " << it->first << endl;
+        vector<esttuple> &estim = it->second;
+        /*cout << "Before sorting: " << endl;
+        PrintTupleVec(estim);*/
+        sort(estim.begin(), estim.end(), compare);
+        /*cout << "After sorting: " << endl;
+        PrintTupleVec(estim);*/
+        for (auto tupleIt = estim.begin(); tupleIt != estim.end(); tupleIt++ ){
+            statagg << tupleIt->get<0>() << " " << tupleIt->get<1>() << " " << tupleIt->get<2>() << " " <<
+                tupleIt->get<3>() << " " << tupleIt->get<4>() << " " << tupleIt->get<5>() << endl;
+        }
+    }
+    statagg.close();
 }
 
 
 
 int _tmain(int argc, _TCHAR* argv[])
 {
-        
+    //current_path("D:\\ITMO\\Degree\\Programs\\WFSched\\CommCreator");
+    path cPath;
+    ReadPath(cPath, false, "working");
+    current_path(cPath);
+    
+  // current_path("D:\\ITMO\\Degree\\Programs\\WFSched\\CommCreator");       
     if (argc == 1){
         InitComm();
     }
@@ -557,7 +709,7 @@ int _tmain(int argc, _TCHAR* argv[])
         }
             
     }
-    system("pause");
+    //system("pause");
     return 0;
 }
 
