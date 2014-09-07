@@ -148,18 +148,19 @@ void GetEstimations(map<int,pair<double, double>>&estimations, map<int,pair<int,
 
             // if task has parents
             if (matrix[i][currentTaskId] != 0){
-                double fin = get<2>(times[i+1]);
-                if (fin > maxParentsFin)
-                    maxParentsFin = fin;
+                // time between end of parent task and end of script
+                double commParents = get<3>(times[i+1]) - get<2>(times[i+1]);
+                if (commParents > maxParentsFin)
+                    maxParentsFin = commParents;
                 isInitTask = false;
             }
         }
         // time before start of initial task is time between start of the script and start of task execution
         if (isInitTask)
             estComm = get<0>(task->second) - startTime;
-        // otherwise it is the length of period between finish of all parent tasks and start of current task
+        // otherwise it is sum of task begin communication time and maximum end communication time among its parents
         else { 
-            estComm = get<1>(task->second) - maxParentsFin;
+            estComm = get<1>(task->second) - get<0>(task->second) + maxParentsFin;
         }
         estimations[currentTaskId] = make_pair(estTime, estComm);
     }
