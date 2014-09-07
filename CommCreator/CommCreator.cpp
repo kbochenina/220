@@ -13,6 +13,7 @@
 using namespace std;
 using namespace boost::filesystem;
 using namespace boost::tuples;
+using namespace boost;
 // inputs: file log.txt
 // folders Temp_1, Temp_2, ... with output information
 
@@ -45,7 +46,9 @@ double ParseData(string s){
 
 void ReadData(map<int,pair<int,int>>&taskId, map<int,int>& taskWF,  map <int, boost::tuple<double,double,double,double>>& times){
     path basePath = current_path();
+    
     current_path(basePath);
+    cout << "ReadData() current path: " << current_path() << endl;
     // taskID, (inCommTime, outCommTime)
     //map <int, pair<double, double>> inOut;
     // taskID, (scriptBegin, taskBegin, scriptEnd, taskEnd)
@@ -58,7 +61,7 @@ void ReadData(map<int,pair<int,int>>&taskId, map<int,int>& taskWF,  map <int, bo
         string dirName = current.string();
         size_t pos = dirName.find_last_of("\\");
         dirName = dirName.substr(pos + 1, dirName.size() - pos - 1);
-        //cout << dirName << " ";
+        cout << dirName << " ";
         int clavireId = atoi(dirName.c_str());
         if (clavireId == 0){
             cout << "Error while getting clavireID value " << endl;
@@ -115,6 +118,7 @@ void ReadData(map<int,pair<int,int>>&taskId, map<int,int>& taskWF,  map <int, bo
 // get estimations from directory
 void GetEstimations(map<int,pair<double, double>>&estimations, map<int,pair<int,int>>&taskId, vector<vector<int>>& matrix){
     path basePath = current_path();
+    //cout << "GetEstimations() current path: " << current_path() << endl;
     ofstream add("addInfo.dat");
     map <int, boost::tuple<double,double,double,double>> times;
     // (taskID, wfID)
@@ -129,27 +133,51 @@ void GetEstimations(map<int,pair<double, double>>&estimations, map<int,pair<int,
             startTime = get<0>(task->second);
     }
 
+    // task id (local, numbered from 0), estimations count
+    map <int,int> taskCount;
+
     for (auto task = times.begin(); task != times.end(); task++){
-        add << taskId[get<0>(*task)].second << " "  << get<0>(task->second) - startTime  << " " << get<1>(task->second) - startTime  << " " 
+        int localId = taskId[get<0>(*task)].second - 1;
+        add << localId + 1 << " "  << get<0>(task->second) - startTime  << " " << get<1>(task->second) - startTime  << " " 
             << get<2>(task->second) - startTime  << " " << get<3>(task->second) - startTime  << endl;
+        if (taskCount.find(localId) == taskCount.end()){
+            taskCount[localId] = 1;
+        }
+        else{
+            taskCount[localId]++;
+        }
     }
+
+
 
     for (auto task = times.begin(); task != times.end(); task++){
         double estComm = 0.0, estTime = get<2>(task->second) - get<1>(task->second);
-        int currentTaskId = taskId[task->first].first - 1;
+        int currentTaskId = taskId[get<0>(*task)].second - 1;
         double maxParentsFin = 0.0;
         bool isInitTask = true;
         // find finishing times for all parents of current task
         for (int i = 0; i < matrix.size(); i++){
-            if (currentTaskId >= matrix.size() - 1){
-                cout << "GetEstimations() error. Current task id " << currentTaskId << " > size of dependency matrix " << matrix.size() << endl;
+            if (currentTaskId > matrix.size() - 1){
+                std::cout << "GetEstimations() error. Current task id " << currentTaskId << " > size of dependency matrix " << matrix.size() << endl;
                 exit(1);
             }
 
             // if task has parents
             if (matrix[i][currentTaskId] != 0){
+                int wfId = taskId[get<0>(*task)].first;
+                int parentGlobalId = 0;
+                for (auto it = taskId.begin(); it != taskId.end(); it++){
+                    if ( it->second.first == wfId && it->second.second == i + 1 )
+                        parentGlobalId = it->first;
+                }
+
+                 
                 // time between end of parent task and end of script
-                double commParents = get<3>(times[i+1]) - get<2>(times[i+1]);
+                double commParents = get<3>(times[parentGlobalId]) - get<2>(times[parentGlobalId]);
+                if (currentTaskId == 4) {
+                    
+                      cout << "Parent " << parentGlobalId << " script end: " << get<3>(times[parentGlobalId]) << " parent task end: " << get<2>(times[parentGlobalId]) << endl;
+                }
                 if (commParents > maxParentsFin)
                     maxParentsFin = commParents;
                 isInitTask = false;
@@ -157,12 +185,25 @@ void GetEstimations(map<int,pair<double, double>>&estimations, map<int,pair<int,
         }
         // time before start of initial task is time between start of the script and start of task execution
         if (isInitTask)
-            estComm = get<0>(task->second) - startTime;
+            estComm = get<1>(task->second) - get<0>(task->second);
         // otherwise it is sum of task begin communication time and maximum end communication time among its parents
         else { 
             estComm = get<1>(task->second) - get<0>(task->second) + maxParentsFin;
+            if (currentTaskId == 4) 
+                cout << "Task begin: " << get<1>(task->second) << " script begin: "  << get<0>(task->second) << " maxParentsFin: " << maxParentsFin << endl;
         }
-        estimations[currentTaskId] = make_pair(estTime, estComm);
+        if (estimations.find(currentTaskId) == estimations.end()){
+            estimations[currentTaskId] = make_pair(estTime, estComm);
+        }
+        else {
+            estimations[currentTaskId].first += estTime;
+            estimations[currentTaskId].second += estComm;
+        }
+        std::cout << "Estimations. Current task id: " << currentTaskId << " esttime: " << estTime << " estComm : " << estComm << endl;
+    }
+    for ( auto est = estimations.begin(); est != estimations.end(); est++ ){
+        est->second.first /= taskCount[est->first];
+        est->second.second /= taskCount[est->first];
     }
     current_path(basePath);
     add << endl;
@@ -266,6 +307,7 @@ void ReadLog(map<int,pair<int, int>>& taskId){
              exit(1);
         }
         taskId[clavireId] = make_pair(workflowId, localId);
+        //cout << "Task ID map. Clavire Id: " << clavireId << " workflow id: " << workflowId << " localId: " << localId << endl;
         // to pass the line in new version of log file
         getline(log, s);
     }
@@ -274,7 +316,77 @@ void ReadLog(map<int,pair<int, int>>& taskId){
     cout << "Log has been successfully read " << endl;
 }
 
+void ReadPath(path& outputPath, bool isNewOutputPath, string whichPath){
+    //cout << current_path() << endl;
+    ifstream cfg("config.txt");
+    if (cfg.fail()){
+        cout << "Cannot open configuration file\n";
+        exit(1);
+    }
+    string s, toFind;
+    if (whichPath == "output")
+        toFind = "Output path = ";
+    else if (whichPath == "statagg"){
+        toFind = "Path to stat agg file = ";
+        isNewOutputPath = false;
+    }
+    else if (whichPath == "input"){
+        toFind = "Path to input files = ";
+        isNewOutputPath = false;
+    }
+    else if (whichPath == "working"){
+        toFind = "Path to working directory = ";
+        isNewOutputPath = false;
+    }
+    else {
+        cout << "ReadPath() wrong parameter. Third parameter can be \"output\" or \"statagg\" or \"input\" or \"working\"";
+        exit(1);
+    }
+
+    bool wasFound = false;
+
+    while (getline(cfg, s)){
+        if (s.find(toFind) != string::npos){
+           wasFound = true; 
+           break;
+        }
+    }
+
+    if (!wasFound){
+        cout << "Cannot find " << whichPath << " path in configuration file\n";
+        exit(1);
+    }
+    size_t pos = s.find_last_of(" ");
+    if (pos == string::npos){
+        cout << "Wrong format in " << whichPath << " path line in configuration file\n";
+        exit(1);
+    }
+    s.erase(0, pos + 1);
+    outputPath.assign(s.begin(), s.end());
+    if (!exists(outputPath)){
+        try{
+            if (isNewOutputPath){
+                if (!create_directory(outputPath)){
+                    cout << "Cannot create output directory\n";
+                    exit(1);
+                }
+            }
+            else {
+                cout << whichPath << " path does not exist\n";
+                exit(1);
+            }
+        }
+         catch (filesystem_error const & e){
+            cout << "Error while removing files from output directory\n";
+            cout << e.what() << endl;
+        }
+    }
+    cfg.close();
+}
+
 void InitComm(){
+    
+
      // reading the communication matrix
     vector<vector<int>> matrix;
     ReadMatrix(matrix);
@@ -284,26 +396,45 @@ void InitComm(){
     // vector of [task id, (execTime, delayTime)]
     vector <map<int,pair<double, double>>> estimations;
 
-    directory_iterator dirIt(current_path()), dirEnd;
-    path basePath = current_path();
-    while (dirIt != dirEnd){
-        path current = *dirIt++;
-        if (is_directory(current)){
-            string pathStr = current.string();
-            if (pathStr.find("Temp") != string::npos){
-                current_path(current);
-                map <int,pair<double, double>> est;
-                GetEstimations(est, taskId, matrix);
-                estimations.push_back(est);
-            }
-        }
-        current_path(basePath);
+    path inputPath;
+    ReadPath(inputPath, false, "input");
+    //cout << "Input path: " << inputPath << endl;
+
+    if (exists(inputPath))
+        current_path(inputPath);
+    else {
+        cout << "No input folder " << inputPath << " was found" << endl;
+        exit(1);
     }
+
+
+    map <int,pair<double, double>> est;
+    GetEstimations(est, taskId, matrix);
+    estimations.push_back(est);
+
+    //directory_iterator dirIt(current_path()), dirEnd;
+
+
+    //path basePath = current_path();
+    //while (dirIt != dirEnd){
+    //    path current = *dirIt++;
+    //    if (is_directory(current)){
+    //        string pathStr = current.string();
+    //        if (pathStr.find("Temp") != string::npos){
+    //            //current_path(current);
+    //            //cout << "InitComm() current path: " << current_path() << endl;
+    //            map <int,pair<double, double>> est;
+    //            GetEstimations(est, taskId, matrix);
+    //            estimations.push_back(est);
+    //        }
+    //    }
+    //    current_path(basePath);
+    //}
 
     cout << "Estimations have been successfully taken " << endl;
     // task id, (execTime, delayTime)
     map<int,pair<double, double>> resultEstimations;
-    ofstream resFile("commTime.dat");
+    ofstream resFile("aggComm.dat");
     if (estimations.size() == 0){
         cout << "Estimations vector cannot have zero size " << endl;
         exit(1);
@@ -322,7 +453,7 @@ void InitComm(){
     for (auto resEst = resultEstimations.begin(); resEst != resultEstimations.end(); resEst++){
         resEst->second.first /= estCount;
         resEst->second.second /= estCount;
-        resFile << resEst->first << " " << resEst->second.first << " " << resEst->second.second << endl;
+        resFile << resEst->first + 1 << " " << resEst->second.first << " " << resEst->second.second << endl;
 
     }
      resFile.close();
@@ -445,73 +576,7 @@ void GetEstimations(path& inputPath, path& outputPath){
     }
      res.close();
 }
-void ReadPath(path& outputPath, bool isNewOutputPath, string whichPath){
-    //cout << current_path() << endl;
-    ifstream cfg("config.txt");
-    if (cfg.fail()){
-        cout << "Cannot open configuration file\n";
-        exit(1);
-    }
-    string s, toFind;
-    if (whichPath == "output")
-        toFind = "Output path = ";
-    else if (whichPath == "statagg"){
-        toFind = "Path to stat agg file = ";
-        isNewOutputPath = false;
-    }
-    else if (whichPath == "input"){
-        toFind = "Path to input files = ";
-        isNewOutputPath = false;
-    }
-    else if (whichPath == "working"){
-        toFind = "Path to working directory = ";
-        isNewOutputPath = false;
-    }
-    else {
-        cout << "ReadPath() wrong parameter. Third parameter can be \"output\" or \"statagg\" or \"input\" or \"working\"";
-        exit(1);
-    }
 
-    bool wasFound = false;
-
-    while (getline(cfg, s)){
-        if (s.find(toFind) != string::npos){
-           wasFound = true; 
-           break;
-        }
-    }
-
-    if (!wasFound){
-        cout << "Cannot find " << whichPath << " path in configuration file\n";
-        exit(1);
-    }
-    size_t pos = s.find_last_of(" ");
-    if (pos == string::npos){
-        cout << "Wrong format in " << whichPath << " path line in configuration file\n";
-        exit(1);
-    }
-    s.erase(0, pos + 1);
-    outputPath.assign(s.begin(), s.end());
-    if (!exists(outputPath)){
-        try{
-            if (isNewOutputPath){
-                if (!create_directory(outputPath)){
-                    cout << "Cannot create output directory\n";
-                    exit(1);
-                }
-            }
-            else {
-                cout << whichPath << " path does not exist\n";
-                exit(1);
-            }
-        }
-         catch (filesystem_error const & e){
-            cout << "Error while removing files from output directory\n";
-            cout << e.what() << endl;
-        }
-    }
-    cfg.close();
-}
 void StatRes(){
     path inputPath, outputPath;
     ReadPath(inputPath, false, "input");
