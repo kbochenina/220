@@ -316,6 +316,45 @@ void ReadLog(map<int,pair<int, int>>& taskId){
     cout << "Log has been successfully read " << endl;
 }
 
+double ReadOverHead(path &workPath){
+    path basePath = current_path();
+    current_path(workPath);
+    ifstream cfg("config.txt");
+    if (cfg.fail()){
+        cout << "ReadOverhead(). Cannot open configuration file\n";
+        exit(1);
+    }
+    
+    string s, toFind = "ScriptOverhead = ";
+    bool wasFound = false;
+
+    while (getline(cfg, s)){
+        if (s.find(toFind) != string::npos){
+           wasFound = true; 
+           break;
+        }
+    }
+
+    if (!wasFound){
+        cout << "Cannot find script overhead information in configuration file\n";
+        exit(1);
+    }
+
+    s.erase(0, toFind.size());
+    istringstream iss(s);
+    double overhead = 0.0;
+    iss >> overhead;
+
+    if (iss.fail()){
+        cout << "ReadOverhead(). Error while parsing overhead value\n";
+        exit(1);
+    }
+
+    cfg.close();
+    current_path(basePath);
+    return overhead;
+}
+
 void ReadPath(path& outputPath, bool isNewOutputPath, string whichPath){
     //cout << current_path() << endl;
     ifstream cfg("config.txt");
@@ -384,7 +423,7 @@ void ReadPath(path& outputPath, bool isNewOutputPath, string whichPath){
     cfg.close();
 }
 
-void InitComm(){
+void InitComm(path workPath){
     
 
      // reading the communication matrix
@@ -432,6 +471,10 @@ void InitComm(){
     //}
 
     cout << "Estimations have been successfully taken " << endl;
+
+    double overhead = ReadOverHead(workPath);
+    cout << "Overhead is set up to " << overhead << " sec\n";
+
     // task id, (execTime, delayTime)
     map<int,pair<double, double>> resultEstimations;
     ofstream resFile("aggComm.dat");
@@ -450,10 +493,12 @@ void InitComm(){
        
     int estCount = estimations.size();
 
+    resFile << "ScriptOverhead = " << overhead << endl;
+
     for (auto resEst = resultEstimations.begin(); resEst != resultEstimations.end(); resEst++){
         resEst->second.first /= estCount;
         resEst->second.second /= estCount;
-        resFile << resEst->first + 1 << " " << resEst->second.first << " " << resEst->second.second << endl;
+        resFile << resEst->first + 1 << " " << resEst->second.first << " " << resEst->second.second  << endl;
 
     }
      resFile.close();
@@ -759,7 +804,7 @@ int _tmain(int argc, _TCHAR* argv[])
     
   // current_path("D:\\ITMO\\Degree\\Programs\\WFSched\\CommCreator");       
     if (argc == 1){
-        InitComm();
+        InitComm(cPath);
     }
     else{
         string arg(argv[1]);

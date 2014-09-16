@@ -28,6 +28,8 @@ class DataInfo
 	int processorsCount;
 	// min length for experiments
 	double minL;
+   // script overhead
+   double overhead;
    // bandwidth matrix
    vector<vector<double>> bandwidth;
 	//OPERATIONS
@@ -102,6 +104,9 @@ public:
     double GetAvgTransferFrom(const int& globalPackage) const;
 	// get maximum exec time of last task of wfNum (for fine calculating)
 	double GetMaxLastTasksExecTime(int wfNum) const;
+   // get overhead value
+   double GetOverhead() {return overhead;}
+   
 	~DataInfo(void);
 };
 

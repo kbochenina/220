@@ -273,7 +273,7 @@ void Scheduler::GetSchedule(int scheduleVariant){
 
  struct my_compare_op
      {
-         bool operator()(const boost::tuple<int,int,double>& a, const boost::tuple<int,int,double>& b) const
+         bool operator()(const tuple<int,int,double,double>& a, const tuple<int,int,double,double>& b) const
          {
              return boost::get<2>(a) < boost::get<2>(b);
          }
@@ -286,7 +286,8 @@ void Scheduler::PrintSchedule(Schedule &s){
         throw UserException("Scheduler::PrintSchedule() error. File schedule.txt was not opened");
     }
     // get vectors for all processors (wfNum, localPNum, tstart)
-    vector<vector<boost::tuple<int, int, double>>> queues;
+    vector<vector<tuple<int, int, double, double>>> queues;
+    //vector<vector<boost::tuple<int, int, double>>> queues;
     queues.resize(data.GetProcessorsCount());
     for (auto packageSched = fullSchedule.begin(); packageSched != fullSchedule.end(); packageSched++){
         int globalNum = packageSched->get_head();
@@ -294,14 +295,19 @@ void Scheduler::PrintSchedule(Schedule &s){
         data.GetLocalNumbers(globalNum, wfNum, localNum);
         int tstart = packageSched->get<1>();
         int processor = packageSched->get<2>().front();
-        queues[processor].push_back(make_tuple(wfNum, localNum, tstart));
+       
+        double execTime = data.Workflows(wfNum).GetExecTime(localNum, data.GetResourceTypeIndex(processor) + 1, 1);
+        queues[processor].push_back(make_tuple(wfNum, localNum, tstart, execTime));
+        //queues[processor].push_back(make_tuple(wfNum, localNum, tstart));
     }
+   
     int processor = 0;
     for (auto queue = queues.begin(); queue != queues.end(); queue++){
         sort(queue->begin(), queue->end(), my_compare_op());
         f << "Processor " << processor++ << endl;
         for (auto package = queue->begin(); package != queue->end(); package++){
-            f << "Wf " << package->get_head() << " task " << package->get<1>() << " tstart " << package->get<2>() << endl;
+            f << "Wf " << package->get_head() << " task " << package->get<1>() << " tstart " << package->get<2>() << " tend " << package->get<2>() 
+                + package->get<3>() << endl;
         }
     }
         
@@ -486,17 +492,27 @@ void Scheduler::OrderedScheme(int criteriaNumber){
 }
 
 void Scheduler::SimpleSched(){
-   // third parameter = -1 means that we will find the schedule for whole big WF
-   unique_ptr <SchedulingMethod> method = SchedulingFactory::GetMethod(data, methodsSet[0], -1);
-   // get full schedule
-   maxEff = method->GetWFSchedule(fullSchedule);
-   maxEff = maxEff/maxPossible;
-   cout << "Efficiency: " << maxEff << endl;
-   //data.FixBusyIntervals();
- //  xmlWriter->SetXMLBaseName("Simple_");
-   // write result to XML
- //  xmlWriter->CreateXML(fullSchedule);
-   data.SetInitBusyIntervals();
+    try{
+        if (methodsSet.size() == 0){
+            throw UserException("Scheduler::SimpleSched() error. Methods set size is equal to zero");
+        }
+       // third parameter = -1 means that we will find the schedule for whole big WF
+       unique_ptr <SchedulingMethod> method = SchedulingFactory::GetMethod(data, methodsSet[0], -1);
+       // get full schedule
+       maxEff = method->GetWFSchedule(fullSchedule);
+       maxEff = maxEff/maxPossible;
+       cout << "Efficiency: " << maxEff << endl;
+       //data.FixBusyIntervals();
+     //  xmlWriter->SetXMLBaseName("Simple_");
+       // write result to XML
+     //  xmlWriter->CreateXML(fullSchedule);
+       data.SetInitBusyIntervals();
+    }
+    catch (UserException e){
+          cout<<"error : " << e.what() <<endl;
+          std::system("pause");
+          exit(EXIT_FAILURE);
+    }
  }
 
 // add to file info about schedule

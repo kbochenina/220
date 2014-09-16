@@ -402,6 +402,8 @@ double Workflow::GetTransfer(const int &in, const int &out) const {
     try{
         if (in > transfer.size()-1 || in < 0 || out > transfer.size()-1 || out < 0)
             throw UserException("Workflow::GetTransfer() error. Wrong parameters");
+        if (transfer.size() == 0)
+            throw UserException("Workflow::GetTransfer() error. Transfer matrix has zero size");
         return transfer[in][out];
     }
     catch (UserException& e){
@@ -424,7 +426,18 @@ void Workflow::GetDep(vector<vector<int>>&m) const{
 // get communication time for task pNum (length of period between latest finishing time of parent tasks and beginning time of this task)
 // this value is obtained during profiling process
 double Workflow::GetCommTime(const int &pNum) const{
-    if (pNum < 0 || pNum > commTime.size())
+    try{
+    if (pNum < 0 || pNum > commTime.size()){
         throw UserException("Workflow::GetCommTime() error. Wrong package number");
+    }
+    if (commTime.size() == 0){
+        throw UserException("Workflow::GetCommTime() error. Comm time size is equal to zero");
+    }
     return commTime[pNum];
+    }
+    catch(UserException e){
+      std::cout<<"error : " << e.what() <<endl;
+      std::system("pause");
+      exit(EXIT_FAILURE);
+    }
 }

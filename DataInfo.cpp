@@ -327,7 +327,8 @@ void DataInfo::Init(string settingsFile){
              std::cout << "File processed - ";
              std::cout << *it << std::endl;
              string filename = it->path().string();
-
+             if (filename.find("bnd") != string::npos)
+                 bandwidthFileName = filename;
              if (filename.find("res")==string::npos && filename.find("n")==string::npos) continue;
              if (filename.find("res")!=string::npos ){
                 resourcesFileName = filename;
@@ -342,7 +343,7 @@ void DataInfo::Init(string settingsFile){
 
 
       InitResources(resourcesFileName, canExecuteOnDiffResources);
-      //InitBandwidth(bandwidthFileName);
+      InitBandwidth(bandwidthFileName);
 
         dir += "\\wfset";
         for (directory_iterator it(dir), end; it != end; ++it) {
@@ -355,11 +356,16 @@ void DataInfo::Init(string settingsFile){
                 }
             }
         }
+      
+      if (WFFileNames.size() == 0){
+          throw UserException("DataInfo::Init() error. Workflows set size is equal to zero");
+      }
 
       for (vector<string>::iterator it = WFFileNames.begin(); it!= WFFileNames.end(); it++)
-         InitWorkflowFromDat(*it);
+        // InitWorkflowFromDat(*it);
+            InitWorkflows(*it);
 
-	  mL = this->minL;
+	  //mL = this->minL;
 
 	  //T = mL + workflows.size() * koeff * mL;
      T = mL;
@@ -377,7 +383,8 @@ void DataInfo::Init(string settingsFile){
 		  //double tstart = 0;
 		  //double tstart =  0;
 		 // double deadline = T;
-		  workflows[i].SetDeadline(deadline);
+		  //workflows[i].SetDeadline(deadline);
+         workflows[i].SetDeadline(T);
 		  workflows[i].SetTStart(tstart);
 		  cout << "WfNum: " << i <<" Tstart:" << tstart << " Deadline " << deadline << endl;
 	  }
@@ -510,6 +517,7 @@ void DataInfo::InitWorkflowFromDat(string fname){
                     throw UserException("DataInfo::InitWorkflowFromDat error. Wrong task ID format");
             double runTime = 0.0;
             iss >> runTime;
+            cout << runTime << endl;
             if (iss.fail())
                     throw UserException("DataInfo::InitWorkflowFromDat error. Wrong runtime format");
 
@@ -529,6 +537,7 @@ void DataInfo::InitWorkflowFromDat(string fname){
             
             Package p(i ,types, cCount, execTime, avgTime, 0);
             pacs.push_back(p);
+            getline(file, s);
         }
         
         // reading information about communication time from file
@@ -537,6 +546,16 @@ void DataInfo::InitWorkflowFromDat(string fname){
             throw UserException("Error while opening aggComm.dat");
         vector <double> commTime;
 
+        getline(commTimeFile, s);
+        string toFind = "ScriptOverhead = ";
+        if (s.find(toFind) == string::npos)
+            throw UserException("DataInfo::InitWorkflowFromDat() error. Cannot find value for overhead");
+        s.erase(0, toFind.size());
+        istringstream iss(s);
+        iss >> overhead;
+        if (iss.fail())
+            throw UserException("DataInfo::InitWorkflowFromDat() error. Error while reading overhead from aggComm.dat");
+
         while (getline(commTimeFile, s)){
             istringstream iss(s);
             double val;
@@ -544,7 +563,7 @@ void DataInfo::InitWorkflowFromDat(string fname){
             iss >> val;
             iss >> val;
             if (iss.fail())
-                throw UserException("Error while reading communication time from aggComm.dat");
+                throw UserException("DataInfo::InitWorkflowFromDat() error. Error while reading communication time from aggComm.dat");
             commTime.push_back(val);
         }
 
@@ -723,6 +742,7 @@ void DataInfo::InitWorkflowsFromDAX(string fname){
           iss >> val;
           iss >> val;
           iss >> val;
+          cout << val;
           if (iss.fail())
               throw UserException("Error while reading communication time from aggComm.dat");
           commTime.push_back(val);
@@ -1070,22 +1090,25 @@ void DataInfo::InitWorkflows(string f){
          }
 
 
-		double maxLength = 20000;//GetT() * pacs.size()/50;
+		//double maxLength = 20000;//GetT() * pacs.size()/50;
 		//double deadline = GetT();
 		//double tstart = 0.00;
 		//cout << "maxTstart " << GetT() - maxLength << endl;
 		
-		double tstart = (GetT() == maxLength) ? 0.00 : (rand() / static_cast<double>(RAND_MAX) * (GetT() - maxLength));
+		//double tstart = (GetT() == maxLength) ? 0.00 : (rand() / static_cast<double>(RAND_MAX) * (GetT() - maxLength));
 		//double tstart = rand() / static_cast<double>(RAND_MAX) * GetT() / 2;
 		//double deadline = tstart - 1;
-		double deadline = tstart + maxLength;
+		//double deadline = tstart + maxLength;
 		//while (deadline < tstart)
 		//	deadline = rand() / static_cast<double>(RAND_MAX) * GetT();
       // for compatibility
-		vector <double> commTime;
+         double tstart = 0.0;
+        double deadline = GetT();
+        // for compatibility
+		  vector <double> commTime;
         //double deadline = GetT(), tstart = 0;
         Workflow w(workflows.size() + i+1, pacs,connectMatrix, deadline, transfer, tstart, commTime);
-        cout << "Tstart:" << tstart << " Deadline " << deadline << endl;
+        //cout << "Tstart:" << tstart << " Deadline " << deadline << endl;
         workflows.push_back(w);
         pacs.clear();
         connectMatrix.clear();
@@ -1102,6 +1125,7 @@ void DataInfo::InitWorkflows(string f){
 void DataInfo::InitResources(string f, bool canExecuteOnDiffResources){
    try{
       processorsCount = 0;
+      double perf = 0.0;
       map <int, vector<pair <int,int>>> busyIntervals;
       char second[21]; // enough to hold all numbers up to 64-bits
       ifstream file(f.c_str(), ifstream::in);
@@ -1167,6 +1191,27 @@ void DataInfo::InitResources(string f, bool canExecuteOnDiffResources){
             throw UserException(errWrongFormatFull);
          }
 
+         // performance
+         getline(file,s);
+         ++line;
+         if (file.eof()) throw UserException(errEarlyEnd);
+         first = "Performance (GFlops): ";
+         found = s.find(first);
+         if (found != 0) {
+            sprintf_s(second, "%d", line);
+            errWrongFormatFull += second;
+            throw UserException(errWrongFormatFull);
+         }
+         s.erase(0,first.size());
+         iss.str(s);
+         iss.clear();
+         iss >> perf;
+         if (iss.fail()) {
+            sprintf_s(second, "%d", line);
+            errWrongFormatFull += second;
+            throw UserException(errWrongFormatFull);
+         }
+
          for (int j = 0; j < resourcesCount; j++){
             busyIntervals.clear();
             getline(file,s);
@@ -1213,7 +1258,7 @@ void DataInfo::InitResources(string f, bool canExecuteOnDiffResources){
             typeBI.push_back(busyIntervals);
          }
 		
-         ResourceType r(i+1, resourcesCount, coresCount, 1.0, typeBI, canExecuteOnDiffResources, context);
+         ResourceType r(i+1, resourcesCount, coresCount, perf, typeBI, canExecuteOnDiffResources, context);
          resources.push_back(r);
          processorsCount += resourcesCount;
       }

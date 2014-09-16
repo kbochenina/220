@@ -62,6 +62,7 @@ int _tmain(int argc, wchar_t**argv)
         _chdir(path.c_str());
     }
 
+   
     // creation of files with time and schedule quality metrics in output directory
     string timeFileName = "time.txt";
     ofstream timeFile(timeFileName);
@@ -110,6 +111,7 @@ int _tmain(int argc, wchar_t**argv)
     // reading name of scheduling method
     while(1) {
         getline(settFile,s);
+       
         if (s.find("SchedMethod") != string::npos)
             break;
         if (settFile.eof()) {
@@ -142,29 +144,35 @@ int _tmain(int argc, wchar_t**argv)
     if (schedName == "SIMPLE"){
         sched.GetSchedule(SIMPLE);
         sched.GetMetrics("simple_metrics.txt", "SimpleSched", metricsFileName);
+        data.SetInitBusyIntervals();
         sched.TestSchedule();
     }
     else if (schedName == "STAGED"){
         sched.GetSchedule(RESERVED_ORDERED);
-        sched.GetMetrics("reserved_metrics.txt", "StagedReservedTime",metricsFileName);
+        sched.GetMetrics("reserved_metrics.txt", "StagedReservedTime", metricsFileName);
+        data.SetInitBusyIntervals();
         sched.TestSchedule();
     }
     else if (schedName == "CLUSTERED"){
         sched.SetSchedulingStrategy(CLUST);
         sched.GetSchedule(CLUSTERED);
         sched.GetMetrics("clustered.txt", "Clustered", metricsFileName);
+        data.SetInitBusyIntervals();
         sched.TestSchedule();
     }
     else if (schedName == "ALL"){
         sched.GetSchedule(SIMPLE);
         sched.GetMetrics("simple_metrics.txt", "SimpleSched", metricsFileName);
+        data.SetInitBusyIntervals();
         sched.TestSchedule();
         sched.GetSchedule(RESERVED_ORDERED);
         sched.GetMetrics("reserved_metrics.txt", "StagedReservedTime",metricsFileName);
+        data.SetInitBusyIntervals();
         sched.TestSchedule();
         sched.SetSchedulingStrategy(CLUST);
         sched.GetSchedule(CLUSTERED);
         sched.GetMetrics("clustered.txt", "Clustered", metricsFileName);
+        data.SetInitBusyIntervals();
         sched.TestSchedule();
     }
     else {

@@ -1,0 +1,23 @@
+﻿Build started 14.08.2014 13:10:43.
+     1>Project "D:\ITMO\Degree\Programs\WFSched\DAXCreator\DAXCreator.vcxproj" on node 2 (Build target(s)).
+     1>InitializeBuildStatus:
+         Creating "Release\DAXCreator.unsuccessfulbuild" because "AlwaysCreate" was specified.
+       ClCompile:
+         All outputs are up-to-date.
+         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\CL.exe /c /ID:\ITMO\Degree\Libs\boost_1_55\boost_1_55_0 /ID:\dist\boost_1_54_0\boost_1_54_0 /Zi /nologo /W3 /WX- /sdl /O2 /Oi /Oy- /GL /D WIN32 /D NDEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Yu"stdafx.h" /Fp"Release\DAXCreator.pch" /Fo"Release\\" /Fd"Release\vc110.pdb" /Gd /TP /analyze- /errorReport:prompt DAXCreator.cpp
+         DAXCreator.cpp
+     1>DAXCreator.cpp(190): warning C4244: 'initializing' : conversion from 'uintmax_t' to 'int', possible loss of data
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"D:\ITMO\Degree\Programs\WFSched\Release\DAXCreator.exe" /INCREMENTAL:NO /NOLOGO /LIBPATH:D:\ITMO\Degree\Libs\boost_1_55\boost_1_55_0\stage\lib /LIBPATH:D:\dist\boost_1_54_0\boost_1_54_0\stage\lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"D:\ITMO\Degree\Programs\WFSched\Release\DAXCreator.pdb" /SUBSYSTEM:CONSOLE /OPT:REF /OPT:ICF /LTCG /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"D:\ITMO\Degree\Programs\WFSched\Release\DAXCreator.lib" /MACHINE:X86 /SAFESEH Release\DAXCreator.obj
+         Release\stdafx.obj
+         Generating code
+         Finished generating code
+         DAXCreator.vcxproj -> D:\ITMO\Degree\Programs\WFSched\Release\DAXCreator.exe
+       FinalizeBuildStatus:
+         Deleting file "Release\DAXCreator.unsuccessfulbuild".
+         Touching "Release\DAXCreator.lastbuildstate".
+     1>Done Building Project "D:\ITMO\Degree\Programs\WFSched\DAXCreator\DAXCreator.vcxproj" (Build target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:04.24

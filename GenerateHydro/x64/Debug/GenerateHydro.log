@@ -1,0 +1,20 @@
+﻿Build started 19.08.2014 12:10:17.
+     1>Project "D:\ITMO\Degree\Programs\WFSched\GenerateHydro\GenerateHydro.vcxproj" on node 5 (Rebuild target(s)).
+     1>_PrepareForClean:
+         Deleting file "x64\Debug\GenerateHydro.lastbuildstate".
+       InitializeBuildStatus:
+         Touching "x64\Debug\GenerateHydro.unsuccessfulbuild".
+       ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\x86_amd64\CL.exe /c /ID:\ITMO\Degree\Libs\boost_1_55\boost_1_55_0 /ID:\dist\boost_1_54_0\boost_1_54_0 /Zi /nologo /W3 /WX- /sdl /Od /D WIN32 /D _DEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Yc"stdafx.h" /Fp"x64\Debug\GenerateHydro.pch" /Fo"x64\Debug\\" /Fd"x64\Debug\vc110.pdb" /Gd /TP /errorReport:prompt stdafx.cpp
+         stdafx.cpp
+         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\x86_amd64\CL.exe /c /ID:\ITMO\Degree\Libs\boost_1_55\boost_1_55_0 /ID:\dist\boost_1_54_0\boost_1_54_0 /Zi /nologo /W3 /WX- /sdl /Od /D WIN32 /D _DEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Yu"stdafx.h" /Fp"x64\Debug\GenerateHydro.pch" /Fo"x64\Debug\\" /Fd"x64\Debug\vc110.pdb" /Gd /TP /errorReport:prompt GenerateHydro.cpp
+         GenerateHydro.cpp
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\x86_amd64\link.exe /ERRORREPORT:PROMPT /OUT:"D:\ITMO\Degree\Programs\WFSched\x64\Debug\GenerateHydro.exe" /INCREMENTAL /NOLOGO /LIBPATH:D:\ITMO\Degree\Libs\boost_1_55\boost_1_55_0\stage\lib /LIBPATH:D:\dist\boost_1_54_0\boost_1_54_0\stage\lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"D:\ITMO\Degree\Programs\WFSched\x64\Debug\GenerateHydro.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"D:\ITMO\Degree\Programs\WFSched\x64\Debug\GenerateHydro.lib" /MACHINE:X64 x64\Debug\GenerateHydro.obj
+         x64\Debug\stdafx.obj
+     1>LINK : fatal error LNK1104: cannot open file 'libboost_filesystem-vc110-mt-gd-1_54.lib'
+     1>Done Building Project "D:\ITMO\Degree\Programs\WFSched\GenerateHydro\GenerateHydro.vcxproj" (Rebuild target(s)) -- FAILED.
+
+Build FAILED.
+
+Time Elapsed 00:00:05.06

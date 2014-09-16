@@ -87,7 +87,10 @@ void Metrics::AvgUnfinischedTime(){
 			   int globalNum = data.GetInitPackageNumber(i)+j;
             int wfNum, localNum;
             data.GetLocalNumbers(globalNum, wfNum, localNum);
-			   unschTimes[i] += data.Workflows(i).GetAvgExecTime(j) + data.Workflows(wfNum).GetCommTime(localNum);//data.GetAvgTransferFrom(globalNum);
+            // for I version
+            unschTimes[i] += data.Workflows(i).GetAvgExecTime(j) + data.GetAvgTransferFrom(globalNum);
+            // for II version
+			   //unschTimes[i] += data.Workflows(i).GetAvgExecTime(j) + data.Workflows(wfNum).GetCommTime(localNum);//data.GetAvgTransferFrom(globalNum);
                //unfinishedTimes[i] += unschTimes[i];
 			   unscheduledTasks[i]++;
                reservedTime[i] = 0.0;
@@ -109,7 +112,10 @@ void Metrics::AvgUnfinischedTime(){
 				int globalNum = data.GetInitPackageNumber(i) + j;
             int wfNum, localNum;
             data.GetLocalNumbers(globalNum, wfNum, localNum);
-				fineMax += data.Workflows(wfNum).GetCommTime(localNum); //data.GetAvgTransferFrom(globalNum);
+            // I version
+            fineMax += data.GetAvgTransferFrom(globalNum);
+            // II version
+				//fineMax += data.Workflows(wfNum).GetCommTime(localNum); //data.GetAvgTransferFrom(globalNum);
 	  }
 	  // if all tasks are scheduled
 	  if (unscheduledTasks[i] == 0){

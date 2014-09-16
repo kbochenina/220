@@ -1,0 +1,534 @@
+Processors count = 512
+Types count = 8
+Type 1 (32 processors)
+Performance (GFlops): 29
+Processor 1 2
+12501  30364
+37338  42215
+Processor 2 1
+7279  23166
+Processor 3 0
+Processor 4 0
+Processor 5 1
+22417  26139
+Processor 6 0
+Processor 7 0
+Processor 8 0
+Processor 9 2
+23557  34378
+41077  41599
+Processor 10 1
+421  18290
+Processor 11 0
+Processor 12 1
+17921  28463
+Processor 13 1
+7194  15609
+Processor 14 0
+Processor 15 2
+20789  40644
+40948  42343
+Processor 16 0
+Processor 17 1
+12706  13558
+Processor 18 0
+Processor 19 1
+29764  32105
+Processor 20 2
+24277  29869
+31692  36980
+Processor 21 0
+Processor 22 0
+Processor 23 2
+25163  33770
+41016  42679
+Processor 24 1
+26988  27304
+Processor 25 2
+28630  39298
+40161  40739
+Processor 26 2
+19168  23456
+33334  40995
+Processor 27 1
+10195  23300
+Processor 28 0
+Processor 29 2
+24159  40934
+42191  42374
+Processor 30 1
+30361  36121
+Processor 31 0
+Processor 32 1
+27235  39669
+Type 2 (32 processors)
+Performance (GFlops): 45
+Processor 1 1
+12918  40948
+Processor 2 2
+32070  37102
+37319  40929
+Processor 3 1
+31754  39935
+Processor 4 2
+28291  36192
+40495  41021
+Processor 5 1
+7738  31764
+Processor 6 2
+13674  17611
+19032  23343
+Processor 7 1
+9233  39074
+Processor 8 2
+20344  26113
+42649  42684
+Processor 9 2
+29499  42188
+42770  42811
+Processor 10 2
+12994  22889
+26576  40299
+Processor 11 0
+Processor 12 1
+6908  19095
+Processor 13 1
+24737  42198
+Processor 14 1
+10155  41726
+Processor 15 2
+274  32460
+38288  38365
+Processor 16 1
+4248  10950
+Processor 17 1
+14208  41870
+Processor 18 1
+20421  26096
+Processor 19 1
+12148  13732
+Processor 20 0
+Processor 21 0
+Processor 22 2
+27305  36917
+39859  40507
+Processor 23 1
+6050  29071
+Processor 24 1
+24693  33600
+Processor 25 2
+17860  29239
+37433  39947
+Processor 26 2
+19081  19457
+42522  43188
+Processor 27 0
+Processor 28 0
+Processor 29 0
+Processor 30 2
+8391  36481
+37933  38162
+Processor 31 1
+21749  27253
+Processor 32 2
+15921  21446
+41619  41890
+Type 3 (32 processors)
+Performance (GFlops): 13
+Processor 1 0
+Processor 2 2
+17352  21319
+22375  36578
+Processor 3 2
+4108  12397
+42629  42706
+Processor 4 1
+1408  19713
+Processor 5 1
+13573  15636
+Processor 6 0
+Processor 7 1
+43  20758
+Processor 8 2
+18031  20521
+27712  42386
+Processor 9 0
+Processor 10 2
+4574  8908
+36004  38566
+Processor 11 2
+26088  27501
+37814  38073
+Processor 12 0
+Processor 13 0
+Processor 14 0
+Processor 15 0
+Processor 16 1
+16360  41899
+Processor 17 0
+Processor 18 1
+6330  15756
+Processor 19 2
+15031  25894
+37641  39858
+Processor 20 1
+29833  39365
+Processor 21 0
+Processor 22 2
+18360  34392
+39531  40837
+Processor 23 1
+13776  15687
+Processor 24 0
+Processor 25 1
+21073  39085
+Processor 26 0
+Processor 27 1
+22640  30301
+Processor 28 2
+7008  9956
+16009  30224
+Processor 29 1
+9587  27107
+Processor 30 0
+Processor 31 0
+Processor 32 0
+Type 4 (32 processors)
+Performance (GFlops): 49
+Processor 1 2
+16422  26696
+41089  42493
+Processor 2 2
+672  7598
+22976  33291
+Processor 3 0
+Processor 4 2
+29066  41765
+41843  42722
+Processor 5 1
+26355  31847
+Processor 6 0
+Processor 7 0
+Processor 8 0
+Processor 9 1
+25802  30857
+Processor 10 2
+30190  35232
+41308  42695
+Processor 11 1
+31154  39439
+Processor 12 2
+24774  35222
+38744  42314
+Processor 13 2
+27846  33644
+37242  39077
+Processor 14 0
+Processor 15 0
+Processor 16 1
+420  1087
+Processor 17 0
+Processor 18 1
+6585  36899
+Processor 19 0
+Processor 20 1
+14323  14421
+Processor 21 1
+19029  37794
+Processor 22 0
+Processor 23 1
+9365  40170
+Processor 24 2
+1101  21209
+33288  33499
+Processor 25 1
+6271  37723
+Processor 26 1
+8602  30255
+Processor 27 0
+Processor 28 2
+14995  31610
+35532  42353
+Processor 29 1
+22486  34356
+Processor 30 1
+28528  30577
+Processor 31 0
+Processor 32 1
+10319  21126
+Type 5 (32 processors)
+Performance (GFlops): 27
+Processor 1 1
+21177  38146
+Processor 2 0
+Processor 3 2
+6597  33897
+41760  42677
+Processor 4 2
+12990  23270
+24418  32187
+Processor 5 0
+Processor 6 1
+16922  27116
+Processor 7 0
+Processor 8 0
+Processor 9 1
+30592  32363
+Processor 10 1
+14375  26268
+Processor 11 2
+7469  29321
+29799  31975
+Processor 12 2
+1179  8899
+36567  41970
+Processor 13 1
+18844  41083
+Processor 14 2
+7254  33566
+37561  38792
+Processor 15 1
+18373  41914
+Processor 16 2
+3551  18723
+26666  32755
+Processor 17 1
+8305  18024
+Processor 18 0
+Processor 19 1
+29214  38373
+Processor 20 0
+Processor 21 2
+3357  12811
+20761  22718
+Processor 22 2
+27678  35417
+42933  42991
+Processor 23 0
+Processor 24 2
+23456  24958
+36002  37386
+Processor 25 0
+Processor 26 1
+19825  26500
+Processor 27 2
+1582  21868
+27706  33481
+Processor 28 2
+17955  36383
+38479  42128
+Processor 29 1
+3951  22237
+Processor 30 2
+20244  23390
+25825  38482
+Processor 31 0
+Processor 32 0
+Type 6 (32 processors)
+Performance (GFlops): 22
+Processor 1 2
+32353  40329
+41365  42647
+Processor 2 0
+Processor 3 2
+4312  34219
+34839  35577
+Processor 4 0
+Processor 5 0
+Processor 6 2
+5262  33755
+34994  36681
+Processor 7 2
+20109  33544
+42355  43037
+Processor 8 2
+19353  23038
+31036  38503
+Processor 9 0
+Processor 10 1
+22244  25519
+Processor 11 0
+Processor 12 0
+Processor 13 0
+Processor 14 1
+9060  27055
+Processor 15 1
+16989  18316
+Processor 16 1
+5413  14824
+Processor 17 1
+10234  40303
+Processor 18 2
+15295  18525
+27480  30204
+Processor 19 1
+16701  32042
+Processor 20 2
+15375  36689
+39752  41243
+Processor 21 2
+10834  37607
+40292  41690
+Processor 22 2
+13224  18945
+30982  35466
+Processor 23 0
+Processor 24 1
+3226  32511
+Processor 25 0
+Processor 26 1
+28531  42266
+Processor 27 2
+8427  31154
+42931  43073
+Processor 28 2
+11346  23778
+42309  42578
+Processor 29 2
+25046  39398
+40974  43181
+Processor 30 1
+24643  28602
+Processor 31 2
+12279  15321
+24306  31089
+Processor 32 0
+Type 7 (32 processors)
+Performance (GFlops): 27
+Processor 1 0
+Processor 2 0
+Processor 3 2
+12542  41073
+41974  42655
+Processor 4 0
+Processor 5 0
+Processor 6 2
+28572  39851
+41920  42436
+Processor 7 0
+Processor 8 0
+Processor 9 2
+23717  37397
+40587  40851
+Processor 10 2
+32752  38166
+38329  39953
+Processor 11 0
+Processor 12 2
+2830  18344
+24770  38499
+Processor 13 2
+4544  23524
+26198  35284
+Processor 14 2
+5200  10781
+35925  38081
+Processor 15 2
+25217  39031
+39492  41566
+Processor 16 1
+21511  30371
+Processor 17 0
+Processor 18 1
+11301  33952
+Processor 19 0
+Processor 20 0
+Processor 21 0
+Processor 22 2
+20196  41932
+42017  43051
+Processor 23 2
+9054  26016
+38638  39855
+Processor 24 2
+29152  40186
+41270  41789
+Processor 25 2
+13638  40946
+41278  42919
+Processor 26 2
+5986  6171
+17838  18177
+Processor 27 1
+30955  39440
+Processor 28 1
+25725  36807
+Processor 29 2
+8944  38904
+39436  41332
+Processor 30 2
+20819  22694
+41502  42139
+Processor 31 0
+Processor 32 0
+Type 8 (32 processors)
+Performance (GFlops): 21
+Processor 1 2
+27627  42086
+42559  42854
+Processor 2 0
+Processor 3 0
+Processor 4 2
+26453  33461
+37014  37788
+Processor 5 0
+Processor 6 2
+6152  11209
+28806  38348
+Processor 7 1
+1615  19636
+Processor 8 1
+22759  36644
+Processor 9 2
+16156  18851
+32212  35387
+Processor 10 1
+12850  39290
+Processor 11 1
+179  6899
+Processor 12 1
+22592  31821
+Processor 13 2
+7072  28777
+30104  39931
+Processor 14 2
+12713  30745
+38051  42850
+Processor 15 0
+Processor 16 0
+Processor 17 1
+19283  33685
+Processor 18 2
+14740  34483
+40512  40771
+Processor 19 2
+28325  38508
+41713  41923
+Processor 20 1
+32483  36644
+Processor 21 1
+25900  36123
+Processor 22 2
+22445  23395
+33053  37921
+Processor 23 2
+6395  8703
+13828  37411
+Processor 24 1
+28644  34867
+Processor 25 0
+Processor 26 1
+5223  36209
+Processor 27 2
+19181  31079
+38289  40961
+Processor 28 1
+11530  16908
+Processor 29 1
+17383  20048
+Processor 30 0
+Processor 31 2
+15834  23245
+35374  38611
+Processor 32 1
+1216  23675

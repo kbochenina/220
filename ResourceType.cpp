@@ -51,6 +51,7 @@ void ResourceType::AddInterval(const double &execTime, const int &tbegin, const 
 	vector <int> processorNumber;
 	processorNumber.push_back(processor);
 	windows.AddDiaps(processorNumber, tbegin, execTime);
+   
 }
 
 // check received interval for intersection with existing intervals

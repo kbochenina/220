@@ -120,7 +120,7 @@ void Intervals::AddDiaps(vector <int> coreNumbers, int tBegin, double execTime) 
             }
             else {
                if (j->second.size() == 0 || tBegin < j->second[0].first){
-                  pair<int,int> newPair = make_pair(tBegin, static_cast<int>(tBegin + execTime + 1));
+                  pair<int,int> newPair = make_pair(tBegin, static_cast<int>(tBegin + execTime));
                   j->second.insert(j->second.begin(), newPair);
                   return;
                }
@@ -132,7 +132,7 @@ void Intervals::AddDiaps(vector <int> coreNumbers, int tBegin, double execTime) 
                      // and this is last interval
                      // or we can insert this interval among two intervals
                      if (k == j->second.size() - 1 || tBegin + execTime <= j->second[k+1].second){
-                     pair<int,int> newPair = make_pair(tBegin, static_cast<int>(tBegin + execTime + 1));
+                     pair<int,int> newPair = make_pair(tBegin, static_cast<int>(tBegin + execTime));
                      j->second.insert(j->second.begin() + k + 1, newPair);
                      return;
                   }
