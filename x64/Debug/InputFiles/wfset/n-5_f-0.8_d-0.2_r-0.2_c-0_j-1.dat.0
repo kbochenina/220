@@ -1,0 +1,38 @@
+Workflows count = 1
+Workflow 1 (5 packages)
+Package 1
+Alpha: 0.23
+Resources types: -1
+Processors count: 1, 2, 4
+GFlop: 72271
+Transfer: P5 13880Mb 
+Package 2
+Alpha: 0.1
+Resources types: -1
+Processors count: 1, 2, 4
+GFlop: 131575
+Transfer: 
+Package 3
+Alpha: 0.18
+Resources types: -1
+Processors count: 1, 2, 4
+GFlop: 55677
+Transfer: P4 424Mb 
+Package 4
+Alpha: 0.18
+Resources types: -1
+Processors count: 1, 2, 4
+GFlop: 69570
+Transfer: 
+Package 5
+Alpha: 0.07
+Resources types: -1
+Processors count: 1, 2, 4
+GFlop: 175228
+Transfer: 
+Connectivity matrix: 
+0 0 0 0 1 
+0 0 0 0 0 
+0 0 0 1 0 
+0 0 0 0 0 
+0 0 0 0 0 

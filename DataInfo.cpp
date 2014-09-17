@@ -386,7 +386,7 @@ void DataInfo::Init(string settingsFile){
 		  //workflows[i].SetDeadline(deadline);
          workflows[i].SetDeadline(T);
 		  workflows[i].SetTStart(tstart);
-		  cout << "WfNum: " << i <<" Tstart:" << tstart << " Deadline " << deadline << endl;
+		  //cout << "WfNum: " << i <<" Tstart:" << tstart << " Deadline " << deadline << endl;
 	  }
 	  // setting deadlines and tstarts
 	  //double singleLength = 20000;
@@ -411,7 +411,7 @@ void DataInfo::Init(string settingsFile){
          initNum += workflows[i].GetPackageCount();
       }
       ofstream resTime("Output/time.txt", ios::app);
-      cout << "Start of assigning of sub-deadlines..." << endl;
+      //cout << "Start of assigning of sub-deadlines..." << endl;
       double t = clock();
       InitFinishingTimes();
      /* for (size_t i = 0; i < workflows.size(); i++)

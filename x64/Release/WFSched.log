@@ -1,64 +1,10 @@
-﻿Build started 08.09.2014 18:09:32.
-     1>Project "D:\ITMO\Degree\Programs\WFSched\WFSched.vcxproj" on node 2 (Rebuild target(s)).
-     1>_PrepareForClean:
-         Deleting file "x64\Release\WFSched.lastbuildstate".
-       InitializeBuildStatus:
+﻿Build started 17.09.2014 12:05:00.
+     1>Project "D:\ITMO\Degree\Programs\WFSched\WFSched.vcxproj" on node 2 (Build target(s)).
+     1>InitializeBuildStatus:
          Creating "x64\Release\WFSched.unsuccessfulbuild" because "AlwaysCreate" was specified.
        ClCompile:
-         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\x86_amd64\CL.exe /c /ID:\dist\boost_1_56 /Zi /nologo /W3 /WX- /O2 /Oi /GL /D WIN32 /D NDEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Yc"StdAfx.h" /Fp"x64\Release\WFSched.pch" /Fo"x64\Release\\" /Fd"x64\Release\vc100.pdb" /Gd /TP /errorReport:prompt stdafx.cpp
-         stdafx.cpp
-         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\x86_amd64\CL.exe /c /ID:\dist\boost_1_56 /Zi /nologo /W3 /WX- /O2 /Oi /GL /D WIN32 /D NDEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Yu"StdAfx.h" /Fp"x64\Release\WFSched.pch" /Fo"x64\Release\\" /Fd"x64\Release\vc100.pdb" /Gd /TP /errorReport:prompt Cluster.cpp Clustered.cpp CriteriaFactory.cpp CriteriaMethod.cpp DataInfo.cpp Efficiency.cpp Greedy.cpp Intervals.cpp Metrics.cpp ModelingContext.cpp Package.cpp ReservedTimeCriteria.cpp ResourceType.cpp Scheduler.cpp ScheduleToXML.cpp SchedulingFactory.cpp SchedulingMethod.cpp Test.cpp UserException.cpp WFSched.cpp Workflow.cpp
-         Cluster.cpp
-     1>d:\itmo\degree\programs\wfsched\Cluster.h(25): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
-     1>d:\itmo\degree\programs\wfsched\Cluster.h(28): warning C4244: 'return' : conversion from 'double' to 'int', possible loss of data
-     1>d:\itmo\degree\programs\wfsched\Cluster.h(29): warning C4244: 'return' : conversion from 'double' to 'int', possible loss of data
-     1>d:\itmo\degree\programs\wfsched\Cluster.h(30): warning C4244: 'return' : conversion from 'double' to 'int', possible loss of data
-     1>d:\itmo\degree\programs\wfsched\Cluster.h(31): warning C4244: 'return' : conversion from 'double' to 'int', possible loss of data
-     1>Cluster.cpp(69): warning C4244: 'initializing' : conversion from 'double' to 'int', possible loss of data
-     1>Cluster.cpp(73): warning C4244: '=' : conversion from 'double' to 'int', possible loss of data
-     1>Cluster.cpp(78): warning C4244: '=' : conversion from 'double' to 'int', possible loss of data
-         Clustered.cpp
-     1>d:\itmo\degree\programs\wfsched\Package.h(26): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
-     1>d:\itmo\degree\programs\wfsched\Package.h(27): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
-     1>d:\itmo\degree\programs\wfsched\Workflow.h(36): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
-     1>d:\itmo\degree\programs\wfsched\Workflow.h(83): warning C4244: '=' : conversion from 'double' to 'int', possible loss of data
-     1>d:\itmo\degree\programs\wfsched\DataInfo.h(61): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
-     1>d:\itmo\degree\programs\wfsched\DataInfo.h(62): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
-     1>d:\itmo\degree\programs\wfsched\DataInfo.h(101): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
-     1>d:\itmo\degree\programs\wfsched\Cluster.h(25): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
-     1>d:\itmo\degree\programs\wfsched\Cluster.h(28): warning C4244: 'return' : conversion from 'double' to 'int', possible loss of data
-     1>d:\itmo\degree\programs\wfsched\Cluster.h(29): warning C4244: 'return' : conversion from 'double' to 'int', possible loss of data
-     1>d:\itmo\degree\programs\wfsched\Cluster.h(30): warning C4244: 'return' : conversion from 'double' to 'int', possible loss of data
-     1>d:\itmo\degree\programs\wfsched\Cluster.h(31): warning C4244: 'return' : conversion from 'double' to 'int', possible loss of data
-     1>Clustered.cpp(167): warning C4267: 'argument' : conversion from 'size_t' to 'int', possible loss of data
-     1>Clustered.cpp(168): warning C4267: 'argument' : conversion from 'size_t' to 'int', possible loss of data
-     1>Clustered.cpp(215): warning C4267: '=' : conversion from 'size_t' to 'int', possible loss of data
-     1>Clustered.cpp(228): warning C4267: '+=' : conversion from 'size_t' to 'int', possible loss of data
-     1>Clustered.cpp(237): warning C4267: 'argument' : conversion from 'size_t' to 'const int', possible loss of data
-     1>Clustered.cpp(267): warning C4267: 'argument' : conversion from 'size_t' to 'int', possible loss of data
-     1>Clustered.cpp(269): warning C4267: 'argument' : conversion from 'size_t' to 'int', possible loss of data
-     1>Clustered.cpp(300): warning C4267: 'argument' : conversion from 'size_t' to 'const int', possible loss of data
-     1>Clustered.cpp(326): warning C4267: '=' : conversion from 'size_t' to 'int', possible loss of data
-     1>Clustered.cpp(358): warning C4267: '=' : conversion from 'size_t' to 'int', possible loss of data
-     1>Clustered.cpp(449): warning C4267: 'initializing' : conversion from 'size_t' to 'int', possible loss of data
-     1>Clustered.cpp(455): warning C4244: 'initializing' : conversion from 'double' to 'int', possible loss of data
-     1>Clustered.cpp(581): warning C4267: 'initializing' : conversion from 'size_t' to 'int', possible loss of data
-         CriteriaFactory.cpp
-     1>d:\itmo\degree\programs\wfsched\Package.h(26): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
-     1>d:\itmo\degree\programs\wfsched\Package.h(27): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
-     1>d:\itmo\degree\programs\wfsched\Workflow.h(36): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
-     1>d:\itmo\degree\programs\wfsched\Workflow.h(83): warning C4244: '=' : conversion from 'double' to 'int', possible loss of data
-     1>d:\itmo\degree\programs\wfsched\DataInfo.h(61): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
-     1>d:\itmo\degree\programs\wfsched\DataInfo.h(62): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
-     1>d:\itmo\degree\programs\wfsched\DataInfo.h(101): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
-         CriteriaMethod.cpp
-     1>d:\itmo\degree\programs\wfsched\Package.h(26): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
-     1>d:\itmo\degree\programs\wfsched\Package.h(27): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
-     1>d:\itmo\degree\programs\wfsched\Workflow.h(36): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
-     1>d:\itmo\degree\programs\wfsched\Workflow.h(83): warning C4244: '=' : conversion from 'double' to 'int', possible loss of data
-     1>d:\itmo\degree\programs\wfsched\DataInfo.h(61): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
-     1>d:\itmo\degree\programs\wfsched\DataInfo.h(62): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
-     1>d:\itmo\degree\programs\wfsched\DataInfo.h(101): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
+         All outputs are up-to-date.
+         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\x86_amd64\CL.exe /c /ID:\dist\boost_1_56 /Zi /nologo /W3 /WX- /O2 /Oi /GL /D WIN32 /D NDEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Yu"StdAfx.h" /Fp"x64\Release\WFSched.pch" /Fo"x64\Release\\" /Fd"x64\Release\vc100.pdb" /Gd /TP /errorReport:prompt DataInfo.cpp Greedy.cpp Metrics.cpp ResourceType.cpp Scheduler.cpp Test.cpp WFSched.cpp Workflow.cpp
          DataInfo.cpp
      1>d:\itmo\degree\programs\wfsched\Package.h(26): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
      1>d:\itmo\degree\programs\wfsched\Package.h(27): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
@@ -68,14 +14,13 @@
      1>d:\itmo\degree\programs\wfsched\DataInfo.h(62): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
      1>d:\itmo\degree\programs\wfsched\DataInfo.h(101): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
      1>DataInfo.cpp(81): warning C4244: '+=' : conversion from 'double' to 'int', possible loss of data
-     1>DataInfo.cpp(365): warning C4244: '=' : conversion from 'double' to 'int', possible loss of data
-     1>DataInfo.cpp(577): warning C4267: 'argument' : conversion from 'size_t' to 'int', possible loss of data
-     1>DataInfo.cpp(779): warning C4267: 'argument' : conversion from 'size_t' to 'int', possible loss of data
-     1>DataInfo.cpp(1100): warning C4267: 'argument' : conversion from 'size_t' to 'int', possible loss of data
-     1>DataInfo.cpp(1324): warning C4244: 'return' : conversion from '__int64' to 'int', possible loss of data
-     1>DataInfo.cpp(1401): warning C4267: 'argument' : conversion from 'size_t' to 'int', possible loss of data
-     1>DataInfo.cpp(1502): warning C4267: '=' : conversion from 'size_t' to 'int', possible loss of data
-         Efficiency.cpp
+     1>DataInfo.cpp(371): warning C4244: '=' : conversion from 'double' to 'int', possible loss of data
+     1>DataInfo.cpp(584): warning C4267: 'argument' : conversion from 'size_t' to 'int', possible loss of data
+     1>DataInfo.cpp(786): warning C4267: 'argument' : conversion from 'size_t' to 'int', possible loss of data
+     1>DataInfo.cpp(1110): warning C4267: 'argument' : conversion from 'size_t' to 'int', possible loss of data
+     1>DataInfo.cpp(1356): warning C4244: 'return' : conversion from '__int64' to 'int', possible loss of data
+     1>DataInfo.cpp(1433): warning C4267: 'argument' : conversion from 'size_t' to 'int', possible loss of data
+     1>DataInfo.cpp(1534): warning C4267: '=' : conversion from 'size_t' to 'int', possible loss of data
          Greedy.cpp
      1>d:\itmo\degree\programs\wfsched\Package.h(26): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
      1>d:\itmo\degree\programs\wfsched\Package.h(27): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
@@ -85,11 +30,6 @@
      1>d:\itmo\degree\programs\wfsched\DataInfo.h(62): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
      1>d:\itmo\degree\programs\wfsched\DataInfo.h(101): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
      1>Greedy.cpp(151): warning C4244: 'initializing' : conversion from 'double' to 'int', possible loss of data
-     1>Greedy.cpp(193): warning C4244: 'argument' : conversion from 'double' to 'const int', possible loss of data
-         Intervals.cpp
-     1>Intervals.cpp(9): warning C4267: '=' : conversion from 'size_t' to 'int', possible loss of data
-     1>Intervals.cpp(52): warning C4267: 'initializing' : conversion from 'size_t' to 'int', possible loss of data
-     1>Intervals.cpp(98): warning C4267: '=' : conversion from 'size_t' to 'int', possible loss of data
          Metrics.cpp
      1>d:\itmo\degree\programs\wfsched\Package.h(26): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
      1>d:\itmo\degree\programs\wfsched\Package.h(27): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
@@ -102,19 +42,7 @@
      1>Metrics.cpp(83): warning C4267: 'argument' : conversion from 'size_t' to 'const int', possible loss of data
      1>Metrics.cpp(84): warning C4267: 'argument' : conversion from 'size_t' to 'int', possible loss of data
      1>Metrics.cpp(87): warning C4267: 'argument' : conversion from 'size_t' to 'int', possible loss of data
-     1>Metrics.cpp(90): warning C4267: 'argument' : conversion from 'size_t' to 'int', possible loss of data
-         ModelingContext.cpp
-         Package.cpp
-     1>d:\itmo\degree\programs\wfsched\Package.h(26): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
-     1>d:\itmo\degree\programs\wfsched\Package.h(27): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
-         ReservedTimeCriteria.cpp
-     1>d:\itmo\degree\programs\wfsched\Package.h(26): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
-     1>d:\itmo\degree\programs\wfsched\Package.h(27): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
-     1>d:\itmo\degree\programs\wfsched\Workflow.h(36): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
-     1>d:\itmo\degree\programs\wfsched\Workflow.h(83): warning C4244: '=' : conversion from 'double' to 'int', possible loss of data
-     1>d:\itmo\degree\programs\wfsched\DataInfo.h(61): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
-     1>d:\itmo\degree\programs\wfsched\DataInfo.h(62): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
-     1>d:\itmo\degree\programs\wfsched\DataInfo.h(101): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
+     1>Metrics.cpp(91): warning C4267: 'argument' : conversion from 'size_t' to 'int', possible loss of data
          ResourceType.cpp
          Scheduler.cpp
      1>d:\itmo\degree\programs\wfsched\Package.h(26): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
@@ -129,36 +57,6 @@
      1>d:\itmo\degree\programs\wfsched\Cluster.h(29): warning C4244: 'return' : conversion from 'double' to 'int', possible loss of data
      1>d:\itmo\degree\programs\wfsched\Cluster.h(30): warning C4244: 'return' : conversion from 'double' to 'int', possible loss of data
      1>d:\itmo\degree\programs\wfsched\Cluster.h(31): warning C4244: 'return' : conversion from 'double' to 'int', possible loss of data
-         ScheduleToXML.cpp
-     1>d:\itmo\degree\programs\wfsched\Package.h(26): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
-     1>d:\itmo\degree\programs\wfsched\Package.h(27): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
-     1>d:\itmo\degree\programs\wfsched\Workflow.h(36): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
-     1>d:\itmo\degree\programs\wfsched\Workflow.h(83): warning C4244: '=' : conversion from 'double' to 'int', possible loss of data
-     1>d:\itmo\degree\programs\wfsched\DataInfo.h(61): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
-     1>d:\itmo\degree\programs\wfsched\DataInfo.h(62): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
-     1>d:\itmo\degree\programs\wfsched\DataInfo.h(101): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
-     1>ScheduleToXML.cpp(122): warning C4267: 'initializing' : conversion from 'size_t' to 'int', possible loss of data
-         SchedulingFactory.cpp
-     1>d:\itmo\degree\programs\wfsched\Package.h(26): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
-     1>d:\itmo\degree\programs\wfsched\Package.h(27): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
-     1>d:\itmo\degree\programs\wfsched\Workflow.h(36): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
-     1>d:\itmo\degree\programs\wfsched\Workflow.h(83): warning C4244: '=' : conversion from 'double' to 'int', possible loss of data
-     1>d:\itmo\degree\programs\wfsched\DataInfo.h(61): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
-     1>d:\itmo\degree\programs\wfsched\DataInfo.h(62): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
-     1>d:\itmo\degree\programs\wfsched\DataInfo.h(101): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
-     1>d:\itmo\degree\programs\wfsched\Cluster.h(25): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
-     1>d:\itmo\degree\programs\wfsched\Cluster.h(28): warning C4244: 'return' : conversion from 'double' to 'int', possible loss of data
-     1>d:\itmo\degree\programs\wfsched\Cluster.h(29): warning C4244: 'return' : conversion from 'double' to 'int', possible loss of data
-     1>d:\itmo\degree\programs\wfsched\Cluster.h(30): warning C4244: 'return' : conversion from 'double' to 'int', possible loss of data
-     1>d:\itmo\degree\programs\wfsched\Cluster.h(31): warning C4244: 'return' : conversion from 'double' to 'int', possible loss of data
-         SchedulingMethod.cpp
-     1>d:\itmo\degree\programs\wfsched\Package.h(26): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
-     1>d:\itmo\degree\programs\wfsched\Package.h(27): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
-     1>d:\itmo\degree\programs\wfsched\Workflow.h(36): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
-     1>d:\itmo\degree\programs\wfsched\Workflow.h(83): warning C4244: '=' : conversion from 'double' to 'int', possible loss of data
-     1>d:\itmo\degree\programs\wfsched\DataInfo.h(61): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
-     1>d:\itmo\degree\programs\wfsched\DataInfo.h(62): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
-     1>d:\itmo\degree\programs\wfsched\DataInfo.h(101): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
          Test.cpp
      1>d:\itmo\degree\programs\wfsched\Package.h(26): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
      1>d:\itmo\degree\programs\wfsched\Package.h(27): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
@@ -167,8 +65,7 @@
      1>d:\itmo\degree\programs\wfsched\DataInfo.h(61): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
      1>d:\itmo\degree\programs\wfsched\DataInfo.h(62): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
      1>d:\itmo\degree\programs\wfsched\DataInfo.h(101): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
-     1>Test.cpp(29): warning C4244: 'initializing' : conversion from 'double' to 'int', possible loss of data
-         UserException.cpp
+     1>Test.cpp(30): warning C4244: 'initializing' : conversion from 'double' to 'int', possible loss of data
          WFSched.cpp
      1>d:\itmo\degree\programs\wfsched\Package.h(26): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
      1>d:\itmo\degree\programs\wfsched\Package.h(27): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
@@ -181,7 +78,6 @@
                  C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\include\direct.h(123) : see declaration of 'chdir'
      1>WFSched.cpp(56): warning C4996: 'strerror': This function or variable may be unsafe. Consider using strerror_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
                  C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\include\string.h(157) : see declaration of 'strerror'
-         Compiling...
          Workflow.cpp
      1>d:\itmo\degree\programs\wfsched\Package.h(26): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
      1>d:\itmo\degree\programs\wfsched\Package.h(27): warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
@@ -295,8 +191,8 @@
        FinalizeBuildStatus:
          Deleting file "x64\Release\WFSched.unsuccessfulbuild".
          Touching "x64\Release\WFSched.lastbuildstate".
-     1>Done Building Project "D:\ITMO\Degree\Programs\WFSched\WFSched.vcxproj" (Rebuild target(s)).
+     1>Done Building Project "D:\ITMO\Degree\Programs\WFSched\WFSched.vcxproj" (Build target(s)).
 
 Build succeeded.
 
-Time Elapsed 00:00:17.32
+Time Elapsed 00:00:16.27

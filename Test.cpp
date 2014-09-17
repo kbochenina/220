@@ -43,7 +43,7 @@ bool Test::TestIntervals(){
 			if (data.Resources(resType).CanPlace(*num, tBegin, execTime)){
 				// add interval
 				data.Resources(resType).AddInterval(execTime, tBegin, *num);
-            cout << "Interval " << "[" << tBegin << ";" << tBegin + execTime << "] was added on " << resType << " # " << *num << endl;
+            //cout << "Interval " << "[" << tBegin << ";" << tBegin + execTime << "] was added on " << resType << " # " << *num << endl;
          }
 			// else TestIntervals() is not passed
 			else {
@@ -112,8 +112,8 @@ bool Test::TestWFLinks(){
                //double transferTime = data.Workflows(wfNum).GetCommTime(localPackageNum);
                int localParentNum = 0;
                data.GetLocalNumbers(parentSched->get<0>(), wfNum, localParentNum);
-               cout << "Parent " << localParentNum << " tstart " << 
-                 parentSched->get<1>() << " exectime " <<  parentSched->get<3>() << endl;
+               /*cout << "Parent " << localParentNum << " tstart " << 
+                 parentSched->get<1>() << " exectime " <<  parentSched->get<3>() << endl;*/
 
 					if (parentSched->get<1>() + parentSched->get<3>() + transferTime > packageSched->get<1>()){
 						cout << "Test Test::TestWFLinks() is not passed. Global package number = " <<

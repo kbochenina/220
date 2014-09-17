@@ -58,7 +58,7 @@ void ResourceType::AddInterval(const double &execTime, const int &tbegin, const 
 bool ResourceType::CanPlace(const int& num, const int& tBegin, const double& execTime){
 	const int resNum = num / numCoresPerOneRes;
 	const int procNum = num - resNum * numCoresPerOneRes + 1;
-	return windows.CanPlace(resNum, procNum, tBegin, execTime);
+	return windows.CanPlace(resNum, resNum + 1, tBegin, execTime);
 }
 
 
