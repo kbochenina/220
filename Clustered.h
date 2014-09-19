@@ -51,6 +51,7 @@ class Clustered :
 	double GetAvgTaskCount(int currentCluster);
 	double GetAvgTaskCount(int currentCluster, int taskToAdd);
 	void SetWfPackages(vector<pair<int,vector<int>>>&wfPackages, int clusterIndex);
+   void ModifyStartDeadline(int wfNum, int cluster, double realEnd);
 public:
 	Clustered() {}
 	Clustered(DataInfo &d, int uid);

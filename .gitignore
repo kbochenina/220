@@ -31,3 +31,5 @@ targetver.h
 /ipch
 /InputFiles
 /Output
+/x64
+/SyntheticExperAgg
