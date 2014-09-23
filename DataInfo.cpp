@@ -343,13 +343,13 @@ void DataInfo::Init(string settingsFile){
 
 
       InitResources(resourcesFileName, canExecuteOnDiffResources);
-      InitBandwidth(bandwidthFileName);
+     // InitBandwidth(bandwidthFileName);
 
         dir += "\\wfset";
         for (directory_iterator it(dir), end; it != end; ++it) {
             if (!is_directory(*it)){
                 string filename = it->path().string();
-                if (filename.find(".dat") != string::npos){
+                if (filename.find(".dax") != string::npos){
                     WFFileNames.push_back(filename);
                     std::cout << "File processed - ";
                     std::cout << *it << std::endl;
@@ -362,8 +362,9 @@ void DataInfo::Init(string settingsFile){
       }
 
       for (vector<string>::iterator it = WFFileNames.begin(); it!= WFFileNames.end(); it++)
+          InitWorkflowsFromDAX(*it);
         // InitWorkflowFromDat(*it);
-            InitWorkflows(*it);
+        //    InitWorkflows(*it);
 
 	  //mL = this->minL;
 
@@ -375,8 +376,8 @@ void DataInfo::Init(string settingsFile){
 	  for (int i = 0; i < workflows.size(); i++){
 		//double deadline = rand() / static_cast<double>(RAND_MAX) * (T - mL) + mL;
 		//double tstart = rand() / static_cast<double>(RAND_MAX) * (deadline-mL);
-         double deadline = mL;
-         double tstart = 0;
+     double deadline = mL;
+     double tstart = 0;
        // double tstart = 0;
       //  double deadline = T;
 		  //double deadline = rand() / static_cast<double>(RAND_MAX) * (T - mL) + mL;
@@ -384,8 +385,8 @@ void DataInfo::Init(string settingsFile){
 		  //double tstart =  0;
 		 // double deadline = T;
 		  //workflows[i].SetDeadline(deadline);
-         workflows[i].SetDeadline(T);
-		  workflows[i].SetTStart(tstart);
+     workflows[i].SetDeadline(T);
+     workflows[i].SetTStart(tstart);
 		  //cout << "WfNum: " << i <<" Tstart:" << tstart << " Deadline " << deadline << endl;
 	  }
 	  // setting deadlines and tstarts
@@ -678,8 +679,7 @@ void DataInfo::InitWorkflowsFromDAX(string fname){
         }
         
         //cout << runTime << endl;
-        double amount = maxPerf * runTime;
-
+        
         //cout << amount << endl;
         map <pair <int,int>, double> execTime;
 				
@@ -689,10 +689,11 @@ void DataInfo::InitWorkflowsFromDAX(string fname){
         double avgTime = 0.0;
 
         for (int j = 0; j < resources.size(); j++){
-	         double currentTime = amount / (resources[j].GetPerf() / maxPerf);
+	         double currentTime = runTime * 60 * (resources[j].GetPerf() / maxPerf);
 	         if (find(types.begin(), types.end(), j+1) != types.end()) 
                 execTime.insert(make_pair(make_pair(j+1, 1), currentTime));
                 avgTime += currentTime;
+        }
 	         //cout << currentTime << endl;
 	         //types.push_back(j+1);
 				
@@ -727,7 +728,6 @@ void DataInfo::InitWorkflowsFromDAX(string fname){
 		          }
 		          getline(file,s);
 				} 
-			}
 
 		}
       // reading information about communication time from file
@@ -742,10 +742,10 @@ void DataInfo::InitWorkflowsFromDAX(string fname){
           iss >> val;
           iss >> val;
           iss >> val;
-          cout << val;
+          //cout << val;
           if (iss.fail())
               throw UserException("Error while reading communication time from aggComm.dat");
-          commTime.push_back(val);
+          commTime.push_back(val * 60);
       }
 
 		// set dependencies
@@ -1124,8 +1124,7 @@ void DataInfo::InitWorkflows(string f){
 
 void DataInfo::InitResources(string f, bool canExecuteOnDiffResources){
    try{
-      processorsCount = 0;
-      double perf = 0.0;
+            processorsCount = 0;
       map <int, vector<pair <int,int>>> busyIntervals;
       char second[21]; // enough to hold all numbers up to 64-bits
       ifstream file(f.c_str(), ifstream::in);
@@ -1141,7 +1140,7 @@ void DataInfo::InitResources(string f, bool canExecuteOnDiffResources){
       getline(file,s);
       ++line;
       if (file.eof()) throw UserException(errEarlyEnd);
-      trim = "Processors count = ";
+      trim = "Resources count = ";
       size_t found = s.find(trim);
       if (found != 0) {
          sprintf_s(second, "%d", line);
@@ -1151,7 +1150,7 @@ void DataInfo::InitResources(string f, bool canExecuteOnDiffResources){
       s.erase(0,trim.size());
       int allResourcesCount = stoi(s);
 
-      trim = "Types count = ";
+      trim = "Resources types count = ";
       getline(file,s);
       ++line;
       if (file.eof()) throw UserException(errEarlyEnd);
@@ -1163,7 +1162,7 @@ void DataInfo::InitResources(string f, bool canExecuteOnDiffResources){
       }
       s.erase(0,trim.size());
       int typesCount = stoi(s);
-      int resourcesCount = 0, coresCount = 1;
+      int resourcesCount = 0, coresCount = 0;
 
       for (int i = 0; i < typesCount; i++)
       {
@@ -1190,77 +1189,78 @@ void DataInfo::InitResources(string f, bool canExecuteOnDiffResources){
             errWrongFormatFull += second;
             throw UserException(errWrongFormatFull);
          }
-
-         // performance
-         getline(file,s);
-         ++line;
-         if (file.eof()) throw UserException(errEarlyEnd);
-         first = "Performance (GFlops): ";
-         found = s.find(first);
-         if (found != 0) {
-            sprintf_s(second, "%d", line);
-            errWrongFormatFull += second;
-            throw UserException(errWrongFormatFull);
-         }
-         s.erase(0,first.size());
+         found = s.find(",");
+         s.erase(0,found+2);
          iss.str(s);
          iss.clear();
-         iss >> perf;
+         iss >> coresCount;
          if (iss.fail()) {
             sprintf_s(second, "%d", line);
             errWrongFormatFull += second;
             throw UserException(errWrongFormatFull);
          }
+         double perf = 0.0;
+         getline(file,s);
+         trim = "Performance (GFlops): ";
+         found = s.find(trim);
+         if (found != 0) {
+            sprintf_s(second, "%d", line);
+            errWrongFormatFull += second;
+            throw UserException(errWrongFormatFull);
+         }
+         s.erase(0,trim.size());
+         perf = atof(s.c_str());
 
          for (int j = 0; j < resourcesCount; j++){
-            busyIntervals.clear();
             getline(file,s);
             ++line;
             if (file.eof()) throw UserException(errEarlyEnd);
-            sprintf_s(second, "%d", j+1);
-            first = "Processor ";
-            trim = first + second;
-            found = s.find(trim);
-            if (found != 0) {
-                sprintf_s(second, "%d", line);
-                errWrongFormatFull += second;
-                throw UserException(errWrongFormatFull);
+            busyIntervals.clear();
+            for (int k = 0; k < coresCount; k++){
+               getline(file,s);
+               ++line;
+               if (file.eof()) throw UserException(errEarlyEnd);
+               sprintf_s(second, "%d", k+1);
+               first = "Core ";
+               trim = first + second;
+               found = s.find(trim);
+               if (found != 0) {
+                  sprintf_s(second, "%d", line);
+                  errWrongFormatFull += second;
+                  throw UserException(errWrongFormatFull);
+               }
+               s.erase(0,trim.size()+1);
+               int diapCount = stoi(s);
+               vector<pair<int,int>> oneResDiaps;
+               for (int l = 0; l < diapCount; l++){
+                  if (file.eof()) throw UserException(errEarlyEnd);
+                  getline(file,s);
+                  ++line;
+                  iss.str(s);
+                  iss.clear();
+                  int one,two;
+                  iss >> one;
+                  if (iss.fail()) {
+                     sprintf_s(second, "%d", line);
+                     errWrongFormatFull += second;
+                     throw UserException(errWrongFormatFull);
+                  }
+                  iss >> two;
+                  if (iss.fail()) {
+                     sprintf_s(second, "%d", line);
+                     errWrongFormatFull += second;
+                     throw UserException(errWrongFormatFull);
+                  }
+                  oneResDiaps.push_back(make_pair(one,two));
+               }
+               busyIntervals.insert(make_pair(k+1, oneResDiaps));
             }
-            s.erase(0,trim.size()+1);
-            int diapCount = stoi(s);
-            vector<pair<int,int>> oneResDiaps;
-            for (int l = 0; l < diapCount; l++){
-                if (file.eof()) throw UserException(errEarlyEnd);
-                getline(file,s);
-                ++line;
-                iss.str(s);
-                iss.clear();
-                int one,two;
-                iss >> one;
-                if (iss.fail()) {
-                    sprintf_s(second, "%d", line);
-                    errWrongFormatFull += second;
-                    throw UserException(errWrongFormatFull);
-                }
-                iss >> two;
-                if (iss.fail()) {
-                    sprintf_s(second, "%d", line);
-                    errWrongFormatFull += second;
-                    throw UserException(errWrongFormatFull);
-                }
-                oneResDiaps.push_back(make_pair(one,two));
-            }
-            busyIntervals.insert(make_pair(j+1, oneResDiaps));
-			   // !!!
-			  //busyIntervals.clear();
-          
             // add busyIntervals for current resource to a vector <BusyIntervals>
             typeBI.push_back(busyIntervals);
          }
-		
-         ResourceType r(i+1, resourcesCount, coresCount, perf, typeBI, canExecuteOnDiffResources, context);
+         ResourceType r(i+1,resourcesCount, coresCount, perf, typeBI, canExecuteOnDiffResources, context);
          resources.push_back(r);
-         processorsCount += resourcesCount;
+         processorsCount += coresCount * resourcesCount;
       }
 
         file.close();

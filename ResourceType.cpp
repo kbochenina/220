@@ -56,9 +56,11 @@ void ResourceType::AddInterval(const double &execTime, const int &tbegin, const 
 
 // check received interval for intersection with existing intervals
 bool ResourceType::CanPlace(const int& num, const int& tBegin, const double& execTime){
+	//const int resNum = num ;
 	const int resNum = num / numCoresPerOneRes;
-	const int procNum = num - resNum * numCoresPerOneRes + 1;
-	return windows.CanPlace(resNum, resNum + 1, tBegin, execTime);
+   const int procNum = num - resNum * numCoresPerOneRes + 1;
+   
+	return windows.CanPlace(resNum, procNum, tBegin, execTime);
 }
 
 

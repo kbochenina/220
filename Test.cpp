@@ -40,7 +40,7 @@ bool Test::TestIntervals(){
 		const double &execTime = packageSched->get<3>();
 		for (auto num = localCoreNums.begin(); num != localCoreNums.end(); num++){
 			// if interval isn't intersect existing intervals
-			if (data.Resources(resType).CanPlace(*num, tBegin, execTime)){
+         if (data.Resources(resType).CanPlace(*num, tBegin, execTime)){
 				// add interval
 				data.Resources(resType).AddInterval(execTime, tBegin, *num);
             //cout << "Interval " << "[" << tBegin << ";" << tBegin + execTime << "] was added on " << resType << " # " << *num << endl;
@@ -105,11 +105,11 @@ bool Test::TestWFLinks(){
                double transferTime = 0.0;
                // I version
                // if package and its parent calculate on different resources types
-               if (packageResType != parentResType){
+               /*if (packageResType != parentResType){
                    transferTime = transfer / data.GetBandwidth(parentResType, packageResType);
-               }
+               }*/
                // II version
-               //double transferTime = data.Workflows(wfNum).GetCommTime(localPackageNum);
+               transferTime = data.Workflows(wfNum).GetCommTime(localPackageNum);
                int localParentNum = 0;
                data.GetLocalNumbers(parentSched->get<0>(), wfNum, localParentNum);
                /*cout << "Parent " << localParentNum << " tstart " << 

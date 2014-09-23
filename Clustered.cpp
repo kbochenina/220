@@ -150,11 +150,16 @@ void Clustered::ClusterizeConsequence(){
 }
 
 void Clustered::SetClusterDep(){
-	vector <vector<int>> &matrix = dep[wfNum];
+  	vector <vector<int>> &matrix = dep[wfNum];
 	matrix.resize(clusters[wfNum].size());
 	//for (auto &ind : matrix)
    for (auto ind = matrix.begin(); ind != matrix.end(); ind++)
 		(*ind).resize(clusters[wfNum].size());
+
+   for (auto row = matrix.begin(); row != matrix.end(); row++)
+		for (auto col = row->begin(); col != row->end(); col++)
+          *col = 0;
+    
 	for (size_t i = 0; i < clusters[wfNum].size(); i++){
 		for (size_t j = 0; j < clusters[wfNum].size(); j++){
 			if (i == j) {
@@ -179,17 +184,11 @@ void Clustered::SetClusterDep(){
 			}
 			if (isDepends) {
 				matrix[i][j] = 1;
-			}
+    		}
 		}
 	}
 
-	/*for (auto& row : matrix){
-		for (auto& col : row)
-			cout << col << " ";
-		cout << endl;
-	}
-	cout << endl;*/
-	//dep[wfNum] = matrix;
+	
 }
 
 
@@ -402,6 +401,9 @@ double Clustered::GetWFSchedule(Schedule &out){
 		schedSetCount++;
 		//cout << "Cluster " << variants[bestWf][bestClusterIndex] << " was deleted from " << bestWf <<"WF"<<endl;
       //file << variants[bestWf].size() << endl << " bestClusterIndex " << bestClusterIndex << endl ;
+      if (variants[bestWf].size() <= bestClusterIndex)
+          throw UserException("Clustered::GetWFSchedule() error. Wrong size of variants vector for wf " + to_string((long long)bestWf) +
+          " , unscheduled clusters: " + to_string((long long)unschedClusters[bestWf].size()));
 		variants[bestWf].erase(variants[bestWf].begin() + bestClusterIndex);
 		
 		auto it = find(unschedClusters[bestWf].begin(), unschedClusters[bestWf].end(), bestCluster);
@@ -434,7 +436,7 @@ double Clustered::GetWFSchedule(Schedule &out){
 		file << "Best wf lastEnd: " << bestWfLastEnd << endl;
 		file << "Percent scheduled: " << percentScheduled << endl << endl;
 	    if (unschedClusters[bestWf].size() == 0)
-			wfMetric[bestWf] = numeric_limits<double>::max();
+			wfMetric[bestWf] = numeric_limits<double>::min();
 		else 
 			//wfMetric[bestWf] = (data.Workflows(bestWf).GetDeadline() - bestWfLastEnd);// / bestWfWeight;// + percentScheduled;
          //wfMetric[bestWf] = -bestWfWeight;

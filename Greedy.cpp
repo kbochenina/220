@@ -90,47 +90,47 @@ void Greedy::FindSchedule(Schedule& out, double &efficiency, int pNum, bool forO
     // (resType, finishingTime, transferTime) for all input packages - II version (transfer time will be equal for all input packages)
     vector <boost::tuple<int, double, double>> commInfo;
     // I version
-    for (size_t i = 0; i < dependsOn.size(); i++){
-        // set global numbers
-        for (auto j = out.begin(); j != out.end(); j++){
-            int add = 0;
-            if (!forOneWf) add += pNum - localNum;
-            // for input package
-            if (boost::get<0>(*j) == dependsOn[i] + add)
-            {
-                int resType = data.GetResourceTypeIndex(boost::get<2>(*j)[0]);
-                double tEnd = boost::get<1>(*j) + boost::get<3>(*j) + 1;
-                int initPackageNumber = data.GetInitPackageNumber(wfNum);
-                double transfer = 0.0;
-                if (!forOneWf)
-                    transfer = data.Workflows(wfNum).GetTransfer(boost::get<0>(*j) - initPackageNumber, 
-                    pNum - initPackageNumber);
-                else 
-                    transfer = data.Workflows(wfNum).GetTransfer(boost::get<0>(*j), pNum);
-                commInfo.push_back(make_tuple(resType, tEnd, transfer));
-                /*if (tEnd > expectedBegin)
-                    expectedBegin = static_cast<int>(tEnd) + 1;*/
-
-            }
-        }
-    }
-    // II version
     //for (size_t i = 0; i < dependsOn.size(); i++){
+    //    // set global numbers
     //    for (auto j = out.begin(); j != out.end(); j++){
     //        int add = 0;
     //        if (!forOneWf) add += pNum - localNum;
-    //        // when package is found in schedule
-    //        if (boost::get<0>(*j) == dependsOn[i] + add){
+    //        // for input package
+    //        if (boost::get<0>(*j) == dependsOn[i] + add)
+    //        {
     //            int resType = data.GetResourceTypeIndex(boost::get<2>(*j)[0]);
     //            double tEnd = boost::get<1>(*j) + boost::get<3>(*j) + 1;
-    //            double commTime = data.Workflows(wfNum).GetCommTime(localNum);
-    //            commInfo.push_back(make_tuple(resType, tEnd, commTime));
+    //            int initPackageNumber = data.GetInitPackageNumber(wfNum);
+    //            double transfer = 0.0;
+    //            if (!forOneWf)
+    //                transfer = data.Workflows(wfNum).GetTransfer(boost::get<0>(*j) - initPackageNumber, 
+    //                pNum - initPackageNumber);
+    //            else 
+    //                transfer = data.Workflows(wfNum).GetTransfer(boost::get<0>(*j), pNum);
+    //            commInfo.push_back(make_tuple(resType, tEnd, transfer));
+    //            /*if (tEnd > expectedBegin)
+    //                expectedBegin = static_cast<int>(tEnd) + 1;*/
+
     //        }
     //    }
     //}
-    //// if package has no parents
-    //if (dependsOn.size() == 0)
-    //    commInfo.push_back(make_tuple(1, 0, data.Workflows(wfNum).GetCommTime(localNum)));
+    // II version
+    for (size_t i = 0; i < dependsOn.size(); i++){
+        for (auto j = out.begin(); j != out.end(); j++){
+            int add = 0;
+            if (!forOneWf) add += pNum - localNum;
+            // when package is found in schedule
+            if (boost::get<0>(*j) == dependsOn[i] + add){
+                int resType = data.GetResourceTypeIndex(boost::get<2>(*j)[0]);
+                double tEnd = boost::get<1>(*j) + boost::get<3>(*j) + 1;
+                double commTime = data.Workflows(wfNum).GetCommTime(localNum);
+                commInfo.push_back(make_tuple(resType, tEnd, commTime));
+            }
+        }
+    }
+    // if package has no parents
+    if (dependsOn.size() == 0)
+        commInfo.push_back(make_tuple(1, 0, data.Workflows(wfNum).GetCommTime(localNum)));
 
     // getting possible types of resources
     vector <int> resTypes = data.Workflows(wfNum)[localNum].GetResTypes();
@@ -152,23 +152,23 @@ void Greedy::FindSchedule(Schedule& out, double &efficiency, int pNum, bool forO
             // get the expected begin time for current resource type
             for (auto in = commInfo.begin(); in != commInfo.end(); in++){
                 // I version
-                double bandwidth = data.GetBandwidth(in->get_head(), *res);
-                double currResBegin = 0.0;
-                if (bandwidth == 0)
-                    currResBegin = in->get<1>();
-                else
-                    currResBegin = in->get<1>() + in->get<2>()/bandwidth;
+                //double bandwidth = data.GetBandwidth(in->get_head(), *res);
+                //double currResBegin = 0.0;
+                //if (bandwidth == 0)
+                //    currResBegin = in->get<1>();
+                //else
+                //    currResBegin = in->get<1>() + in->get<2>()/bandwidth;
+                //if (currResBegin > tbegin){
+                //    // for rounding to upper int
+                //    currResBegin += 0.5;
+                //    tbegin = static_cast<int>(currResBegin);
+                //}
+                // II version
+                double currResBegin = in->get<1>() + in->get<2>();
                 if (currResBegin > tbegin){
-                    // for rounding to upper int
                     currResBegin += 0.5;
                     tbegin = static_cast<int>(currResBegin);
                 }
-                // II version
-                /*double currResBegin = in->get<1>() + in->get<2>();
-                if (currResBegin > tbegin){
-                    currResBegin += 0.5;
-                    tbegin = static_cast<int>(currResBegin);
-                }*/
             }
 			if (tbegin > deadline) continue;
             
@@ -190,6 +190,8 @@ void Greedy::FindSchedule(Schedule& out, double &efficiency, int pNum, bool forO
         double execTime = savedPlan.get<2>()-tbegin;
         data.Resources(savedPlan.get<3>()).AddInterval(execTime, 
             tbegin, savedPlan.get<0>());
+        //cout << "[" << tbegin << ";" << tbegin + execTime << "] was added on processor " <<  savedPlan.get<0>() << " of type " << savedPlan.get<3>() << endl;
+        //system("pause");
         //II version
         // add overhead
         //data.Resources(savedPlan.get<3>()).AddInterval(data.GetOverhead(), tbegin + execTime, savedPlan.get<0>());
