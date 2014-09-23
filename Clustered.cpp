@@ -267,8 +267,9 @@ double Clustered::GetWFSchedule(Schedule &out){
 		}
 		double percentScheduled = scheduled / data.Workflows(wf).GetPackageCount();
 		//wfMetric.push_back(data.Workflows(wf).GetDeadline() - (lastEnd + weight));
-		wfMetric.push_back(data.Workflows(wf).GetDeadline() - lastEnd);//weight);// + percentScheduled );
+		//wfMetric.push_back(data.Workflows(wf).GetDeadline() - lastEnd);//weight);// + percentScheduled );
      // wfMetric.push_back(-weight);
+      wfMetric.push_back( weight / (data.Workflows(wf).GetDeadline() - lastEnd) );
 	}
 
 	vector<int> wfToAddClusters;
@@ -331,12 +332,12 @@ double Clustered::GetWFSchedule(Schedule &out){
 		//while (schedSetCount != clustersSetSize){
 		//double prevMinDeadline = numeric_limits<double>::max();
 		//double prevMaxWeightLength = 0;
-		double bestMetric = numeric_limits<double>::max();
-//      double bestMetric = 0;
+		//double bestMetric = numeric_limits<double>::max();
+      double bestMetric = 0;
 		int bestWf = 0, bestCluster = 0, bestClusterIndex = 0;
 		for (size_t wf = 0; wf < wfMetric.size(); wf++){
-			//if (wfMetric[wf] < bestMetric){
-          if (wfMetric[wf] < bestMetric){
+			 if (wfMetric[wf] > bestMetric){
+         // if (wfMetric[wf] < bestMetric){
 				bestMetric = wfMetric[wf];
 				bestWf = wf;
 			}
@@ -420,8 +421,11 @@ double Clustered::GetWFSchedule(Schedule &out){
 				
 			}
 			else {
-				if (clusters[bestWf][i].GetDeadline() > bestWfLastEnd)
-					bestWfLastEnd = clusters[bestWf][i].GetDeadline();
+             // STRANGE??
+				//if (clusters[bestWf][i].GetDeadline() > bestWfLastEnd)
+				//	bestWfLastEnd = clusters[bestWf][i].GetDeadline();
+            if (clusters[bestWf][i].GetDeadline() > bestWfLastEnd)
+                bestWfLastEnd = clusters[bestWf][i].GetDeadline();
 				scheduled += clusters[bestWf][i].GetSize();
 			}
 		}
@@ -434,7 +438,12 @@ double Clustered::GetWFSchedule(Schedule &out){
 		else 
 			//wfMetric[bestWf] = (data.Workflows(bestWf).GetDeadline() - bestWfLastEnd);// / bestWfWeight;// + percentScheduled;
          //wfMetric[bestWf] = -bestWfWeight;
-         wfMetric[bestWf] = data.Workflows(bestWf).GetDeadline() - bestWfLastEnd;
+         // if workflow violates the deadline it cannot be scheduled
+         if (bestWfLastEnd >= data.Workflows(bestWf).GetDeadline())
+             wfMetric[bestWf] = -1;
+         else
+             wfMetric[bestWf] = bestWfWeight / ( data.Workflows(bestWf).GetDeadline() - bestWfLastEnd );
+        // wfMetric[bestWf] = data.Workflows(bestWf).GetDeadline() - bestWfLastEnd;
 		
 		//minDeadline = prevMinDeadline;
 		//maxWeightLength = prevMaxWeightLength;
