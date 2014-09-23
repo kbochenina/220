@@ -366,28 +366,28 @@ void DataInfo::Init(string settingsFile){
         // InitWorkflowFromDat(*it);
         //    InitWorkflows(*it);
 
-	  //mL = this->minL;
+	  mL = this->minL;
 
-	  //T = mL + workflows.size() * koeff * mL;
+	  //T = mL + (workflows.size()-1) * 0.125 * mL;
      T = mL;
 	  context.SetContext(T, CCR, h, mL);	
-     cout << "mL = " << mL << endl;
+    /* cout << "mL = " << mL << endl;*/
 
 	  for (int i = 0; i < workflows.size(); i++){
 		//double deadline = rand() / static_cast<double>(RAND_MAX) * (T - mL) + mL;
 		//double tstart = rand() / static_cast<double>(RAND_MAX) * (deadline-mL);
-     double deadline = mL;
-     double tstart = 0;
-       // double tstart = 0;
-      //  double deadline = T;
-		  //double deadline = rand() / static_cast<double>(RAND_MAX) * (T - mL) + mL;
-		  //double tstart = 0;
-		  //double tstart =  0;
-		 // double deadline = T;
-		  //workflows[i].SetDeadline(deadline);
-     workflows[i].SetDeadline(T);
-     workflows[i].SetTStart(tstart);
-		  //cout << "WfNum: " << i <<" Tstart:" << tstart << " Deadline " << deadline << endl;
+         double deadline = mL;
+         double tstart = 0;
+           // double tstart = 0;
+          //  double deadline = T;
+		      //double deadline = rand() / static_cast<double>(RAND_MAX) * (T - mL) + mL;
+		      //double tstart = 0;
+		      //double tstart =  0;
+		     // double deadline = T;
+		      //workflows[i].SetDeadline(deadline);
+         workflows[i].SetDeadline(T);
+         workflows[i].SetTStart(tstart);
+		   //cout << "WfNum: " << i <<" Tstart:" << tstart << " Deadline " << deadline << endl;
 	  }
 	  // setting deadlines and tstarts
 	  //double singleLength = 20000;

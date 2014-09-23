@@ -133,7 +133,7 @@ int _tmain(int argc, wchar_t**argv)
     }
     string parName = "SchedMethod=";
     string schedName = s.substr(pos+1, s.size()-parName.size());
-    deadline = 350;
+    //deadline = 350;
     cout << "Deadline = " << deadline << endl;
 
     // initializing data and scheduler
