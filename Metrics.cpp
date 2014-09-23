@@ -49,9 +49,6 @@ void Metrics::AvgUnfinischedTime(){
       int type = data.GetResourceTypeIndex(processor) ; // !
       int wfNum, localNum;
       data.GetLocalNumbers(pNum, wfNum, localNum);
-      if (wfNum == 161) {
-          cout << pNum << " " << tBegin << " " << execTime << " " << tBegin+execTime << " " << processor << endl;
-      }
       resTypesPerWfPackages[wfNum][localNum] = type;
       scheduledTasks[wfNum].push_back(localNum);
       execTimePerWf[wfNum] += execTime;
@@ -94,7 +91,7 @@ void Metrics::AvgUnfinischedTime(){
             //unschTimes[i] += data.Workflows(i).GetAvgExecTime(j) + data.GetAvgTransferFrom(globalNum);
             // for II version
 			   unschTimes[i] += data.Workflows(i).GetAvgExecTime(j) + data.Workflows(wfNum).GetCommTime(localNum);//data.GetAvgTransferFrom(globalNum);
-            unfinishedTimes[i] += unschTimes[i];
+            //unfinishedTimes[i] += unschTimes[i];
 			   unscheduledTasks[i]++;
                reservedTime[i] = 0.0;
             }
